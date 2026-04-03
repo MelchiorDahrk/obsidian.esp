@@ -362,7 +362,11 @@ These values are **not authored** in Markdown but must be computed by the compil
 
 ---
 
-## 7. Recommended File Structure Summary
+## 7. Source File Layout
+
+### 7.1 Header File
+
+Every project directory must contain exactly one `header.md` with the plugin-level frontmatter:
 
 ```
 ---
@@ -372,22 +376,45 @@ masters:
   - Morrowind.esm
   [additional masters in order]
 ---
-
-## Journal "<quest_id>"        ← Journals FIRST (engine requirement)
-[entries...]
-
-## Topic "<topic name>"
-[entries...]
-
-## Greeting "Greeting N"
-[entries...]
-
-## Voice "<voice id>"
-[entries...]
-
-## Persuasion "<persuasion id>"
-[entries...]
 ```
 
+### 7.2 Topic Files
+
+Each topic (Dialogue block) is authored as a separate `.md` file. File names follow this convention:
+
+```
+<TopicId> ~<N>.md
+```
+
+- **`<TopicId>`** — The exact dialogue topic string (e.g., `little advice`, `my_quest`, `Greeting 0`).
+- **`~<N>`** — A required numeric ordering suffix (e.g., `~1`, `~2`, `~10`). The numeric value determines the order in which files are processed when no explicit `PrevID` is given. Lower numbers are processed first.
+
+Examples:
+
+```
+little advice ~1.md
+little advice ~2.md
+my_quest ~1.md
+Greeting 0 ~1.md
+```
+
+> [!IMPORTANT]
+> The `~N` suffix is **only an ordering hint** for the compiler. It is never stored in the compiled plugin. The final INFO ordering in the plugin is determined by `PrevID` fields inside the file content, not by the numeric suffix.
+
+> [!NOTE]
+> If two files have the same `~N` value, their relative order is unspecified (filesystem dependent). Always use distinct suffixes to guarantee deterministic ordering.
+
+### 7.3 PrevID
+
+`PrevID` is **always** specified inside the file frontmatter — never in the filename:
+
+```
+PrevID: <value>
+```
+
+- **Empty string** → inserted at the **front** of the list (highest evaluation priority).
+- **Valid ID** → inserted immediately *after* that INFO in the linked list.
+- **Omitted / unresolvable** → appended to the **end**.
+
 > [!TIP]
-> Splitting one quest into **one `.md` file per dialogue type** (e.g., `my_quest_journal.md`, `my_quest_topics.md`) is valid as long as each file has its own complete `masters` frontmatter. The compiler merges them using the same `PluginData::merge_into()` path used for regular plugins.
+> Splitting one quest into **one `.md` file per dialogue entry** (e.g., one file per INFO) and using `~N` ordering is the recommended authoring pattern. This keeps each file small and makes version-control diffs easy to read.

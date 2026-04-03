@@ -1,5 +1,5 @@
-use std::path::Path;
 use anyhow::{Context, Result};
+use std::path::Path;
 use tes3::esp::{DialogueType2, FilterComparison, FilterType};
 
 pub mod frontmatter;
@@ -23,7 +23,6 @@ pub struct ParsedHeader {
 #[derive(Debug, Default)]
 pub struct ParsedInfo {
     pub topic: String,
-    pub existing_id: Option<String>,
     pub frontmatter: ParsedInfoFrontmatter,
     pub text: String,
 }
@@ -65,7 +64,9 @@ pub enum FilterValue {
 
 pub fn parse_project_directory(path: &Path) -> Result<ParsedPlugin> {
     let mut header = None;
-    let mut infos = Vec::new();
+
+    // Collect (order, path) for topic files so we can sort them.
+    let mut topic_entries: Vec<(u64, std::path::PathBuf)> = Vec::new();
 
     let entries = std::fs::read_dir(path)
         .with_context(|| format!("Failed to read directory: {}", path.display()))?;
@@ -78,41 +79,65 @@ pub fn parse_project_directory(path: &Path) -> Result<ParsedPlugin> {
             continue;
         }
 
-        let file_name = entry_path.file_stem().unwrap().to_string_lossy().into_owned();
+        let file_name = entry_path
+            .file_stem()
+            .unwrap()
+            .to_string_lossy()
+            .into_owned();
+
+        if file_name.eq_ignore_ascii_case("header") {
+            let content = std::fs::read_to_string(&entry_path)
+                .with_context(|| format!("Failed to read file: {}", entry_path.display()))?;
+            let mut input = content.as_str();
+            header = Some(
+                header::parse_header(&mut input)
+                    .map_err(|e| anyhow::anyhow!("{}", e))
+                    .with_context(|| "Failed to parse header.md")?,
+            );
+        } else {
+            // Extract the numeric order from the `~N` suffix: "TopicId ~N"
+            // The suffix is always ` ~<number>` at the end of the stem.
+            let order: u64 = if let Some(idx) = file_name.rfind(" ~") {
+                file_name[idx + 2..].parse().unwrap_or(u64::MAX)
+            } else {
+                u64::MAX
+            };
+            topic_entries.push((order, entry_path));
+        }
+    }
+
+    // Sort topic files by their numeric order suffix so infos are inserted
+    // in the correct sequence even when no explicit PrevID is specified.
+    topic_entries.sort_by_key(|(order, _)| *order);
+
+    let mut infos = Vec::new();
+    for (_order, entry_path) in topic_entries {
+        let file_name = entry_path
+            .file_stem()
+            .unwrap()
+            .to_string_lossy()
+            .into_owned();
+
+        // Strip the ` ~N` suffix to recover the topic name.
+        let topic = if let Some(idx) = file_name.rfind(" ~") {
+            file_name[..idx].to_string()
+        } else {
+            file_name
+        };
+
         let content = std::fs::read_to_string(&entry_path)
             .with_context(|| format!("Failed to read file: {}", entry_path.display()))?;
         let mut input = content.as_str();
 
-        if file_name.eq_ignore_ascii_case("header") {
-            header = Some(header::parse_header(&mut input)
-                .map_err(|e| anyhow::anyhow!("{}", e))
-                .with_context(|| format!("Failed to parse header.md"))?);
-        } else {
-            // Parse topic and optional ID from filename
-            // Names typically like "Akatosh 20160125141604927941" or "Akatosh ~1"
-            let (topic, existing_id) = if let Some(idx) = file_name.rfind(' ') {
-                let topic_part = &file_name[..idx];
-                let id_part = &file_name[idx + 1..];
-                if id_part.starts_with('~') {
-                    (topic_part.to_string(), None)
-                } else {
-                    (topic_part.to_string(), Some(id_part.to_string()))
-                }
-            } else {
-                (file_name, None)
-            };
+        let (frontmatter, text) = info::parse_info_file(&mut input)
+            .map_err(|e| anyhow::anyhow!("{}", e))
+            .with_context(|| format!("Failed to parse info file: {}", entry_path.display()))?;
 
-            let (frontmatter, text) = info::parse_info_file(&mut input)
-                .map_err(|e| anyhow::anyhow!("{}", e))
-                .with_context(|| format!("Failed to parse info file: {}", entry_path.display()))?;
-
-            infos.push(ParsedInfo {
-                topic,
-                existing_id,
-                frontmatter,
-                text,
-            });
-        }
+        infos.push(ParsedInfo {
+            topic,
+            frontmatter,
+            text,
+        });
     }
 
     let header = header.context("Missing header.md")?;

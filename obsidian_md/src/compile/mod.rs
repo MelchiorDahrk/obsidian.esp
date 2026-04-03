@@ -1,21 +1,28 @@
+use crate::parse::{FilterValue, ParsedPlugin};
+use anyhow::Result;
+use merge_to_master::{DialogueGroup, PluginData};
 use std::fmt::Write;
 use tes3::esp::{
     Dialogue, DialogueData, DialogueInfo, FileType, Filter, Header, ObjectFlags, QuestState, Sex,
 };
-use merge_to_master::{DialogueGroup, PluginData};
-use crate::parse::{FilterValue, ParsedPlugin};
-use anyhow::Result;
 
 pub mod resolve;
 
-fn generate_info_id() -> String {
+use std::collections::{HashMap, HashSet};
+
+fn generate_info_id(existing_ids: &HashSet<String>) -> String {
     let mut id = String::new();
-    let a: u16 = rand::random::<u16>() & 0x7FFF;
-    let b: u16 = rand::random::<u16>() & 0x7FFF;
-    let c: u16 = rand::random::<u16>() & 0x7FFF;
-    let d: u16 = rand::random::<u16>() & 0x7FFF;
-    write!(id, "{}{}{}{}", a, b, c, d).unwrap();
-    id
+    loop {
+        id.clear();
+        let a: u16 = rand::random::<u16>() & 0x7FFF;
+        let b: u16 = rand::random::<u16>() & 0x7FFF;
+        let c: u16 = rand::random::<u16>() & 0x7FFF;
+        let d: u16 = rand::random::<u16>() & 0x7FFF;
+        write!(id, "{}{}{}{}", a, b, c, d).unwrap();
+        if !existing_ids.contains(&id) {
+            return id;
+        }
+    }
 }
 
 pub fn compile(parsed: ParsedPlugin) -> Result<PluginData> {
@@ -37,22 +44,31 @@ pub fn compile(parsed: ParsedPlugin) -> Result<PluginData> {
     };
 
     // 2. Build Dialogues
+    let mut last_ids_by_topic: HashMap<String, String> = HashMap::new();
+
     for parsed_info in parsed.infos {
-        let dialogue_type = parsed_info.frontmatter.dialogue_type.unwrap_or(tes3::esp::DialogueType2::Topic);
-        
+        let dialogue_type = parsed_info
+            .frontmatter
+            .dialogue_type
+            .unwrap_or(tes3::esp::DialogueType2::Topic);
+
         let topic_key = parsed_info.topic.to_ascii_lowercase();
-        let group = plugin.dialogues.entry(topic_key).or_insert_with(|| {
-            DialogueGroup {
+        let group = plugin
+            .dialogues
+            .entry(topic_key.clone())
+            .or_insert_with(|| DialogueGroup {
                 dialogue: Dialogue {
                     flags: ObjectFlags::empty(),
                     id: parsed_info.topic.clone(),
                     dialogue_type,
                 },
                 infos: Default::default(),
-            }
-        });
+            });
 
-        let id = parsed_info.existing_id.clone().unwrap_or_else(generate_info_id);
+        // Collect the set of IDs already present in this group (to guarantee uniqueness).
+        let existing_ids = group.infos.iter().map(|i| i.id.clone()).collect();
+
+        let id = generate_info_id(&existing_ids);
 
         let data = DialogueData {
             dialogue_type: match dialogue_type {
@@ -99,17 +115,37 @@ pub fn compile(parsed: ParsedPlugin) -> Result<PluginData> {
             });
         }
 
-        let quest_state = parsed_info.frontmatter.quest_state.and_then(|s| match s.as_str() {
-            "Name" => Some(QuestState::Name),
-            "Finished" => Some(QuestState::Finished),
-            "Restart" => Some(QuestState::Restart),
-            _ => None,
-        });
+        let quest_state = parsed_info
+            .frontmatter
+            .quest_state
+            .and_then(|s| match s.as_str() {
+                "Name" => Some(QuestState::Name),
+                "Finished" => Some(QuestState::Finished),
+                "Restart" => Some(QuestState::Restart),
+                _ => None,
+            });
+
+        // Preserve an authored prev_id verbatim. When it is omitted, fall back to
+        // the previously generated info id for this topic only.
+        let prev_id = if let Some(pid) = &parsed_info.frontmatter.prev_id {
+            assert!(
+                pid.chars().all(|c| c.is_ascii_digit()),
+                "prev_id must be numeric if provided"
+            );
+            pid.clone()
+        } else {
+            last_ids_by_topic
+                .get(&topic_key)
+                .cloned()
+                .unwrap_or_default()
+        };
+
+        last_ids_by_topic.insert(topic_key, id.clone());
 
         let info = DialogueInfo {
             flags: ObjectFlags::empty(),
             id,
-            prev_id: parsed_info.frontmatter.prev_id.unwrap_or_default(),
+            prev_id,
             next_id: String::new(), // Filled by repair_links
             data,
             speaker_id: parsed_info.frontmatter.speaker_id.unwrap_or_default(),
@@ -126,11 +162,6 @@ pub fn compile(parsed: ParsedPlugin) -> Result<PluginData> {
         };
 
         group.insert_info(info);
-    }
-    
-    // Final fixes: run repair_links
-    for group in plugin.dialogues.values_mut() {
-        group.repair_links();
     }
 
     Ok(plugin)
