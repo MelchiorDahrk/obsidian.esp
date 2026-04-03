@@ -256,7 +256,7 @@ An individual response within a dialogue topic. This is where the actual text, c
 ```rust
 pub struct DialogueInfo {
     pub flags: ObjectFlags,
-    pub id: String,              // Unique INFO record ID
+    pub id: String,              // Unique INFO ID (must be a string of numerical characters)
     pub prev_id: String,         // Links to previous INFO (doubly-linked list)
     pub next_id: String,         // Links to next INFO
     pub data: DialogueData,      // Type, disposition, rank, sex requirements
@@ -272,6 +272,32 @@ pub struct DialogueInfo {
     pub filters: Vec<Filter>,    // Additional conditions (up to 6)
     pub script_text: String,     // Result script (BNAM) — runs when this info is selected
 }
+
+### INFO ID Generation
+
+DialogueInfo `.id` fields (the `INAM` sub-record) are required to be a string of all numerical characters. This is how the game engine and TESCS track unique responses. The ID only needs to be unique within its own topic.
+
+Example ID generation logic:
+
+```rust
+use std::fmt::Write;
+
+fn generate_info_id() -> String {
+    let mut id = String::new();
+    // note: `id_exists` is not provided by the crates; 
+    // you must implement it by checking the current topic's info list.
+    while id.is_empty() || id.len() >= 32 || id_exists(&id) {
+        id.clear();
+        let a = rand::random_range(0..=0x7FFF);
+        let b = rand::random_range(0..=0x7FFF);
+        let c = rand::random_range(0..=0x7FFF);
+        let d = rand::random_range(0..=0x7FFF);
+        write!(id, "{}{}{}{}", a, b, c, d).unwrap();
+    }
+    id
+}
+```
+
 ```
 
 ### `DialogueData`
@@ -773,3 +799,5 @@ Any = -1, Male = 0, Female = 1
 8. **Filter indexing**: Filter indices are stored as ASCII chars internally (`b'0'` through `b'5'`), but the library converts them to `u8` (0-5) on load and back on save.
 
 9. **Plugin sort order**: When saving, objects follow a specific tag order defined in `sort_objects.rs`. Journals must come before other dialogue types.
+
+10. **INFO IDs MUST be numerical**: The `DialogueInfo.id` field must be a string consisting only of digits. While stored as a `String` in Rust, the engine expects numerical data. These IDs only need to be unique within their parent topic.
