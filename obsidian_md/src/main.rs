@@ -40,8 +40,8 @@ fn main() -> Result<()> {
 
     // info!("Done!");
 
-    let path = Path::new("testfile.esp");
-    let export_path = Path::new("testfile_md");
+    let path = Path::new("D:/Games/Morrowind/Data Files/OAAB_Grazelands.ESP");
+    let export_path = Path::new("D:/Games/Morrowind/Data Files/obsidian.esp export");
 
     let plugin = PluginData::from_path(path)?;
     obsidian_md::export::write_project_directory(&plugin, export_path)?;

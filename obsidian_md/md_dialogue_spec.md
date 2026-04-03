@@ -1,420 +1,507 @@
-# TES3 Markdown Dialogue Authoring — Mandatory Field Specification
+# TES3 Markdown Dialogue Format
 
 > [!IMPORTANT]
-> This document defines what every `.md` dialogue/quest file **must** contain to be successfully compiled into a valid TES3 plugin (`.esp`/`.esm`). Fields marked **REQUIRED** must always be present. Fields marked **OPTIONAL** may be omitted; the compiler will use safe defaults.
+> This document describes the Markdown format currently implemented by `obsidian_md`.
+> It covers both directions:
+> - authoring Markdown and compiling it into a TES3 plugin
+> - exporting a TES3 plugin back into Markdown
 
 ---
 
-## 1. File-Level Frontmatter (Plugin Header)
+## 1. Project Layout
 
-Every file must begin with a YAML frontmatter block. This block maps to the `Header` record (`TES3` tag) that must be the **first object** in any valid TES3 plugin.
+A dialogue project directory contains:
 
-```yaml
----
-plugin_author: "AuthorName"          # REQUIRED — maps to Header.author (max 32 chars)
-plugin_description: "Short note"     # REQUIRED — maps to Header.description (max 256 chars)
-plugin_version: 1.3                  # OPTIONAL — defaults to 1.3 (the only version used in practice)
-file_type: esp                       # OPTIONAL — "esp" or "esm", defaults to "esp"
+- exactly one `header.md`
+- zero or more dialogue entry files named like `<Topic> ~<N>.md`
 
-masters:                             # REQUIRED if any IDs reference vanilla/mod content
-  - Morrowind.esm                    # List master filenames in load-order (ascending)
-  - Tribunal.esm
-  - Bloodmoon.esm
----
+Example:
+
+```text
+header.md
+Greeting 1 ~0.md
+Greeting 1 ~1.md
+test topic ~0.md
+test topic ~1.md
 ```
 
-### Why `masters` is mandatory
-
-The TES3 linked-list model for **dialogue** (`DialogueGroup`) depends on inserting new `DialogueInfo` records *after* existing ones in the merged load order. To build that ordered list correctly, `merge_load_order()` must first know **all master files** so it can:
-
-1. Collect master metadata (`Header::collect_masters`) and build a reference-remap table.
-2. Give each INFO record a `prev_id` that resolves to a real INFO already present in a master.
-
-If a master is omitted, the loaded `DialogueGroup.infos` list is incomplete, and `insert_info()` will silently append the new INFO to the **wrong position** — breaking NPC dialogue flow.
-
-> [!WARNING]
-> Masters must be listed in **exact load order** (the same order a user would put them in their `Morrowind.ini`). The file sizes used in `Header.masters` are read from disk at compile time — only the filenames need to be in the Markdown.
+Each non-header Markdown file represents exactly one `DialogueInfo`.
+The topic is normally derived from the filename, but can be overridden in frontmatter with `Topic:`.
 
 ---
 
-## 2. Dialogue Block Types
+## 2. `header.md`
 
-A single `.md` file may contain multiple dialogue blocks. Each block maps to one `DialogueGroup` (a `Dialogue` header + its ordered `DialogueInfo` records).
+`header.md` must begin with YAML-like frontmatter in the format the parser actually accepts:
 
-The first heading in a block declares its **type** and **ID**:
-
-```
-## [DialogueType] "<id>"
-```
-
-| `DialogueType` | TES3 Enum          | `Dialogue.id` convention                       |
-|----------------|--------------------|------------------------------------------------|
-| `Topic`        | `DialogueType2::Topic`      | Any string, e.g. `"little advice"`   |
-| `Journal`      | `DialogueType2::Journal`    | Quest script ID, e.g. `"my_quest"`   |
-| `Greeting`     | `DialogueType2::Greeting`   | Must be `"Greeting 0"` – `"Greeting 9"` |
-| `Voice`        | `DialogueType2::Voice`      | e.g. `"Hello"`, `"Attack"`, `"Flee"` |
-| `Persuasion`   | `DialogueType2::Persuasion` | e.g. `"Admire"`, `"Taunt"`, etc.     |
-
-### REQUIRED fields per block
-
-| Field        | Maps to               | Notes                                    |
-|--------------|-----------------------|------------------------------------------|
-| `type`       | `Dialogue.dialogue_type` | One of the five types above           |
-| `id`         | `Dialogue.id`         | Case-insensitive; stored lowercase in maps |
-
+```yaml
 ---
-
-## 3. DialogueInfo Records (Entries)
-
-Each entry within a dialogue block maps to one `DialogueInfo` record.
-
-### 3.1  Entry ID
-
-```yaml
-- id: "unique_info_id_001"   # REQUIRED
-```
-
-- Must be **globally unique** across the entire plugin and its masters.
-- Used as the key for the linked-list (`prev_id` / `next_id`) that controls ordering.
-- Recommended convention: `<topic_slug>_<NNN>` (e.g., `my_quest_010`).
-
-> [!CAUTION]
-> Duplicate INFO IDs within the same `DialogueGroup` cause `insert_info()` to **replace** the existing record silently. Duplicates across different topics or plugins produce undefined engine behavior.
-
-### 3.2  Ordering / Position
-
-```yaml
-  prev_id: "unique_info_id_000"   # OPTIONAL — empty string = insert at front of list
-```
-
-- `prev_id` controls where this INFO is inserted in the linked list.
-- **Empty string** → inserted at the **front** (highest evaluation priority).
-- **Valid ID** → inserted immediately *after* that INFO.
-- **Missing / unresolvable ID** → appended to the **end**.
-- The compiler calls `repair_links()` after all inserts, so explicit `next_id` is never needed in source.
-
-> [!IMPORTANT]
-> For Topics and Greetings the engine evaluates entries **top-to-bottom** and uses the **first match**. More specific entries (single NPC, more filters) **must be listed before** less specific ones. Ordering in the Markdown must reflect intended evaluation order.
-
-### 3.3  Speaker Conditions
-
-Maps to `DialogueInfo` string fields. All are **OPTIONAL** (empty = no constraint):
-
-```yaml
-  speaker_id:      "caius cosades"   # Specific NPC ID (ONAM sub-record)
-  speaker_race:    "Imperial"        # Race ID
-  speaker_class:   "Operative"       # Class ID
-  speaker_faction: "Blades"          # Faction ID
-  speaker_cell:    "Balmora"         # Cell name (interior) or leave empty
-  player_faction:  "Mages Guild"     # Player must be in this faction
-```
-
-### 3.4  DialogueData Fields
-
-Maps to the `DialogueData` sub-record embedded in each INFO:
-
-```yaml
-  dialogue_type: Topic               # REQUIRED — must match the parent block's type
-  disposition:   50                  # REQUIRED (for Topic/Voice/Greeting/Persuasion) OR journal index for Journal type
-  speaker_rank:  -1                  # OPTIONAL — -1 = any rank; 0+ = minimum rank in speaker_faction
-  speaker_sex:   Any                 # OPTIONAL — "Any" (-1), "Male" (0), "Female" (1)
-  player_rank:   -1                  # OPTIONAL — -1 = any rank; 0+ = minimum rank in player_faction
-```
-
-> [!IMPORTANT]
-> **For Journal entries**, `disposition` is **repurposed as the journal index** (stage number, 0–32767), not a disposition requirement. Do not confuse the two.
-
-### 3.5  Text
-
-```yaml
-  text: |
-    "There is a hidden passage behind the bookshelf."
-```
-
-- **REQUIRED** for Topic, Greeting, Voice, and Persuasion entries.
-- **OPTIONAL** for Journal entries (used as the journal log text shown to the player).
-- Hard engine limit: **512 characters**. The compiler should enforce this.
-
-### 3.6  Quest State (Journal only)
-
-```yaml
-  quest_state: Name       # OPTIONAL — one of: Name | Finished | Restart | (omit for plain entry)
-```
-
-| Value      | Meaning                                            |
-|------------|----------------------------------------------------|
-| `Name`     | This index displays the quest name in the journal  |
-| `Finished` | Marks the quest as completed                       |
-| `Restart`  | Restarts a finished/failed quest                   |
-| *(omit)*   | Plain journal entry, no special state change       |
-
-> [!NOTE]
-> Every Journal dialogue block should have **exactly one** entry with `quest_state: Name` to give the quest a display name. A quest without it will appear with a blank name in the in-game journal.
-
-### 3.7  Sound Path (Voice lines)
-
-```yaml
-  sound_path: "Sound\\Vo\\n\\m\\attck1.wav"   # OPTIONAL — path relative to Data Files\
-```
-
-Required only for **Voice** type entries that have recorded audio. Leave empty otherwise.
-
-### 3.8  Result Script
-
-```yaml
-  script_text: |
-    Journal "my_quest" 20
-    StartScript "mq_trigger"
-```
-
-- **OPTIONAL** — MWScript source code that runs when this INFO is selected.
-- Maps to `DialogueInfo.script_text` (the `BNAM` sub-record).
-- This is **interpreted script text**, not a compiled `Script` record. It runs as an immediate result script.
-
-### 3.9  Filters (Conditions)
-
-Up to **6 filters** per INFO entry. Each filter maps to a `Filter` struct.
-
-```yaml
-  filters:
-    - index:      0              # REQUIRED — slot 0–5 (must be unique per entry)
-      type:       Journal        # REQUIRED — see FilterType table below
-      function:   ~              # REQUIRED for type=Function; omit otherwise
-      comparison: ">="           # REQUIRED — one of: == != > >= < <=
-      id:         "my_quest"     # REQUIRED for Journal/Item/Global/Local/Dead/Not* types
-      value:      10             # REQUIRED — integer or float
-```
-
-#### FilterType Reference
-
-| Markdown value | `FilterType` enum  | `id` field meaning                        |
-|----------------|--------------------|-------------------------------------------|
-| `Function`     | `Function`         | *(not used — use `function` field)*       |
-| `Global`       | `Global`           | Global variable name                      |
-| `Local`        | `Local`            | Local script variable name                |
-| `Journal`      | `Journal`          | Quest ID                                  |
-| `Item`         | `Item`             | Item BASE ID                              |
-| `Dead`         | `Dead`             | NPC/Creature ID                           |
-| `NotId`        | `NotId`            | NPC ID (speaker must NOT be this NPC)     |
-| `NotFaction`   | `NotFaction`       | Faction ID (speaker must NOT be in it)    |
-| `NotClass`     | `NotClass`         | Class ID                                  |
-| `NotRace`      | `NotRace`          | Race ID                                   |
-| `NotCell`      | `NotCell`          | Cell name                                 |
-| `NotLocal`     | `NotLocal`         | Local variable (negative check)           |
-
-#### FilterFunction Reference (type=Function only)
-
-Used when `type: Function`. The `id` field is unused; the value is compared against the function result.
-
-```yaml
-      function: PcLevel          # e.g. PcLevel >= 5
-```
-
-Key functions: `PcLevel`, `PcReputation`, `PcHealth`, `PcGold`, `PcSex`, `Reputation`,
-`Disposition`, `Choice`, `TalkedToPc`, `Attacked`, `SameFaction`, `SameRace`,
-`FactionRankDifference`, `Weather`, `Werewolf`, etc.
-
-#### FilterComparison Symbols
-
-| Markdown | `FilterComparison` |
-|----------|--------------------|
-| `==`     | `Equal`            |
-| `!=`     | `NotEqual`         |
-| `>`      | `Greater`          |
-| `>=`     | `GreaterEqual`     |
-| `<`      | `Less`             |
-| `<=`     | `LessEqual`        |
-
----
-
-## 4. Dialogue Type Quick-Reference
-
-### 4.1 Topic
-
-```yaml
-## Topic "little advice"
-
-- id: "little_advice_caius_001"
-  prev_id: ""                         # First in list (front)
-  dialogue_type: Topic
-  speaker_id: "caius cosades"
-  disposition: 30
-  speaker_sex: Any
-  speaker_rank: -1
-  player_rank: -1
-  text: "Stay out of trouble, outlander."
-  filters:
-    - index: 0
-      type: Journal
-      comparison: "<"
-      id: "my_quest"
-      value: 10
-  script_text: ""
-```
-
-### 4.2 Journal
-
-```yaml
-## Journal "my_quest"
-
-- id: "my_quest_000"
-  dialogue_type: Journal
-  disposition: 0          # journal index = 0
-  quest_state: Name
-  text: "My Quest"        # Quest display name
-
-- id: "my_quest_010"
-  dialogue_type: Journal
-  disposition: 10         # journal index = 10
-  text: "I heard a rumor about treasure in the cave."
-
-- id: "my_quest_100"
-  dialogue_type: Journal
-  disposition: 100        # journal index = 100
-  quest_state: Finished
-  text: "I found the treasure."
-```
-
-### 4.3 Greeting
-
-```yaml
-## Greeting "Greeting 0"
-
-- id: "greet0_essential_npc_001"
-  prev_id: ""
-  dialogue_type: Greeting
-  speaker_id: "vital npc"
-  disposition: 0
-  speaker_sex: Any
-  speaker_rank: -1
-  player_rank: -1
-  text: "I've been expecting you."
-  filters:
-    - index: 0
-      type: Journal
-      comparison: ">="
-      id: "my_quest"
-      value: 10
-```
-
-### 4.4 Voice
-
-```yaml
-## Voice "Hello"
-
-- id: "hello_guard_001"
-  prev_id: ""
-  dialogue_type: Voice
-  speaker_class: "Guard"
-  disposition: 0
-  speaker_sex: Any
-  speaker_rank: -1
-  player_rank: -1
-  sound_path: ""
-  text: "Move along, citizen."
-```
-
-### 4.5 Persuasion
-
-```yaml
-## Persuasion "Taunt"
-
-- id: "taunt_generic_001"
-  prev_id: ""
-  dialogue_type: Persuasion
-  disposition: 0
-  speaker_sex: Any
-  speaker_rank: -1
-  player_rank: -1
-  text: "You can't intimidate me!"
-```
-
----
-
-## 5. Global Compile-Time Requirements
-
-These apply to the **entire file**, not individual records:
-
-| Requirement | Reason |
-|---|---|
-| Unique `id` values across all INFO entries in the file | `insert_info()` replaces on duplicate — silent data loss |
-| `masters` list complete and in load order | Required to build the pre-existing INFO linked list correctly |
-| `disposition` for Journal entries interpreted as journal index | Compiler must treat this field differently per dialogue type |
-| Journal Dialogues serialized **before** all other types | Required by the TES3 engine (`into_objects()` enforces this; compiler must too) |
-| Words in `id`, `speaker_id`, etc. match the case used in masters *exactly* | The engine is case-insensitive at runtime, but `merge_to_master` lowercases keys — IDs from masters must already be lowercase or the compiler must normalize them |
-| Filter `index` values 0–5, no duplicates per INFO | The engine only reads 6 filter slots; extras are silently ignored |
-| `text` ≤ 512 characters | Hard engine limit; the `Save` trait omits null terminator to stay within it |
-
----
-
-## 6. What the Compiler Must Supply Automatically
-
-These values are **not authored** in Markdown but must be computed by the compiler:
-
-| Field | How the compiler derives it |
-|---|---|
-| `Header.num_objects` | Count of all records written |
-| `Header.masters[*].size` | Read file size of each master from disk |
-| `DialogueInfo.next_id` | Computed by `repair_links()` after all inserts |
-| `DialogueInfo.prev_id` (final) | Computed by `repair_links()` for new records inserted mid-list |
-| `ObjectFlags` | Default (`0`) for new records; preserve flags from merged masters |
-| Plugin sort order | `PluginData::into_plugin()` / `sort_objects()` handles this |
-
----
-
-## 7. Source File Layout
-
-### 7.1 Header File
-
-Every project directory must contain exactly one `header.md` with the plugin-level frontmatter:
-
-```
----
-plugin_author: "..."
-plugin_description: "..."
-masters:
+Author: Melchior Dahrk
+Description: dialogue test
+File Type: ESP
+Masters:
   - Morrowind.esm
-  [additional masters in order]
+  - Tribunal.esm
 ---
 ```
 
-### 7.2 Topic Files
+### Supported header keys
 
-Each topic (Dialogue block) is authored as a separate `.md` file. File names follow this convention:
+| Key | Required | Notes |
+|---|---|---|
+| `Author` | No | Defaults to empty string |
+| `Description` | No | Defaults to empty string |
+| `File Type` | No | `ESP`, `ESM`, or `ESS`; defaults to `ESP` |
+| `Masters` | No | List of master filenames in load order |
 
+### Compiler behavior
+
+- The compiler always writes plugin version `1.3`.
+- `Header.num_objects` is computed during TES3 save.
+- `Header.masters[*].size` is resolved from disk during the resolve pass, not authored in Markdown.
+- `Masters` should be in real load order if the project modifies dialogue defined in master plugins.
+
+---
+
+## 3. Dialogue Entry Files
+
+Every dialogue entry file must start with frontmatter delimited by `---`.
+After the closing `---`, the remaining content becomes `DialogueInfo.text`.
+
+Example:
+
+```yaml
+---
+Type: Topic
+PrevID: 123456789
+Faction: Ashlanders
+PC Faction: Ashlanders
+PC Rank: Rank 3
+FunctionIndex: 0
+Function: Function
+Variable: Choice = 2
+---
+This is the response text.
 ```
-<TopicId> ~<N>.md
+
+### Filename rules
+
+The parser looks for files ending in ` ~<number>.md`.
+
+- The portion before ` ~<number>` is treated as the topic id.
+- The numeric suffix is used only as a directory ordering hint.
+- Files are sorted by that numeric suffix before compilation.
+- If a file has no ` ~<number>` suffix, it sorts last.
+
+### `Topic:` override
+
+The frontmatter may override the filename-derived topic:
+
+```yaml
+Topic: Greeting 0
 ```
 
-- **`<TopicId>`** — The exact dialogue topic string (e.g., `little advice`, `my_quest`, `Greeting 0`).
-- **`~<N>`** — A required numeric ordering suffix (e.g., `~1`, `~2`, `~10`). The numeric value determines the order in which files are processed when no explicit `PrevID` is given. Lower numbers are processed first.
+This is primarily used by the TES3-to-Markdown exporter so it can generate safe filenames while preserving the original TES3 topic id exactly.
 
-Examples:
+---
 
+## 4. Entry Frontmatter Fields
+
+These keys are recognized by the parser.
+
+| Key | Meaning |
+|---|---|
+| `Topic` | Overrides the topic id derived from the filename |
+| `Type` | Dialogue type: `Topic`, `Journal`, `Voice`, `Greeting`, or `Persuasion` |
+| `DiagID` | Preserved TES3 `DialogueInfo.id`; must be numeric if present |
+| `PrevID` | TES3 `prev_id`; must be numeric if present |
+| `ID` | `speaker_id` |
+| `Disposition` | Dialogue disposition for non-journal entries |
+| `Index` | Journal index; parsed into the same internal `disposition` field |
+| `Race` | `speaker_race` |
+| `Sex` | `Any`, `Male`, or `Female` |
+| `Class` | `speaker_class` |
+| `Faction` | `speaker_faction` |
+| `Rank` | `speaker_rank`; accepts `-1`, raw integers, or `Rank <n>` |
+| `Cell` | `speaker_cell` |
+| `PC Faction` | `player_faction` |
+| `PC Rank` | `player_rank`; accepts `-1`, raw integers, or `Rank <n>` |
+| `Sound Path` | `sound_path` |
+| `SoundPath` | Alias for `Sound Path` |
+| `Result` | `script_text`; supports escaped `\\r\\n` and `\\n` |
+| `Quest Name` | If `true`, sets journal quest state to `Name` |
+| `Finished` | If `true`, sets journal quest state to `Finished` |
+| `Restart` | If `true`, sets journal quest state to `Restart` |
+| `FunctionIndex` | Filter slot index |
+| `Function` | Filter type name for the following `Variable` line |
+| `Variable` | Filter expression for the current filter |
+
+Unknown keys are ignored by the parser.
+
+---
+
+## 5. Field Semantics
+
+### `Type`
+
+Recognized values:
+
+- `Topic`
+- `Journal`
+- `Voice`
+- `Greeting`
+- `Persuasion`
+
+If omitted, the compiler defaults to `Topic`.
+
+### `DiagID`
+
+`DiagID` preserves an exact TES3 INFO id during import/export.
+
+- Must contain only ASCII digits if present.
+- If omitted, the compiler generates a random numeric id unique within that topic group.
+- The exporter always writes `DiagID`.
+
+### `PrevID`
+
+`PrevID` controls insertion ordering.
+
+- Must contain only ASCII digits if present.
+- If omitted, the compiler links the entry after the previously compiled entry for the same topic.
+- If present, it is preserved verbatim during compile.
+- During resolve, rounded authored `PrevID` values may be reconciled to exact master ids when possible.
+
+### `Disposition` and `Index`
+
+- For `Topic`, `Voice`, `Greeting`, and `Persuasion`, use `Disposition`.
+- For `Journal`, use `Index`.
+- Internally both map to `DialogueData.disposition`.
+
+### `Rank` and `PC Rank`
+
+Accepted forms:
+
+- `-1`
+- `3`
+- `Rank 3`
+
+The exporter writes non-default ranks as `Rank <n>`.
+
+### `Sex`
+
+Accepted values:
+
+- `Any`
+- `Male`
+- `Female`
+
+If omitted, the compiler uses `Any`.
+
+### Quest flags
+
+These map to `DialogueInfo.quest_state`:
+
+- `Quest Name: true` -> `Name`
+- `Finished: true` -> `Finished`
+- `Restart: true` -> `Restart`
+
+If multiple are set to `true`, the last one encountered in parse order wins.
+
+### `Result`
+
+`Result` maps to `DialogueInfo.script_text`.
+
+- Inline `\r\n` and `\n` escape sequences are decoded by the parser.
+- The exporter writes multiline scripts back out using escaped newlines on one line.
+
+### Body text
+
+Everything after the closing `---` becomes `DialogueInfo.text`.
+
+The parser:
+
+- trims leading blank space before the body
+- trims trailing line endings at the end of the file
+- normalizes text line endings to CRLF internally
+
+The exporter writes the text body exactly after a blank line following the closing `---`.
+
+---
+
+## 6. Filter Format
+
+Filters are expressed as repeated triples:
+
+```yaml
+FunctionIndex: 0
+Function: Function
+Variable: Choice = 2
 ```
-little advice ~1.md
-little advice ~2.md
-my_quest ~1.md
-Greeting 0 ~1.md
+
+or:
+
+```yaml
+FunctionIndex: 1
+Function: Journal
+Variable: my_quest >= 10
 ```
 
-> [!IMPORTANT]
-> The `~N` suffix is **only an ordering hint** for the compiler. It is never stored in the compiled plugin. The final INFO ordering in the plugin is determined by `PrevID` fields inside the file content, not by the numeric suffix.
+Each `Variable` line consumes the current `FunctionIndex` and `Function` values, then resets them.
 
-> [!NOTE]
-> If two files have the same `~N` value, their relative order is unspecified (filesystem dependent). Always use distinct suffixes to guarantee deterministic ordering.
+### Filter type values accepted in `Function:`
 
-### 7.3 PrevID
+- `Function`
+- `Global`
+- `Local`
+- `Journal`
+- `Item`
+- `Dead`
+- `NotId`
+- `NotFaction`
+- `NotClass`
+- `NotRace`
+- `NotCell`
+- `NotLocal`
 
-`PrevID` is **always** specified inside the file frontmatter — never in the filename:
+### `Variable:` syntax
 
+The parser accepts:
+
+- `name = 1`
+- `name == 1`
+- `name != 1`
+- `name > 1`
+- `name >= 1`
+- `name < 1`
+- `name <= 1`
+
+The value is parsed as:
+
+- `Integer` if it does not contain `.`, `e`, or `E`
+- `Float` otherwise
+
+### Filter function mapping
+
+The compiler derives TES3 `FilterFunction` values from the parsed filter type:
+
+- `Function` uses the function name from the left-hand side of `Variable:`
+  - Example: `Variable: Choice = 2`
+- `Journal` maps to `JournalType`
+- `Dead` maps to `DeadType`
+- `Item` maps to `ItemType`
+- `Global`, `Local`, and `NotLocal` map to `VariableCompare` unless an explicit recognized function name is provided
+- `NotId`, `NotFaction`, `NotClass`, `NotRace`, and `NotCell` map to their TES3 negative-check function variants
+
+For `Function`, the left-hand side is stored as `function_name` and the TES3 filter `id` becomes empty.
+For other filter types, the left-hand side becomes the TES3 filter `id`.
+
+### Exported filter shape
+
+The exporter writes filters back as:
+
+- `FunctionIndex: <n>`
+- `Function: <FilterType>`
+- `Variable: <expression>`
+
+For `FilterType::Function`, the expression is written using the TES3 function name:
+
+```yaml
+Function: Function
+Variable: Choice = 2
 ```
-PrevID: <value>
+
+For non-function filters, the expression uses the TES3 `id`:
+
+```yaml
+Function: Global
+Variable: Random100 < 33
 ```
 
-- **Empty string** → inserted at the **front** of the list (highest evaluation priority).
-- **Valid ID** → inserted immediately *after* that INFO in the linked list.
-- **Omitted / unresolvable** → appended to the **end**.
+---
 
-> [!TIP]
-> Splitting one quest into **one `.md` file per dialogue entry** (e.g., one file per INFO) and using `~N` ordering is the recommended authoring pattern. This keeps each file small and makes version-control diffs easy to read.
+## 7. Compile Behavior
+
+### Header creation
+
+The compiler builds a fresh TES3 header using:
+
+- `version = 1.3`
+- `file_type` from `header.md`
+- `author` from `header.md`
+- `description` from `header.md`
+- an empty `masters` list initially
+
+The resolve pass later restores the authored masters with real file sizes.
+
+### Dialogue grouping
+
+Entries are grouped by lowercased topic id internally, but the first encountered original casing is preserved on the emitted TES3 `Dialogue`.
+
+### INFO id generation
+
+If `DiagID` is absent, the compiler generates a numeric id using random 15-bit chunks concatenated into a string.
+
+### Link repair strategy
+
+After compilation:
+
+- topics with preserved TES3 links (`DiagID` present or explicit `PrevID` present) only get `next_id` repaired
+- topics without preserved links get full `repair_links()`
+
+This distinction lets authored Markdown keep its simpler sequential behavior while exported Markdown preserves master-facing `PrevID` values accurately.
+
+---
+
+## 8. Resolve Behavior
+
+When compiling against masters, the resolve pass:
+
+1. loads the master plugins from the current OpenMW load order
+2. reconciles modified INFO ids by matching `Original text: ...` markers when present
+3. also attempts to reconcile rounded numeric `PrevID` values against exact master ids
+4. merges the authored plugin into the master data
+5. normalizes touched journal topics by journal index
+6. removes unmodified records
+7. restores the original authored masters list and sets the output file type to `ESP`
+
+### `Original text:` convention
+
+The code recognizes this marker inside body text:
+
+```text
+Original text: Enough %PCName. You beat me fairly.
+```
+
+When present, resolve uses it to locate the original master INFO and recover the exact TES3 INFO id.
+
+This is especially important for modifying existing dialogue imported from a plugin.
+
+---
+
+## 9. TES3-to-Markdown Export Format
+
+The reverse exporter writes Markdown in the same format described above.
+
+### Exported `header.md`
+
+The exporter writes:
+
+- `Author`
+- `Description`
+- `File Type`
+- `Masters`
+
+### Exported entry frontmatter
+
+The exporter writes:
+
+- `Topic`
+- `Type`
+- `DiagID`
+- `PrevID`
+- `Disposition` or `Index`
+- speaker/player condition fields
+- `Sound Path`
+- `Result`
+- `Quest Name`
+- `Finished`
+- `Restart`
+- zero or more filter triples
+
+### Export ordering
+
+Dialogue groups are exported in TES3 serialization order:
+
+1. `Journal`
+2. `Topic`
+3. `Voice`
+4. `Greeting`
+5. `Persuasion`
+
+Within a type, groups are sorted alphabetically by dialogue id.
+
+Within a group, files are written in the existing INFO order as:
+
+```text
+<safe topic stem> ~0.md
+<safe topic stem> ~1.md
+<safe topic stem> ~2.md
+```
+
+### Safe filenames
+
+The exporter sanitizes Windows-invalid filename characters:
+
+- `<`
+- `>`
+- `:`
+- `"`
+- `/`
+- `\`
+- `|`
+- `?`
+- `*`
+
+It replaces them with `_`, trims trailing spaces and periods, and falls back to `dialogue` if needed.
+Because the real topic id is also written in `Topic:`, the original TES3 dialogue id still round-trips even when the filename is sanitized.
+
+---
+
+## 10. Authoring Notes
+
+- One file corresponds to one `DialogueInfo`, not one whole topic block.
+- `DiagID` is optional for hand-authored content but always present in exported content.
+- `PrevID` should be numeric if used.
+- If you are modifying existing master dialogue, include complete and correct `Masters` in `header.md`.
+- If you are importing/exporting existing plugin data, preserve `DiagID`, `PrevID`, and `Original text:` lines when present.
+- The body text is not parsed for semantic fields except for the optional `Original text:` reconciliation helper used during resolve.
+
+---
+
+## 11. Minimal Examples
+
+### Header
+
+```yaml
+---
+Author: Example Author
+Description: demo plugin
+File Type: ESP
+Masters:
+  - Morrowind.esm
+---
+```
+
+### New topic entry
+
+```yaml
+---
+Type: Topic
+Faction: Ashlanders
+PC Faction: Ashlanders
+PC Rank: Rank 3
+FunctionIndex: 0
+Function: Function
+Variable: Choice = 2
+---
+This is the first response.
+```
+
+### Export-style preserved entry
+
+```yaml
+---
+Topic: Greeting 1
+Type: Greeting
+DiagID: 50716010272305400
+PrevID: 891314329736518839
+Result: Goodbye
+FunctionIndex: 1
+Function: Local
+Variable: dancingGirl = 1
+FunctionIndex: 2
+Function: Function
+Variable: SameSex = 1
+---
+If you want a job here, you'll have to talk to Helviane. Excuse me.
+```
