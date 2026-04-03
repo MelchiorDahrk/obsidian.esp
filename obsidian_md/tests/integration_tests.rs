@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use anyhow::Result;
 use itertools::Itertools;
 use merge_to_master::PluginData;
@@ -8,54 +6,17 @@ use std::iter::zip;
 use std::path::Path;
 use uncased::AsUncased;
 
-/*
-    Dialogue Structures Reference:
-
-    DialogueGroup {
-        dialogue: Dialogue,
-        infos: VecDeque<DialogueInfo>,
-    }
-
-    Dialogue {
-        flags: ObjectFlags,
-        id: String,
-        dialogue_type: DialogueType2,
-    }
-
-    DialogueInfo {
-        flags: ObjectFlags,
-        id: String,
-        prev_id: String,
-        next_id: String,
-        data: DialogueData,
-        speaker_id: String,
-        speaker_race: String,
-        speaker_class: String,
-        speaker_faction: String,
-        speaker_cell: String,
-        player_faction: String,
-        sound_path: String,
-        text: String,
-        quest_state: Option<QuestState>,
-        filters: Vec<Filter>,
-        script_text: String,
-    }
-*/
-
 #[test]
 fn test_topics_1() -> Result<()> {
     let markdown_path = Path::new("tests/test_topics_1/project");
     let expected_path = Path::new("tests/test_topics_1/expect/output.esp");
 
     let parsed = obsidian_md::parse::parse_project_directory(&markdown_path)?;
-
     let (master_paths, master_sizes) = collect_master_paths(&parsed.header.masters);
 
     let compiled = obsidian_md::compile::compile(parsed)?;
     let resolved = obsidian_md::compile::resolve::resolve(compiled, &master_paths, master_sizes)?;
     let expected = PluginData::from_path(&expected_path)?;
-
-    // expected.save_path("tests/test_topics_1/expect/output~1.esp".as_ref())?;
 
     assert_eq!(resolved.dialogues.len(), expected.dialogues.len());
 
@@ -88,18 +49,14 @@ fn test_topics_1() -> Result<()> {
         );
 
         // Test `DialogueInfo` fields.
+
         // Note: Don't compare `id` fields directly since they are generated randomly.
         // Instead, compare the structure and content of the dialogue infos.
 
         let expected_infos = &expected_group.infos;
         let resolved_infos = &resolved_group.infos;
 
-        assert_eq!(
-            expected_infos.len(),
-            resolved_infos.len(),
-            "Dialogue infos have different lengths for dialogue ID '{}'",
-            expected_dialogue.id
-        );
+        assert_eq!(expected_infos.len(), resolved_infos.len());
 
         for (expected_info, resolved_info) in zip(expected_infos, resolved_infos) {
             assert_eq!(expected_info.flags, resolved_info.flags);
