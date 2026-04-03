@@ -1,4 +1,8 @@
 ---
+Type:
+  - Greeting
+DiagID:
+PrevID: 3190558963063415300
 ID:
 Disposition:
 Race:
@@ -11,23 +15,11 @@ Rank:
 Cell:
 PC Faction:
 PC Rank:
-Function 1:
+Result: "ModDisposition -10\r\nGoodbye"
+FunctionIndex: 0
+Function:
   - Journal
-Variable 1: 11111 test journal = 50
-Function 2:
-Variable 2:
-Function 3:
-Variable 3:
-Function 4:
-Variable 4:
-Function 5:
-Variable 5:
-Function 6:
-Variable 6:
-Result: |-
-  ModDisposition -10
-  Goodbye
-BeforeID: 50716010272305400
+Variable: 11111 test journal = 50
 ---
 This is a new greeting. It should be above the modified greeting. It should be above 50716010272305400.
 

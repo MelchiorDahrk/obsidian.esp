@@ -1,11 +1,13 @@
 ---
+Type:
+  - Journal
+DiagID:
+PrevID:
 Quest Name: false
-Finished: true
+Finished: false
 Restart: false
-Index: 20
-BeforeID:
+Index: 10
 ---
 This is a text journal entry.
 
-Index: 20
-Finished: TRUE
+Index: 10

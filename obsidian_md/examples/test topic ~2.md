@@ -1,4 +1,8 @@
 ---
+Type:
+  - Topic
+DiagID:
+PrevID:
 ID:
 Disposition:
 Race:
@@ -12,21 +16,11 @@ PC Faction:
   - Ashlanders
 PC Rank:
   - Rank 3
-Function 1:
-  - Function
-Variable 1: Choice = 2
-Function 2:
-Variable 2:
-Function 3:
-Variable 3:
-Function 4:
-Variable 4:
-Function 5:
-Variable 5:
-Function 6:
-Variable 6:
 Result:
-BeforeID:
+FunctionIndex: 0
+Function:
+  - Function
+Variable: Choice = 1
 ---
 This is the second response to the "test topic" topic.
 

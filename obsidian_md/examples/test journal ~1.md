@@ -1,9 +1,12 @@
 ---
+Type:
+  - Journal
+DiagID:
+PrevID:
 Quest Name: true
 Finished: false
 Restart: false
 Index:
-BeforeID:
 ---
 Testing 1 2 3
 
