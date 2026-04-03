@@ -19,25 +19,32 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 fn main() -> Result<()> {
     let _guard = init_logger();
 
-    let example_path = PathBuf::from("tests/test_topics_1/project");
-    info!("Parsing markdown from {}...", example_path.display());
+    // let example_path = PathBuf::from("tests/test_topics_1/project");
+    // info!("Parsing markdown from {}...", example_path.display());
 
-    let parsed = obsidian_md::parse::parse_project_directory(&example_path)?;
-    let original_masters = parsed.header.masters.clone();
+    // let parsed = obsidian_md::parse::parse_project_directory(&example_path)?;
+    // let original_masters = parsed.header.masters.clone();
 
-    info!("Collecting load order...");
-    let (master_paths, master_sizes) = collect_master_paths(&original_masters);
+    // info!("Collecting load order...");
+    // let (master_paths, master_sizes) = collect_master_paths(&original_masters);
 
-    info!("Compiling into dialogue structures...");
-    let compiled = obsidian_md::compile::compile(parsed)?;
+    // info!("Compiling into dialogue structures...");
+    // let compiled = obsidian_md::compile::compile(parsed)?;
 
-    info!("Merging into masters and resolving diff...");
-    let resolved = obsidian_md::compile::resolve::resolve(compiled, &master_paths, master_sizes)?;
+    // info!("Merging into masters and resolving diff...");
+    // let resolved = obsidian_md::compile::resolve::resolve(compiled, &master_paths, master_sizes)?;
 
-    let out_path = PathBuf::from("tests/test_topics_1/expect/output~1.esp");
-    info!("Saving into {}...", out_path.display());
-    resolved.save_path(&out_path)?; // Uses inner .into_plugin().save_path()
+    // let out_path = PathBuf::from("tests/test_topics_1/expect/output~1.esp");
+    // info!("Saving into {}...", out_path.display());
+    // resolved.save_path(&out_path)?; // Uses inner .into_plugin().save_path()
 
-    info!("Done!");
+    // info!("Done!");
+
+    let path = Path::new("testfile.esp");
+    let export_path = Path::new("testfile_md");
+
+    let plugin = PluginData::from_path(path)?;
+    obsidian_md::export::write_project_directory(&plugin, export_path)?;
+
     Ok(())
 }
