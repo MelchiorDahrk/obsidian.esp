@@ -26,4 +26,4 @@ features = ["esp"]
 
 [dependencies.merge_to_master]
 git = "https://github.com/Greatness7/merge_to_master.git"
-branch = "merge_load_order"
+rev = "52b70d63e7585194f14ce4a70356646a8673b9aa"

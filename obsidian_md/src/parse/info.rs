@@ -1,11 +1,12 @@
-use winnow::prelude::*;
-use winnow::combinator::*;
-use winnow::token::*;
-use winnow::ascii::*;
-use winnow::Result;
-use super::{ParsedInfoFrontmatter, ParsedFilter, FilterValue};
 use super::frontmatter::*;
+use super::{FilterValue, ParsedFilter, ParsedInfoFrontmatter};
 use tes3::esp::{DialogueType2, FilterComparison, FilterType};
+use winnow::Result;
+use winnow::ascii::*;
+use winnow::combinator::*;
+use winnow::error::ContextError;
+use winnow::prelude::*;
+use winnow::token::*;
 
 fn parse_filter_comparison(input: &mut &str) -> Result<FilterComparison> {
     alt((
@@ -16,18 +17,23 @@ fn parse_filter_comparison(input: &mut &str) -> Result<FilterComparison> {
         ">".value(FilterComparison::Greater),
         "<".value(FilterComparison::Less),
         "=".value(FilterComparison::Equal), // Sometimes just = is used
-    )).parse_next(input)
+    ))
+    .parse_next(input)
 }
 
 fn parse_filter_value(input: &mut &str) -> Result<FilterValue> {
     alt((
         float.map(FilterValue::Float),
         dec_int.map(FilterValue::Integer),
-    )).parse_next(input)
+    ))
+    .parse_next(input)
 }
 
-pub fn parse_variable_expression<'s>(input: &mut &'s str) -> Result<(String, FilterComparison, FilterValue)> {
-    let id_str = take_till(1.., |c: char| c == '=' || c == '<' || c == '>' || c == '!').parse_next(input)?;
+pub fn parse_variable_expression<'s>(
+    input: &mut &'s str,
+) -> Result<(String, FilterComparison, FilterValue)> {
+    let id_str =
+        take_till(1.., |c: char| c == '=' || c == '<' || c == '>' || c == '!').parse_next(input)?;
     let id = id_str.trim().to_string();
     let comparison = parse_filter_comparison.parse_next(input)?;
     let _ = space0.parse_next(input)?;
@@ -36,36 +42,37 @@ pub fn parse_variable_expression<'s>(input: &mut &'s str) -> Result<(String, Fil
 }
 
 pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter, String)> {
-    let _ = delimited(
-        space0,
-        "---",
-        line_ending
-    ).parse_next(input)?;
+    let _ = delimited(space0, "---", line_ending).parse_next(input)?;
 
     let mut info = ParsedInfoFrontmatter::default();
 
     let mut current_filter_index: Option<u8> = None;
     let mut current_filter_type: Option<FilterType> = None;
 
-    while let Ok((_, peeked)) = take_till::<_, &'s str, winnow::error::ContextError>(1.., ['\n', '\r']).parse_peek(*input) {
+    while let Ok((_, peeked)) =
+        take_till::<_, &'s str, ContextError>(1.., ['\n', '\r']).parse_peek(*input)
+    {
         if peeked.trim() == "---" {
             break;
         }
 
         let key_str = parse_yaml_key.parse_next(input)?;
         let key = key_str.trim();
-        
+
         let val_opt = parse_yaml_value_or_list.parse_next(input)?;
 
         if key.eq_ignore_ascii_case("Type") {
             if let Some(val) = val_opt {
-                info.dialogue_type = alt::<_, _, winnow::error::ContextError, _>((
+                info.dialogue_type = alt::<_, _, ContextError, _>((
                     Caseless("Topic").value(DialogueType2::Topic),
                     Caseless("Journal").value(DialogueType2::Journal),
                     Caseless("Voice").value(DialogueType2::Voice),
                     Caseless("Greeting").value(DialogueType2::Greeting),
                     Caseless("Persuasion").value(DialogueType2::Persuasion),
-                )).parse_peek(val).ok().map(|x| x.1);
+                ))
+                .parse_peek(val)
+                .ok()
+                .map(|x| x.1);
             }
         } else if key.eq_ignore_ascii_case("PrevID") {
             info.prev_id = val_opt.map(|s| s.to_string());
@@ -143,22 +150,25 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
             }
         } else if key.eq_ignore_ascii_case("Function") {
             if let Some(val) = val_opt {
-                current_filter_type = alt::<_, _, winnow::error::ContextError, _>((
+                current_filter_type = alt::<_, _, ContextError, _>((
                     Caseless("Function").value(FilterType::Function),
                     Caseless("Global").value(FilterType::Global),
                     Caseless("Local").value(FilterType::Local),
                     Caseless("Journal").value(FilterType::Journal),
                     Caseless("Item").value(FilterType::Item),
                     Caseless("Dead").value(FilterType::Dead),
-                    alt::<_, _, winnow::error::ContextError, _>((
+                    alt::<_, _, ContextError, _>((
                         Caseless("NotId").value(FilterType::NotId),
                         Caseless("NotFaction").value(FilterType::NotFaction),
                         Caseless("NotClass").value(FilterType::NotClass),
                         Caseless("NotRace").value(FilterType::NotRace),
                         Caseless("NotCell").value(FilterType::NotCell),
                         Caseless("NotLocal").value(FilterType::NotLocal),
-                    ))
-                )).parse_peek(val).ok().map(|x| x.1);
+                    )),
+                ))
+                .parse_peek(val)
+                .ok()
+                .map(|x| x.1);
             }
         } else if key.eq_ignore_ascii_case("Variable") {
             if let Some(val) = val_opt {
@@ -166,7 +176,7 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
                 if let Ok((id, comparison, value)) = parse_variable_expression(&mut v_input) {
                     let mut function_name = None;
                     let mut id_val = id.clone();
-                    
+
                     if let Some(ftype) = current_filter_type {
                         match ftype {
                             FilterType::Function => {
@@ -204,18 +214,16 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
         }
     }
 
-    let _ = delimited(
-        space0,
-        "---",
-        alt((line_ending, eof.value("")))
-    ).parse_next(input)?;
+    let _ = delimited(space0, "---", alt((line_ending, eof.value("")))).parse_next(input)?;
 
     // Remaining text is the body text
     let text = rest.parse_next(input)?;
-    
+
     // Trim leading whitespace but preserve newlines
-    let text = text.trim_start_matches(|c: char| c == ' ' || c == '\t' || c == '\r' || c == '\n').to_string();
-    
+    let text = text
+        .trim_start_matches(|c: char| c == ' ' || c == '\t' || c == '\r' || c == '\n')
+        .to_string();
+
     // Un-escape \r\n in result
     if let Some(script_text) = &mut info.script_text {
         *script_text = script_text.replace("\\r\\n", "\r\n").replace("\\n", "\n");

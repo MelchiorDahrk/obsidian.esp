@@ -1,15 +1,16 @@
-use winnow::prelude::*;
-use winnow::combinator::*;
-use winnow::token::*;
-use winnow::ascii::*;
-use winnow::Result;
 use super::ParsedHeader;
 use super::frontmatter::*;
+use winnow::Result;
+use winnow::ascii::*;
+use winnow::combinator::*;
+use winnow::error::ContextError;
+use winnow::prelude::*;
+use winnow::token::*;
 
 fn parse_masters_list<'s>(input: &mut &'s str) -> Result<Vec<String>> {
     let _ = space_or_tab.parse_next(input)?;
     let _ = eol_or_eof.parse_next(input)?;
-    
+
     let mut masters = Vec::new();
     while let Ok(_) = peek((space_or_tab, "-", space1)).parse_next(input) {
         let _ = (space_or_tab, "-", space1).parse_next(input)?;
@@ -17,23 +18,21 @@ fn parse_masters_list<'s>(input: &mut &'s str) -> Result<Vec<String>> {
         let _ = eol_or_eof.parse_next(input)?;
         masters.push(val.trim().to_string());
     }
-    
+
     Ok(masters)
 }
 
 pub fn parse_header<'s>(input: &mut &'s str) -> Result<ParsedHeader> {
-    let _ = delimited(
-        space0,
-        "---",
-        line_ending
-    ).parse_next(input)?;
+    let _ = delimited(space0, "---", line_ending).parse_next(input)?;
 
     let mut author = String::new();
     let mut description = String::new();
     let mut file_type = String::new();
     let mut masters = Vec::new();
 
-    while let Ok((_, peeked)) = take_till::<_, &'s str, winnow::error::ContextError>(1.., ['\n', '\r']).parse_peek(*input) {
+    while let Ok((_, peeked)) =
+        take_till::<_, &'s str, ContextError>(1.., ['\n', '\r']).parse_peek(*input)
+    {
         if peeked.trim() == "---" {
             break;
         }
@@ -59,11 +58,7 @@ pub fn parse_header<'s>(input: &mut &'s str) -> Result<ParsedHeader> {
         }
     }
 
-    let _ = delimited(
-        space0,
-        "---",
-        alt((line_ending, eof.value("")))
-    ).parse_next(input)?;
+    let _ = delimited(space0, "---", alt((line_ending, eof.value("")))).parse_next(input)?;
 
     Ok(ParsedHeader {
         author,

@@ -1,35 +1,8 @@
-use std::path::PathBuf;
-use merge_to_master::{merge_load_order, PluginData};
-use tes3::esp::ObjectInfo;
 use anyhow::Result;
 use merge_to_master::traits::MergeInto;
-
-pub trait SetModified {
-    fn set_all_modified(&mut self, modified: bool);
-}
-
-impl SetModified for PluginData {
-    fn set_all_modified(&mut self, modified: bool) {
-        for object in self.objects.values_mut() {
-            object.set_modified(modified);
-        }
-        for interior in self.cells.interiors.values_mut() {
-            if let Some(cell) = &mut interior.cell { cell.set_modified(modified); }
-            if let Some(pg) = &mut interior.pathgrid { pg.set_modified(modified); }
-        }
-        for exterior in self.cells.exteriors.values_mut() {
-            if let Some(cell) = &mut exterior.cell { cell.set_modified(modified); }
-            if let Some(ls) = &mut exterior.landscape { ls.set_modified(modified); }
-            if let Some(pg) = &mut exterior.pathgrid { pg.set_modified(modified); }
-        }
-        for group in self.dialogues.values_mut() {
-            group.dialogue.set_modified(modified);
-            for info in group.infos.iter_mut() {
-                info.set_modified(modified);
-            }
-        }
-    }
-}
+use merge_to_master::{DialogueGroup, Exterior, Interior, PluginData, merge_load_order};
+use std::path::PathBuf;
+use tes3::esp::ObjectInfo;
 
 pub trait RemoveUnmodified {
     fn remove_unmodified(&mut self);
@@ -48,7 +21,7 @@ where
     }
 }
 
-impl RemoveUnmodified for merge_to_master::Exterior {
+impl RemoveUnmodified for Exterior {
     fn remove_unmodified(&mut self) {
         self.cell.remove_unmodified();
         self.landscape.remove_unmodified();
@@ -56,14 +29,14 @@ impl RemoveUnmodified for merge_to_master::Exterior {
     }
 }
 
-impl RemoveUnmodified for merge_to_master::Interior {
+impl RemoveUnmodified for Interior {
     fn remove_unmodified(&mut self) {
         self.cell.remove_unmodified();
         self.pathgrid.remove_unmodified();
     }
 }
 
-impl RemoveUnmodified for merge_to_master::DialogueGroup {
+impl RemoveUnmodified for DialogueGroup {
     fn remove_unmodified(&mut self) {
         self.infos.retain(|info| info.modified());
     }
@@ -87,7 +60,11 @@ impl RemoveUnmodified for PluginData {
     }
 }
 
-pub fn resolve(mut plugin: PluginData, master_paths: &[PathBuf], original_masters: Vec<(String, u64)>) -> Result<PluginData> {
+pub fn resolve(
+    mut plugin: PluginData,
+    master_paths: &[PathBuf],
+    original_masters: Vec<(String, u64)>,
+) -> Result<PluginData> {
     // 1. Merge load order to get masters
     let mut master_data = merge_load_order(master_paths)?;
 
@@ -105,7 +82,7 @@ pub fn resolve(mut plugin: PluginData, master_paths: &[PathBuf], original_master
 
     // 6. Restore original masters list
     master_data.header.masters = original_masters;
-    
+
     // The previous file type might have been ESM, so switch back to ESP
     master_data.header.file_type = tes3::esp::FileType::Esp;
     // Num objects is calculated dynamically on save, so we can ignore it
