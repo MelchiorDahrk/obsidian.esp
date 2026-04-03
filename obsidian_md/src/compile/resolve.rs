@@ -4,6 +4,90 @@ use merge_to_master::{DialogueGroup, Exterior, Interior, PluginData, merge_load_
 use std::path::PathBuf;
 use tes3::esp::{ObjectFlags, ObjectInfo};
 
+fn normalize_prev_ids(plugin: &mut PluginData, master_data: &PluginData) {
+    for (dialogue_id, plugin_group) in plugin.dialogues.iter_mut() {
+        let Some(master_group) = master_data.dialogues.get(dialogue_id) else {
+            continue;
+        };
+
+        for info in plugin_group.infos.iter_mut() {
+            if info.prev_id.is_empty() || master_group.find(&info.prev_id).is_some() {
+                continue;
+            }
+
+            let Ok(prev_id) = info.prev_id.parse::<u64>() else {
+                continue;
+            };
+
+            let mut best_match = None;
+            let mut best_diff = u64::MAX;
+
+            for master_info in master_group.infos.iter() {
+                let Ok(master_id) = master_info.id.parse::<u64>() else {
+                    continue;
+                };
+
+                let diff = prev_id.abs_diff(master_id);
+                if diff < best_diff {
+                    best_diff = diff;
+                    best_match = Some(master_info.id.as_str());
+                }
+            }
+
+            // Large INFO ids can be rounded when they flow through tooling that uses
+            // IEEE-754 numbers. Recover the intended master link when the authored
+            // value is very close to a real INFO id from the target dialogue.
+            if best_diff <= 1024 {
+                if let Some(best_match) = best_match {
+                    info.prev_id.clear();
+                    info.prev_id.push_str(best_match);
+                }
+            }
+        }
+    }
+}
+
+fn extract_original_text(text: &str) -> Option<&str> {
+    text.lines().find_map(|line| {
+        line.trim()
+            .strip_prefix("Original text: ")
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+    })
+}
+
+fn reconcile_modified_info_ids(plugin: &mut PluginData, master_data: &PluginData) {
+    for (dialogue_id, plugin_group) in plugin.dialogues.iter_mut() {
+        let Some(master_group) = master_data.dialogues.get(dialogue_id) else {
+            continue;
+        };
+
+        for info in plugin_group.infos.iter_mut() {
+            let Some(original_text) = extract_original_text(&info.text) else {
+                continue;
+            };
+
+            let mut matching_infos = master_group
+                .infos
+                .iter()
+                .filter(|master_info| master_info.text == original_text);
+
+            let replacement = matching_infos
+                .clone()
+                .find(|master_info| master_info.prev_id == info.prev_id)
+                .or_else(|| {
+                    let only_match = matching_infos.next()?;
+                    matching_infos.next().is_none().then_some(only_match)
+                });
+
+            if let Some(replacement) = replacement {
+                info.id.clear();
+                info.id.push_str(&replacement.id);
+            }
+        }
+    }
+}
+
 pub trait RemoveUnmodified {
     fn remove_unmodified(&mut self);
 }
@@ -67,6 +151,10 @@ pub fn resolve(
 ) -> Result<PluginData> {
     // 1. Merge load order to get masters
     let mut master_data = merge_load_order(master_paths)?;
+
+    // Recover exact master INFO ids when the markdown carries a rounded prev_id.
+    normalize_prev_ids(&mut plugin, &master_data);
+    reconcile_modified_info_ids(&mut plugin, &master_data);
 
     // 2. Set modified=false on masters
     master_data.set_all_modified(false);

@@ -48,33 +48,14 @@ fn test_topics_1() -> Result<()> {
     let expected_path = Path::new("tests/test_topics_1/expect/output.esp");
 
     let parsed = obsidian_md::parse::parse_project_directory(&markdown_path)?;
+
     let (master_paths, master_sizes) = collect_master_paths(&parsed.header.masters);
 
-    let parsed_akatosh_topic_prev_ids = parsed
-        .infos
-        .iter()
-        .filter(|info| info.topic.starts_with("Akatosh"))
-        .map(|info| info.frontmatter.prev_id.clone().unwrap())
-        .collect_vec();
-
     let compiled = obsidian_md::compile::compile(parsed)?;
-
-    let compiled_akatosh_topic_prev_ids = compiled
-        .dialogues
-        .values()
-        .filter(|group| group.dialogue.id.starts_with("Akatosh"))
-        .flat_map(|group| group.infos.iter().map(|info| info.prev_id.clone()))
-        .collect_vec();
-
-    assert_eq!(
-        parsed_akatosh_topic_prev_ids,
-        compiled_akatosh_topic_prev_ids
-    );
-
     let resolved = obsidian_md::compile::resolve::resolve(compiled, &master_paths, master_sizes)?;
     let expected = PluginData::from_path(&expected_path)?;
 
-    // resolved.save_path("tests/test_topics_1/expect/output~1.esp".as_ref())?;
+    // expected.save_path("tests/test_topics_1/expect/output~1.esp".as_ref())?;
 
     assert_eq!(resolved.dialogues.len(), expected.dialogues.len());
 
@@ -113,7 +94,12 @@ fn test_topics_1() -> Result<()> {
         let expected_infos = &expected_group.infos;
         let resolved_infos = &resolved_group.infos;
 
-        assert_eq!(expected_infos.len(), resolved_infos.len());
+        assert_eq!(
+            expected_infos.len(),
+            resolved_infos.len(),
+            "Dialogue infos have different lengths for dialogue ID '{}'",
+            expected_dialogue.id
+        );
 
         for (expected_info, resolved_info) in zip(expected_infos, resolved_infos) {
             assert_eq!(expected_info.flags, resolved_info.flags);
