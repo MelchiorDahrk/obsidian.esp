@@ -6,6 +6,7 @@ use anyhow::Result;
 use openmw_config::OpenMWConfiguration;
 use vfstool_lib::VFS;
 
+use merge_to_master::merge_load_order;
 use merge_to_master::traits::*;
 use merge_to_master::{Cells, Dialogues, Objects, PluginData};
 
@@ -54,4 +55,23 @@ fn main() -> Result<()> {
         info!("{}", path.display());
     }
     Ok(())
+}
+
+#[test]
+fn load_bethesda_masters() {
+    let load_order: Vec<_> = collect_load_order()
+        .into_iter()
+        .filter(|path| {
+            let file_name = path.file_name().unwrap().to_str().unwrap();
+            ["Morrowind.esm", "Tribunal.esm", "Bloodmoon.esm"].contains(&file_name)
+        })
+        .collect();
+
+    assert_eq!(load_order.len(), 3);
+
+    let merged: PluginData = merge_to_master::merge_load_order(&load_order).unwrap();
+
+    assert_eq!(merged.cells.len(), 2887);
+    assert_eq!(merged.objects.len(), 21346);
+    assert_eq!(merged.dialogues.len(), 2884);
 }
