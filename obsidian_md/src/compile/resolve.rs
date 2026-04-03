@@ -1,8 +1,9 @@
 use anyhow::Result;
 use merge_to_master::traits::MergeInto;
 use merge_to_master::{DialogueGroup, Exterior, Interior, PluginData, merge_load_order};
+use std::collections::HashSet;
 use std::path::PathBuf;
-use tes3::esp::{ObjectFlags, ObjectInfo};
+use tes3::esp::{DialogueType, DialogueType2, ObjectFlags, ObjectInfo};
 
 fn extract_original_text(text: &str) -> Option<&str> {
     text.lines().find_map(|line| {
@@ -13,6 +14,42 @@ fn extract_original_text(text: &str) -> Option<&str> {
     })
 }
 
+fn reconcile_rounded_prev_id(info: &mut tes3::esp::DialogueInfo, master_group: &DialogueGroup) {
+    if info.prev_id.is_empty()
+        || master_group.find(&info.prev_id).is_some()
+        || !info.prev_id.chars().all(|c| c.is_ascii_digit())
+    {
+        return;
+    }
+
+    let Ok(prev_id) = info.prev_id.parse::<i128>() else {
+        return;
+    };
+
+    let mut candidates = master_group
+        .infos
+        .iter()
+        .filter_map(|master_info| {
+            let master_id = master_info.id.parse::<i128>().ok()?;
+            let distance = (master_id - prev_id).abs();
+            (distance <= 1_000).then_some((distance, master_info.id.as_str()))
+        })
+        .collect::<Vec<_>>();
+
+    candidates.sort_by_key(|(distance, id)| (*distance, id.len()));
+
+    if let Some((best_distance, best_id)) = candidates.first().copied()
+        && candidates
+            .iter()
+            .filter(|(distance, _)| *distance == best_distance)
+            .count()
+            == 1
+    {
+        info.prev_id.clear();
+        info.prev_id.push_str(best_id);
+    }
+}
+
 fn reconcile_modified_info_ids(plugin: &mut PluginData, master_data: &PluginData) {
     for (dialogue_id, plugin_group) in plugin.dialogues.iter_mut() {
         let Some(master_group) = master_data.dialogues.get(dialogue_id) else {
@@ -20,14 +57,20 @@ fn reconcile_modified_info_ids(plugin: &mut PluginData, master_data: &PluginData
         };
 
         for info in plugin_group.infos.iter_mut() {
-            let Some(original_text) = extract_original_text(&info.text) else {
-                continue;
-            };
+            reconcile_rounded_prev_id(info, master_group);
 
-            let mut matching_infos = master_group
-                .infos
-                .iter()
-                .filter(|master_info| master_info.text == original_text);
+            let original_text = extract_original_text(&info.text);
+
+            let mut matching_infos = master_group.infos.iter().filter(|master_info| {
+                if let Some(original_text) = original_text {
+                    master_info.text == original_text
+                } else if info.data.dialogue_type == DialogueType::Journal {
+                    master_info.data.disposition == info.data.disposition
+                        && master_info.quest_state == info.quest_state
+                } else {
+                    false
+                }
+            });
 
             let replacement = matching_infos
                 .clone()
@@ -106,6 +149,13 @@ pub fn resolve(
     master_paths: &[PathBuf],
     original_masters: Vec<(String, u64)>,
 ) -> Result<PluginData> {
+    let touched_journal_topics: HashSet<_> = plugin
+        .dialogues
+        .iter()
+        .filter(|(_, group)| group.dialogue.dialogue_type == DialogueType2::Journal)
+        .map(|(topic_id, _)| topic_id.clone())
+        .collect();
+
     // 1. Merge load order to get masters
     let mut master_data = merge_load_order(master_paths)?;
 
@@ -145,7 +195,21 @@ pub fn resolve(
     // 5. Merge our plugin into masters (also calls repair_links inside)
     plugin.merge_into(&mut master_data);
 
-    // 6. Mark any master info whose links changed as modified so it survives pruning.
+    // 6. Journal groups are ordered by journal index in practice; normalize them here so
+    //    authored additions to existing quests slot into the expected stage order.
+    for (topic_id, group) in master_data.dialogues.iter_mut() {
+        if touched_journal_topics.contains(topic_id)
+            && group.dialogue.dialogue_type == DialogueType2::Journal
+        {
+            group
+                .infos
+                .make_contiguous()
+                .sort_by_key(|info| info.data.disposition);
+            group.repair_links();
+        }
+    }
+
+    // 7. Mark any master info whose links changed as modified so it survives pruning.
     for group in master_data.dialogues.values_mut() {
         let Some(snapshots) = link_snapshots.get(&group.dialogue.id) else {
             continue;
@@ -159,11 +223,11 @@ pub fn resolve(
         }
     }
 
-    // 7. Prune unmodified
+    // 8. Prune unmodified
     master_data.remove_unmodified();
     master_data.set_all_modified(false);
 
-    // 8. Restore original masters list
+    // 9. Restore original masters list
     master_data.header.masters = original_masters;
 
     // The previous file type might have been ESM, so switch back to ESP

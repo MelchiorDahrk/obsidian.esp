@@ -22,11 +22,18 @@ fn parse_filter_comparison(input: &mut &str) -> Result<FilterComparison> {
 }
 
 fn parse_filter_value(input: &mut &str) -> Result<FilterValue> {
-    alt((
-        float.map(FilterValue::Float),
-        dec_int.map(FilterValue::Integer),
-    ))
-    .parse_next(input)
+    let raw = take_till(1.., |c: char| c == '\r' || c == '\n').parse_next(input)?;
+    let raw = raw.trim();
+
+    if raw.contains(['.', 'e', 'E']) {
+        Ok(FilterValue::Float(
+            raw.parse().expect("filter value should parse as float"),
+        ))
+    } else {
+        Ok(FilterValue::Integer(
+            raw.parse().expect("filter value should parse as integer"),
+        ))
+    }
 }
 
 pub fn parse_variable_expression<'s>(
@@ -61,7 +68,9 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
 
         let val_opt = parse_yaml_value_or_list.parse_next(input)?;
 
-        if key.eq_ignore_ascii_case("Type") {
+        if key.eq_ignore_ascii_case("Topic") {
+            info.topic_override = val_opt.map(|s| s.to_string());
+        } else if key.eq_ignore_ascii_case("Type") {
             if let Some(val) = val_opt {
                 info.dialogue_type = alt::<_, _, ContextError, _>((
                     Caseless("Topic").value(DialogueType2::Topic),
@@ -74,6 +83,8 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
                 .ok()
                 .map(|x| x.1);
             }
+        } else if key.eq_ignore_ascii_case("DiagID") {
+            info.diag_id = val_opt.map(|s| s.to_string());
         } else if key.eq_ignore_ascii_case("PrevID") {
             info.prev_id = val_opt.map(|s| s.to_string());
         } else if key.eq_ignore_ascii_case("ID") {
@@ -122,6 +133,8 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
                     info.player_rank = Some(rank);
                 }
             }
+        } else if key.eq_ignore_ascii_case("Sound Path") || key.eq_ignore_ascii_case("SoundPath") {
+            info.sound_path = val_opt.map(|s| s.to_string());
         } else if key.eq_ignore_ascii_case("Result") {
             info.script_text = val_opt.map(|s| s.to_string());
         } else if key.eq_ignore_ascii_case("Quest Name") {
@@ -222,7 +235,10 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
     // Trim leading whitespace but preserve newlines
     let text = text
         .trim_start_matches(|c: char| c == ' ' || c == '\t' || c == '\r' || c == '\n')
-        .to_string();
+        .trim_end_matches(['\r', '\n'])
+        .replace("\r\n", "\n")
+        .replace('\r', "\n")
+        .replace('\n', "\r\n");
 
     // Un-escape \r\n in result
     if let Some(script_text) = &mut info.script_text {

@@ -4,6 +4,7 @@ pub mod logging;
 pub use logging::*;
 
 pub mod compile;
+pub mod export;
 pub mod parse;
 
 use std::path::{Path, PathBuf};

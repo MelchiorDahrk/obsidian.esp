@@ -29,7 +29,9 @@ pub struct ParsedInfo {
 
 #[derive(Debug, Default)]
 pub struct ParsedInfoFrontmatter {
+    pub topic_override: Option<String>,
     pub dialogue_type: Option<DialogueType2>,
+    pub diag_id: Option<String>,
     pub prev_id: Option<String>,
     pub speaker_id: Option<String>,
     pub disposition: Option<i32>,
@@ -41,6 +43,7 @@ pub struct ParsedInfoFrontmatter {
     pub speaker_cell: Option<String>,
     pub player_faction: Option<String>,
     pub player_rank: Option<i8>,
+    pub sound_path: Option<String>,
     pub script_text: Option<String>,
     pub quest_state: Option<String>, // "Name", "Finished", "Restart"
     pub filters: Vec<ParsedFilter>,
@@ -132,6 +135,8 @@ pub fn parse_project_directory(path: &Path) -> Result<ParsedPlugin> {
         let (frontmatter, text) = info::parse_info_file(&mut input)
             .map_err(|e| anyhow::anyhow!("{}", e))
             .with_context(|| format!("Failed to parse info file: {}", entry_path.display()))?;
+
+        let topic = frontmatter.topic_override.clone().unwrap_or(topic);
 
         infos.push(ParsedInfo {
             topic,
