@@ -1,6 +1,6 @@
 ---
-Topic: 11111 test journal
 Type: Journal
+Topic: 11111 test journal
 DiagID: 5307269821468523819
 PrevID: 32056462707524390
 Index: 50
@@ -14,7 +14,6 @@ Cell:
 PC Faction:
 PC Rank:
 Sound Path:
-Result:
 Quest Name: false
 Finished: true
 Restart: false

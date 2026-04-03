@@ -1,6 +1,6 @@
 ---
-Topic: test topic
 Type: Topic
+Topic: test topic
 DiagID: 24066274042536731113
 PrevID: 2232273551681116076
 Disposition: 80

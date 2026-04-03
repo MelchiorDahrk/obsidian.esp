@@ -1,6 +1,6 @@
 ---
-Topic: test topic
 Type: Topic
+Topic: test topic
 DiagID: 184615655170866801
 PrevID:
 Disposition: 0
@@ -14,7 +14,6 @@ Cell:
 PC Faction: Ashlanders
 PC Rank: Rank 3
 Sound Path:
-Result:
 Quest Name: false
 Finished: false
 Restart: false

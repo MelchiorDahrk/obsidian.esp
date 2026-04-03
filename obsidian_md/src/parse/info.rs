@@ -54,7 +54,7 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
 
     let mut info = ParsedInfoFrontmatter::default();
 
-    let mut filters_map: BTreeMap<u8, (Option<FilterType>, Option<&str>)> = BTreeMap::new();
+    let mut filters_map: BTreeMap<u8, (Option<FilterType>, Option<String>)> = BTreeMap::new();
 
     while let Ok((_, peeked)) =
         take_till::<_, &'s str, ContextError>(1.., ['\n', '\r']).parse_peek(*input)
@@ -69,7 +69,7 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
         let val_opt = parse_yaml_value_or_list.parse_next(input)?;
 
         if key.eq_ignore_ascii_case("Topic") {
-            info.topic_override = val_opt.map(|s| s.to_string());
+            info.topic_override = val_opt;
         } else if key.eq_ignore_ascii_case("Type") {
             if let Some(val) = val_opt {
                 info.dialogue_type = alt::<_, _, ContextError, _>((
@@ -79,16 +79,16 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
                     Caseless("Greeting").value(DialogueType2::Greeting),
                     Caseless("Persuasion").value(DialogueType2::Persuasion),
                 ))
-                .parse_peek(val)
+                .parse_peek(val.as_str())
                 .ok()
                 .map(|x| x.1);
             }
         } else if key.eq_ignore_ascii_case("DiagID") {
-            info.diag_id = val_opt.map(|s| s.to_string());
+            info.diag_id = val_opt;
         } else if key.eq_ignore_ascii_case("PrevID") {
-            info.prev_id = val_opt.map(|s| s.to_string());
+            info.prev_id = val_opt;
         } else if key.eq_ignore_ascii_case("ID") {
-            info.speaker_id = val_opt.map(|s| s.to_string());
+            info.speaker_id = val_opt;
         } else if key.eq_ignore_ascii_case("Disposition") || key.eq_ignore_ascii_case("Index") {
             if let Some(val) = val_opt {
                 if let Ok(disp) = val.parse::<i32>() {
@@ -96,15 +96,15 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
                 }
             }
         } else if key.eq_ignore_ascii_case("Race") {
-            info.speaker_race = val_opt.map(|s| s.to_string());
+            info.speaker_race = val_opt;
         } else if key.eq_ignore_ascii_case("Sex") {
             if let Some(val) = val_opt {
-                info.speaker_sex = parse_sex.parse_peek(val).ok().map(|x| x.1);
+                info.speaker_sex = parse_sex.parse_peek(val.as_str()).ok().map(|x| x.1);
             }
         } else if key.eq_ignore_ascii_case("Class") {
-            info.speaker_class = val_opt.map(|s| s.to_string());
+            info.speaker_class = val_opt;
         } else if key.eq_ignore_ascii_case("Faction") {
-            info.speaker_faction = val_opt.map(|s| s.to_string());
+            info.speaker_faction = val_opt;
         } else if key.eq_ignore_ascii_case("Rank") {
             if let Some(val) = val_opt {
                 if val.eq_ignore_ascii_case("-1") {
@@ -118,9 +118,9 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
                 }
             }
         } else if key.eq_ignore_ascii_case("Cell") {
-            info.speaker_cell = val_opt.map(|s| s.to_string());
+            info.speaker_cell = val_opt;
         } else if key.eq_ignore_ascii_case("PC Faction") {
-            info.player_faction = val_opt.map(|s| s.to_string());
+            info.player_faction = val_opt;
         } else if key.eq_ignore_ascii_case("PC Rank") {
             if let Some(val) = val_opt {
                 if val.eq_ignore_ascii_case("-1") {
@@ -134,28 +134,29 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
                 }
             }
         } else if key.eq_ignore_ascii_case("Sound Path") || key.eq_ignore_ascii_case("SoundPath") {
-            info.sound_path = val_opt.map(|s| s.to_string());
+            info.sound_path = val_opt;
         } else if key.eq_ignore_ascii_case("Result") {
-            info.script_text = val_opt.map(|s| s.to_string());
+            info.script_text = val_opt;
         } else if key.eq_ignore_ascii_case("Quest Name") {
             if let Some(val) = val_opt {
-                if parse_bool.parse_peek(val).ok().map(|x| x.1) == Some(true) {
+                if parse_bool.parse_peek(val.as_str()).ok().map(|x| x.1) == Some(true) {
                     info.quest_state = Some("Name".to_string());
                 }
             }
         } else if key.eq_ignore_ascii_case("Finished") {
             if let Some(val) = val_opt {
-                if parse_bool.parse_peek(val).ok().map(|x| x.1) == Some(true) {
+                if parse_bool.parse_peek(val.as_str()).ok().map(|x| x.1) == Some(true) {
                     info.quest_state = Some("Finished".to_string());
                 }
             }
         } else if key.eq_ignore_ascii_case("Restart") {
             if let Some(val) = val_opt {
-                if parse_bool.parse_peek(val).ok().map(|x| x.1) == Some(true) {
+                if parse_bool.parse_peek(val.as_str()).ok().map(|x| x.1) == Some(true) {
                     info.quest_state = Some("Restart".to_string());
                 }
             }
-        } else if let Some(idx_str) = key.to_lowercase().strip_prefix("function") {
+        }
+ else if let Some(idx_str) = key.to_lowercase().strip_prefix("function") {
             if let Ok(idx) = idx_str.parse::<u8>() {
                 if let Some(val) = val_opt {
                     let ftype = alt::<_, _, ContextError, _>((
@@ -174,11 +175,11 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
                             Caseless("NotLocal").value(FilterType::NotLocal),
                         )),
                     ))
-                    .parse_peek(val)
+                    .parse_peek(val.as_str())
                     .ok()
                     .map(|x| x.1);
                     if let Some(ftype) = ftype {
-                        filters_map.entry(idx).or_insert((None, None)).0 = Some(ftype);
+                        filters_map.insert(idx, (Some(ftype), None));
                     }
                 }
             }
@@ -193,7 +194,7 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
 
     for (idx, (ftype_opt, var_opt)) in filters_map {
         if let (Some(ftype), Some(val)) = (ftype_opt, var_opt) {
-            let mut v_input = val;
+            let mut v_input = &val[..];
             if let Ok((id, comparison, value)) = parse_variable_expression(&mut v_input) {
                 let mut function_name = None;
                 let mut id_val = id.clone();

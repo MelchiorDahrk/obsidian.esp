@@ -1,6 +1,6 @@
 ---
-Topic: Greeting 1
 Type: Greeting
+Topic: Greeting 1
 DiagID: 891314329736518839
 PrevID: 3190558963063415128
 Disposition: 0
@@ -14,7 +14,9 @@ Cell:
 PC Faction:
 PC Rank:
 Sound Path:
-Result: ModDisposition -10\r\nGoodbye
+Result: |
+  ModDisposition -10
+  Goodbye
 Quest Name: false
 Finished: false
 Restart: false

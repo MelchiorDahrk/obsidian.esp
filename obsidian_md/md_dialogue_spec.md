@@ -73,6 +73,7 @@ Example:
 ```yaml
 ---
 Type: Topic
+Topic: test topic
 PrevID: 123456789
 Faction: Ashlanders
 PC Faction: Ashlanders
@@ -97,6 +98,7 @@ The parser looks for files ending in ` ~<number>.md`.
 The frontmatter may override the filename-derived topic:
 
 ```yaml
+Type: Topic
 Topic: Greeting 0
 ```
 
@@ -110,8 +112,8 @@ These keys are recognized by the parser.
 
 | Key | Meaning |
 |---|---|
-| `Topic` | Overrides the topic id derived from the filename |
 | `Type` | Dialogue type: `Topic`, `Journal`, `Voice`, `Greeting`, or `Persuasion` |
+| `Topic` | Overrides the topic id derived from the filename |
 | `DiagID` | Preserved TES3 `DialogueInfo.id`; must be numeric if present |
 | `PrevID` | TES3 `prev_id`; must be numeric if present |
 | `ID` | `speaker_id` |
@@ -127,7 +129,7 @@ These keys are recognized by the parser.
 | `PC Rank` | `player_rank`; accepts `-1`, raw integers, or `Rank <n>` |
 | `Sound Path` | `sound_path` |
 | `SoundPath` | Alias for `Sound Path` |
-| `Result` | `script_text`; supports escaped `\\r\\n` and `\\n` |
+| `Result` | `script_text`; supports escaped `\\r\\n` or standard YAML literal block scalars (`\|`) |
 | `Quest Name` | If `true`, sets journal quest state to `Name` |
 | `Finished` | If `true`, sets journal quest state to `Finished` |
 | `Restart` | If `true`, sets journal quest state to `Restart` |
@@ -209,8 +211,16 @@ If multiple are set to `true`, the last one encountered in parse order wins.
 
 `Result` maps to `DialogueInfo.script_text`.
 
-- Inline `\r\n` and `\n` escape sequences are decoded by the parser.
-- The exporter writes multiline scripts back out using escaped newlines on one line.
+The exporter writes multiline scripts back out using the standard YAML literal block scalar syntax (`|`):
+
+```yaml
+Result: |
+  AddTopic "Girith's guar hides"
+  Goodbye
+```
+
+The parser reconstructs the script by joining these indented lines with `\r\n`.
+Alternatively, inline `\r\n` and `\n` escape sequences are decoded by the parser if used on a single line.
 
 ### Body text
 
@@ -292,27 +302,6 @@ The compiler derives TES3 `FilterFunction` values from the parsed filter type:
 For `Function`, the left-hand side is stored as `function_name` and the TES3 filter `id` becomes empty.
 For other filter types, the left-hand side becomes the TES3 filter `id`.
 
-### Exported filter shape
-
-The exporter writes filters back as:
-
-- `Function<n>: <FilterType>`
-- `Variable<n>: <expression>`
-
-For `FilterType::Function`, the expression is written using the TES3 function name:
-
-```yaml
-Function0: Function
-Variable0: Choice = 2
-```
-
-For non-function filters, the expression uses the TES3 `id`:
-
-```yaml
-Function0: Global
-Variable0: Random100 < 33
-```
-
 ---
 
 ## 7. Compile Behavior
@@ -391,8 +380,8 @@ The exporter writes:
 
 The exporter writes:
 
-- `Topic`
 - `Type`
+- `Topic`
 - `DiagID`
 - `PrevID`
 - `Disposition` or `Index`
@@ -473,6 +462,7 @@ Masters:
 ```yaml
 ---
 Type: Topic
+Topic: My Topic
 Faction: Ashlanders
 PC Faction: Ashlanders
 PC Rank: Rank 3
@@ -486,11 +476,14 @@ This is the first response.
 
 ```yaml
 ---
-Topic: Greeting 1
 Type: Greeting
+Topic: Greeting 1
 DiagID: 50716010272305400
 PrevID: 891314329736518839
-Result: Goodbye
+Result: |
+  Journal OAAB_TVos_MoraTrader 103
+  ModDisposition -40
+  goodbye
 Function1: Local
 Variable1: dancingGirl = 1
 Function2: Function

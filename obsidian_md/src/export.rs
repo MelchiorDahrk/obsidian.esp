@@ -40,6 +40,27 @@ fn push_field(output: &mut String, key: &str, value: Option<impl AsRef<str>>) {
     output.push('\n');
 }
 
+fn push_multiline_field(output: &mut String, key: &str, value: Option<impl AsRef<str>>) {
+    if let Some(value) = value {
+        output.push_str(key);
+        output.push(':');
+        let val = value.as_ref();
+        if val.contains('\n') || val.contains('\r') {
+            output.push_str(" |\n");
+            let normalized = val.replace("\r\n", "\n").replace('\r', "\n");
+            for line in normalized.lines() {
+                output.push_str("  ");
+                output.push_str(line);
+                output.push('\n');
+            }
+        } else {
+            output.push(' ');
+            output.push_str(val);
+            output.push('\n');
+        }
+    }
+}
+
 fn format_file_type(file_type: FileType) -> &'static str {
     match file_type {
         FileType::Esp => "ESP",
@@ -145,12 +166,12 @@ fn render_header(plugin: &PluginData) -> String {
 fn render_info(topic: &str, info: &DialogueInfo) -> String {
     let mut output = String::from("---\n");
 
-    push_field(&mut output, "Topic", Some(topic));
     push_field(
         &mut output,
         "Type",
         Some(format!("{:?}", info.data.dialogue_type)),
     );
+    push_field(&mut output, "Topic", Some(topic));
     push_field(&mut output, "DiagID", Some(info.id.as_str()));
     push_field(
         &mut output,
@@ -210,11 +231,9 @@ fn render_info(topic: &str, info: &DialogueInfo) -> String {
         "Sound Path",
         (!info.sound_path.is_empty()).then_some(info.sound_path.as_str()),
     );
-    push_field(
-        &mut output,
-        "Result",
-        (!info.script_text.is_empty()).then(|| encode_inline_value(&info.script_text)),
-    );
+    if !info.script_text.is_empty() {
+        push_multiline_field(&mut output, "Result", Some(&info.script_text));
+    }
     push_field(
         &mut output,
         "Quest Name",

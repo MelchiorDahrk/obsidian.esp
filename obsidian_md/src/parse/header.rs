@@ -40,15 +40,15 @@ pub fn parse_header<'s>(input: &mut &'s str) -> Result<ParsedHeader> {
         let key = parse_yaml_key.parse_next(input)?;
         if key.eq_ignore_ascii_case("Author") {
             if let Some(val) = parse_yaml_value_or_list.parse_next(input)? {
-                author = val.to_string();
+                author = val;
             }
         } else if key.eq_ignore_ascii_case("Description") {
             if let Some(val) = parse_yaml_value_or_list.parse_next(input)? {
-                description = val.to_string();
+                description = val;
             }
         } else if key.eq_ignore_ascii_case("File Type") {
             if let Some(val) = parse_yaml_value_or_list.parse_next(input)? {
-                file_type = val.to_string();
+                file_type = val;
             }
         } else if key.eq_ignore_ascii_case("Masters") {
             masters = parse_masters_list.parse_next(input)?;

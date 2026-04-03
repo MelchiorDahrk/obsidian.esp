@@ -1,6 +1,6 @@
 ---
-Topic: Akatosh
 Type: Topic
+Topic: Akatosh
 DiagID: 26529262392845131967
 PrevID: 9578241642750319064
 Disposition: 0
@@ -14,7 +14,6 @@ Cell: Abaelun Mine
 PC Faction:
 PC Rank:
 Sound Path:
-Result:
 Quest Name: false
 Finished: false
 Restart: false

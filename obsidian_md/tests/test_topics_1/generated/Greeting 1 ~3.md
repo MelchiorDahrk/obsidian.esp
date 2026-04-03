@@ -1,6 +1,6 @@
 ---
-Topic: Greeting 1
 Type: Greeting
+Topic: Greeting 1
 DiagID: 3746148869655778
 PrevID: 25867274131901607
 Disposition: 0
