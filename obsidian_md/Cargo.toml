@@ -1,0 +1,27 @@
+[package]
+name = "obsidian_md"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "^1.0"
+hashbrown = { version = "^0.16", features = ["nightly", "rayon"] }
+itertools = "^0.14"
+log = { version = "^0.4", features = ["release_max_level_off"] }
+mimalloc = { version = "^0.1", features = ["v3"] }
+rayon = "^1.10"
+tracing = { version = "^0.1", features = ["release_max_level_info"] }
+tracing-appender = "^0.2"
+tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
+uncased = "^0.9"
+vfstool_lib  = "^0.2"
+openmw-config = "^0.1"
+
+[dependencies.tes3]
+git = "https://github.com/Greatness7/tes3"
+default-features = false
+features = ["esp"]
+
+[dependencies.merge_to_master]
+git = "https://github.com/Greatness7/merge_to_master.git"
+branch = "merge_load_order"
