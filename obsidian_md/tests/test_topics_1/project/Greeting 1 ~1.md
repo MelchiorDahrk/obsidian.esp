@@ -15,10 +15,9 @@ Cell: Vivec, Arena Pit
 PC Faction:
 PC Rank:
 Result: Goodbye
-FunctionIndex: 3
-Function:
+Function3:
   - Journal
-Variable: HH_BeroSupport >= 70
+Variable3: HH_BeroSupport >= 70
 ---
 This is a modified greeting. It should be below the new greeting.
 

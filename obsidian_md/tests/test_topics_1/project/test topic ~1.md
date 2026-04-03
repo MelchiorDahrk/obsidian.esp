@@ -17,10 +17,9 @@ PC Faction:
 PC Rank:
   - Rank 3
 Result:
-FunctionIndex: 0
-Function:
+Function0:
   - Function
-Variable: Choice = 1
+Variable0: Choice = 1
 ---
 This is the second response to the "test topic" topic.
 

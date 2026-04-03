@@ -16,10 +16,9 @@ Cell:
 PC Faction:
 PC Rank:
 Result: ;Imperial cult priests; monks; healers;
-FunctionIndex: 1
-Function:
+Function1:
   - Global
-Variable: Random100 < 33
+Variable1: Random100 < 33
 ---
 This is a modified topic info. It should be 2nd in the list for the "Akatosh" topic.
 

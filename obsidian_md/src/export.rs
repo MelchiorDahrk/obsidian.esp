@@ -232,15 +232,15 @@ fn render_info(topic: &str, info: &DialogueInfo) -> String {
     );
 
     for filter in &info.filters {
-        push_field(&mut output, "FunctionIndex", Some(filter.index.to_string()));
+        let i = filter.index;
         push_field(
             &mut output,
-            "Function",
+            &format!("Function{i}"),
             Some(format_filter_type(filter.filter_type)),
         );
         push_field(
             &mut output,
-            "Variable",
+            &format!("Variable{i}"),
             Some(format_filter_variable(filter)),
         );
     }

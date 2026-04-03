@@ -18,9 +18,8 @@ Result:
 Quest Name: false
 Finished: false
 Restart: false
-FunctionIndex: 0
-Function: Dead
-Variable: a smuggler boss = 1
+Function0: Dead
+Variable0: a smuggler boss = 1
 ---
 
 This is a new topic info for the "Akatosh" topic. It should be at the bottom of the list.

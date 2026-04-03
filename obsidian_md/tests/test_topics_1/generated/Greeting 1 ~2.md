@@ -18,12 +18,10 @@ Result: Goodbye
 Quest Name: false
 Finished: false
 Restart: false
-FunctionIndex: 0
-Function: Local
-Variable: dancingGirl = 1
-FunctionIndex: 1
-Function: Function
-Variable: SameSex = 1
+Function0: Local
+Variable0: dancingGirl = 1
+Function1: Function
+Variable1: SameSex = 1
 ---
 
 If you want a job here, you'll have to talk to Helviane. Excuse me.

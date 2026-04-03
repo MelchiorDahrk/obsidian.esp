@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use super::frontmatter::*;
 use super::{FilterValue, ParsedFilter, ParsedInfoFrontmatter};
 use tes3::esp::{DialogueType2, FilterComparison, FilterType};
@@ -53,8 +54,7 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
 
     let mut info = ParsedInfoFrontmatter::default();
 
-    let mut current_filter_index: Option<u8> = None;
-    let mut current_filter_type: Option<FilterType> = None;
+    let mut filters_map: BTreeMap<u8, (Option<FilterType>, Option<&str>)> = BTreeMap::new();
 
     while let Ok((_, peeked)) =
         take_till::<_, &'s str, ContextError>(1.., ['\n', '\r']).parse_peek(*input)
@@ -155,75 +155,78 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
                     info.quest_state = Some("Restart".to_string());
                 }
             }
-        } else if key.eq_ignore_ascii_case("FunctionIndex") {
-            if let Some(val) = val_opt {
-                if let Ok(idx) = val.parse::<u8>() {
-                    current_filter_index = Some(idx);
-                }
-            }
-        } else if key.eq_ignore_ascii_case("Function") {
-            if let Some(val) = val_opt {
-                current_filter_type = alt::<_, _, ContextError, _>((
-                    Caseless("Function").value(FilterType::Function),
-                    Caseless("Global").value(FilterType::Global),
-                    Caseless("Local").value(FilterType::Local),
-                    Caseless("Journal").value(FilterType::Journal),
-                    Caseless("Item").value(FilterType::Item),
-                    Caseless("Dead").value(FilterType::Dead),
-                    alt::<_, _, ContextError, _>((
-                        Caseless("NotId").value(FilterType::NotId),
-                        Caseless("NotFaction").value(FilterType::NotFaction),
-                        Caseless("NotClass").value(FilterType::NotClass),
-                        Caseless("NotRace").value(FilterType::NotRace),
-                        Caseless("NotCell").value(FilterType::NotCell),
-                        Caseless("NotLocal").value(FilterType::NotLocal),
-                    )),
-                ))
-                .parse_peek(val)
-                .ok()
-                .map(|x| x.1);
-            }
-        } else if key.eq_ignore_ascii_case("Variable") {
-            if let Some(val) = val_opt {
-                let mut v_input = val;
-                if let Ok((id, comparison, value)) = parse_variable_expression(&mut v_input) {
-                    let mut function_name = None;
-                    let mut id_val = id.clone();
-
-                    if let Some(ftype) = current_filter_type {
-                        match ftype {
-                            FilterType::Function => {
-                                function_name = Some(id.clone());
-                                id_val = "".to_string();
-                            }
-                            FilterType::Journal => {
-                                function_name = Some("JournalType".to_string());
-                            }
-                            FilterType::Dead => {
-                                function_name = Some("DeadType".to_string());
-                            }
-                            FilterType::Item => {
-                                function_name = Some("ItemType".to_string());
-                            }
-                            FilterType::Global | FilterType::Local | FilterType::NotLocal => {
-                                function_name = Some("VariableCompare".to_string());
-                            }
-                            _ => {}
-                        }
+        } else if let Some(idx_str) = key.to_lowercase().strip_prefix("function") {
+            if let Ok(idx) = idx_str.parse::<u8>() {
+                if let Some(val) = val_opt {
+                    let ftype = alt::<_, _, ContextError, _>((
+                        Caseless("Function").value(FilterType::Function),
+                        Caseless("Global").value(FilterType::Global),
+                        Caseless("Local").value(FilterType::Local),
+                        Caseless("Journal").value(FilterType::Journal),
+                        Caseless("Item").value(FilterType::Item),
+                        Caseless("Dead").value(FilterType::Dead),
+                        alt::<_, _, ContextError, _>((
+                            Caseless("NotId").value(FilterType::NotId),
+                            Caseless("NotFaction").value(FilterType::NotFaction),
+                            Caseless("NotClass").value(FilterType::NotClass),
+                            Caseless("NotRace").value(FilterType::NotRace),
+                            Caseless("NotCell").value(FilterType::NotCell),
+                            Caseless("NotLocal").value(FilterType::NotLocal),
+                        )),
+                    ))
+                    .parse_peek(val)
+                    .ok()
+                    .map(|x| x.1);
+                    if let Some(ftype) = ftype {
+                        filters_map.entry(idx).or_insert((None, None)).0 = Some(ftype);
                     }
-
-                    info.filters.push(ParsedFilter {
-                        index: current_filter_index.unwrap_or(0),
-                        filter_type: current_filter_type.unwrap_or(FilterType::None),
-                        function_name,
-                        comparison,
-                        id: id_val,
-                        value,
-                    });
                 }
             }
-            current_filter_index = None;
-            current_filter_type = None;
+        } else if let Some(idx_str) = key.to_lowercase().strip_prefix("variable") {
+            if let Ok(idx) = idx_str.parse::<u8>() {
+                if let Some(val) = val_opt {
+                    filters_map.entry(idx).or_insert((None, None)).1 = Some(val);
+                }
+            }
+        }
+    }
+
+    for (idx, (ftype_opt, var_opt)) in filters_map {
+        if let (Some(ftype), Some(val)) = (ftype_opt, var_opt) {
+            let mut v_input = val;
+            if let Ok((id, comparison, value)) = parse_variable_expression(&mut v_input) {
+                let mut function_name = None;
+                let mut id_val = id.clone();
+
+                match ftype {
+                    FilterType::Function => {
+                        function_name = Some(id.clone());
+                        id_val = "".to_string();
+                    }
+                    FilterType::Journal => {
+                        function_name = Some("JournalType".to_string());
+                    }
+                    FilterType::Dead => {
+                        function_name = Some("DeadType".to_string());
+                    }
+                    FilterType::Item => {
+                        function_name = Some("ItemType".to_string());
+                    }
+                    FilterType::Global | FilterType::Local | FilterType::NotLocal => {
+                        function_name = Some("VariableCompare".to_string());
+                    }
+                    _ => {}
+                }
+
+                info.filters.push(ParsedFilter {
+                    index: idx,
+                    filter_type: ftype,
+                    function_name,
+                    comparison,
+                    id: id_val,
+                    value,
+                });
+            }
         }
     }
 

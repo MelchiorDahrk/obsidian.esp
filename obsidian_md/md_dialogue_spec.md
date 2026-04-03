@@ -77,9 +77,8 @@ PrevID: 123456789
 Faction: Ashlanders
 PC Faction: Ashlanders
 PC Rank: Rank 3
-FunctionIndex: 0
-Function: Function
-Variable: Choice = 2
+Function0: Function
+Variable0: Choice = 2
 ---
 This is the response text.
 ```
@@ -132,9 +131,8 @@ These keys are recognized by the parser.
 | `Quest Name` | If `true`, sets journal quest state to `Name` |
 | `Finished` | If `true`, sets journal quest state to `Finished` |
 | `Restart` | If `true`, sets journal quest state to `Restart` |
-| `FunctionIndex` | Filter slot index |
-| `Function` | Filter type name for the following `Variable` line |
-| `Variable` | Filter expression for the current filter |
+| `Function<n>` | Filter type name for filter slot `n` |
+| `Variable<n>` | Filter expression for filter slot `n` |
 
 Unknown keys are ignored by the parser.
 
@@ -230,25 +228,24 @@ The exporter writes the text body exactly after a blank line following the closi
 
 ## 6. Filter Format
 
-Filters are expressed as repeated triples:
+Filters are expressed as indexed pairs:
 
 ```yaml
-FunctionIndex: 0
-Function: Function
-Variable: Choice = 2
+Function0: Function
+Variable0: Choice = 2
 ```
 
 or:
 
 ```yaml
-FunctionIndex: 1
-Function: Journal
-Variable: my_quest >= 10
+Function1: Journal
+Variable1: my_quest >= 10
 ```
 
-Each `Variable` line consumes the current `FunctionIndex` and `Function` values, then resets them.
+The numeric suffix `n` corresponds to the TES3 filter slot index (0-5).
+Both `Function<n>` and `Variable<n>` must be present for a filter to be compiled.
 
-### Filter type values accepted in `Function:`
+### Filter type values accepted in `Function<n>:`
 
 - `Function`
 - `Global`
@@ -263,7 +260,7 @@ Each `Variable` line consumes the current `FunctionIndex` and `Function` values,
 - `NotCell`
 - `NotLocal`
 
-### `Variable:` syntax
+### `Variable<n>:` syntax
 
 The parser accepts:
 
@@ -284,8 +281,8 @@ The value is parsed as:
 
 The compiler derives TES3 `FilterFunction` values from the parsed filter type:
 
-- `Function` uses the function name from the left-hand side of `Variable:`
-  - Example: `Variable: Choice = 2`
+- `Function` uses the function name from the left-hand side of `Variable<n>:`
+  - Example: `Variable0: Choice = 2`
 - `Journal` maps to `JournalType`
 - `Dead` maps to `DeadType`
 - `Item` maps to `ItemType`
@@ -299,22 +296,21 @@ For other filter types, the left-hand side becomes the TES3 filter `id`.
 
 The exporter writes filters back as:
 
-- `FunctionIndex: <n>`
-- `Function: <FilterType>`
-- `Variable: <expression>`
+- `Function<n>: <FilterType>`
+- `Variable<n>: <expression>`
 
 For `FilterType::Function`, the expression is written using the TES3 function name:
 
 ```yaml
-Function: Function
-Variable: Choice = 2
+Function0: Function
+Variable0: Choice = 2
 ```
 
 For non-function filters, the expression uses the TES3 `id`:
 
 ```yaml
-Function: Global
-Variable: Random100 < 33
+Function0: Global
+Variable0: Random100 < 33
 ```
 
 ---
@@ -406,7 +402,7 @@ The exporter writes:
 - `Quest Name`
 - `Finished`
 - `Restart`
-- zero or more filter triples
+- zero or more indexed filter pairs
 
 ### Export ordering
 
@@ -480,9 +476,8 @@ Type: Topic
 Faction: Ashlanders
 PC Faction: Ashlanders
 PC Rank: Rank 3
-FunctionIndex: 0
-Function: Function
-Variable: Choice = 2
+Function0: Function
+Variable0: Choice = 2
 ---
 This is the first response.
 ```
@@ -496,12 +491,10 @@ Type: Greeting
 DiagID: 50716010272305400
 PrevID: 891314329736518839
 Result: Goodbye
-FunctionIndex: 1
-Function: Local
-Variable: dancingGirl = 1
-FunctionIndex: 2
-Function: Function
-Variable: SameSex = 1
+Function1: Local
+Variable1: dancingGirl = 1
+Function2: Function
+Variable2: SameSex = 1
 ---
 If you want a job here, you'll have to talk to Helviane. Excuse me.
 ```

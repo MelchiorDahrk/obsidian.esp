@@ -18,9 +18,8 @@ Result: SetFight 100
 Quest Name: false
 Finished: false
 Restart: false
-FunctionIndex: 0
-Function: Global
-Variable: abelmawiaCounter != 1
+Function0: Global
+Variable0: abelmawiaCounter != 1
 ---
 
 This is a new topic info for the "Akatosh" topic. It should be before 197707454496710384.

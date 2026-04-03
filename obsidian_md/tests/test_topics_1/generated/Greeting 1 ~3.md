@@ -18,9 +18,8 @@ Result: Goodbye
 Quest Name: false
 Finished: false
 Restart: false
-FunctionIndex: 3
-Function: Journal
-Variable: HH_BeroSupport >= 70
+Function3: Journal
+Variable3: HH_BeroSupport >= 70
 ---
 
 This is a modified greeting. It should be below the new greeting.

@@ -18,9 +18,8 @@ Result: ;Imperial cult priests; monks; healers;
 Quest Name: false
 Finished: false
 Restart: false
-FunctionIndex: 1
-Function: Global
-Variable: Random100 < 33
+Function1: Global
+Variable1: Random100 < 33
 ---
 
 This is a modified topic info. It should be 2nd in the list for the "Akatosh" topic.

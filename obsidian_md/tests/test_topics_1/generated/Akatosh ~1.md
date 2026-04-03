@@ -18,9 +18,8 @@ Result: ;Imperial cult priests; monks; healers;
 Quest Name: false
 Finished: false
 Restart: false
-FunctionIndex: 1
-Function: Global
-Variable: Random100 < 66
+Function1: Global
+Variable1: Random100 < 66
 ---
 
 Akatosh is generally considered to be the first of the Gods to form in the Beginning Place; after his establishment, other spirits found the process of being easier and the various pantheons of the world emerged.

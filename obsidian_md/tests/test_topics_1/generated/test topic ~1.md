@@ -18,9 +18,8 @@ Result:
 Quest Name: false
 Finished: false
 Restart: false
-FunctionIndex: 0
-Function: Function
-Variable: Choice = 1
+Function0: Function
+Variable0: Choice = 1
 ---
 
 This is the second response to the "test topic" topic.

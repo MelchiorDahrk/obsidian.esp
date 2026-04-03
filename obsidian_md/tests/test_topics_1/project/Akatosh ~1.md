@@ -15,10 +15,9 @@ Cell:
 PC Faction:
 PC Rank:
 Result: SetFight 100
-FunctionIndex: 0
-Function:
+Function0:
   - Global
-Variable: abelmawiaCounter != 1
+Variable0: abelmawiaCounter != 1
 ---
 This is a new topic info for the "Akatosh" topic. It should be before 197707454496710384.
 
