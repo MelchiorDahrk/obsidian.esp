@@ -1,6 +1,9 @@
 import { Notice, Plugin, TFolder, normalizePath } from 'obsidian';
 import { initSync, unpack_plugin } from '../pkg/obsidian_esp.js';
-import { compileVaultFolder } from './features/compile-folder';
+import {
+	compileFolderSelection,
+	compileVaultFolder,
+} from './features/compile-folder';
 import {
 	DEFAULT_SETTINGS,
 	ObsidianEspSettings,
@@ -19,10 +22,6 @@ export default class ObsidianEsp extends Plugin {
 			this.promptForFile();
 		});
 
-		this.addRibbonIcon('folder', 'Compile dialogue folder', () => {
-			void this.compileFolder();
-		});
-
 		this.addCommand({
 			id: 'unpack',
 			name: 'Unpack plugin file',
@@ -38,6 +37,23 @@ export default class ObsidianEsp extends Plugin {
 				void this.compileFolder();
 			},
 		});
+
+		this.registerEvent(
+			this.app.workspace.on('file-menu', (menu, file) => {
+				if (!(file instanceof TFolder)) {
+					return;
+				}
+
+				menu.addItem((item) => {
+					item
+						.setTitle('Compile dialogue folder')
+						.setIcon('folder')
+						.onClick(() => {
+							void this.compileSelectedFolder(file);
+						});
+				});
+			}),
+		);
 
 		this.addSettingTab(new ObsidianEspSettingTab(this.app, this));
 	}
@@ -122,6 +138,15 @@ export default class ObsidianEsp extends Plugin {
 		}
 
 		await compileVaultFolder(this.app);
+	}
+
+	async compileSelectedFolder(folder: TFolder) {
+		if (!this.wasmReady) {
+			new Notice('Wasm module is not ready yet.');
+			return;
+		}
+
+		await compileFolderSelection(this.app, folder);
 	}
 
 	async ensureFolder(path: string) {

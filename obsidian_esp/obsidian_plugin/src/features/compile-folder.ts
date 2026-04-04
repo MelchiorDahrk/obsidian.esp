@@ -79,13 +79,11 @@ async function writePluginFile(
 	await app.vault.createBinary(outputPath, arrayBuffer);
 }
 
-export async function compileVaultFolder(app: App): Promise<void> {
+export async function compileFolderSelection(
+	app: App,
+	folder: TFolder,
+): Promise<void> {
 	try {
-		const folder = await selectVaultFolder(app);
-		if (!folder) {
-			return;
-		}
-
 		const projectFiles = await collectProjectFiles(app, folder);
 		const hasHeader = fileExists(folder, 'header.md', app);
 		if (!hasHeader) {
@@ -112,4 +110,13 @@ export async function compileVaultFolder(app: App): Promise<void> {
 		const message = error instanceof Error ? error.message : String(error);
 		new Notice(`Failed to compile folder: ${message}`);
 	}
+}
+
+export async function compileVaultFolder(app: App): Promise<void> {
+	const folder = await selectVaultFolder(app);
+	if (!folder) {
+		return;
+	}
+
+	await compileFolderSelection(app, folder);
 }
