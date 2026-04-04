@@ -3,14 +3,14 @@ Type: Greeting
 Topic: Greeting 1
 DiagID: 1001001001
 PrevID:
-ID: fargoth
+ID: Aumsi
 Disposition: 35
-Race: Wood Elf
-Sex: Male
-Class: Scout
-Faction: Thieves Guild
+Race: Breton
+Sex: Female
+Class: Agent
+Faction: Blades
 Rank: Rank 1
-Cell: Seyda Neen
+Cell: Ald Daedroth
 PC Faction: Blades
 PC Rank: Rank 0
 Result: |
@@ -19,6 +19,6 @@ Result: |
 Function0: Function
 Variable0: Choice = 1
 Function1: Global
-Variable1: aa_example_started >= 1
+Variable1: GameHour >= 0
 ---
 Psst. If you are looking for a relic lost beneath the old shrine, ask me about the relic lead.

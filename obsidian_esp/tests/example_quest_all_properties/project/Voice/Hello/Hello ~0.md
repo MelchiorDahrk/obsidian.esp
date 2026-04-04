@@ -3,15 +3,15 @@ Type: Voice
 Topic: Hello
 DiagID: 6006006000
 PrevID:
-ID: ghost_gate_guardian
+ID: Aumsi
 Disposition: 0
-Race: Dark Elf
+Race: Breton
 Sex: Female
-Class: Ordinator
-Faction: Tribunal Temple
+Class: Agent
+Faction: Blades
 Rank: Rank 3
-Cell: Ghostgate, Tower of Dawn
-PC Faction: Tribunal Temple
+Cell: Ald Daedroth
+PC Faction: Blades
 PC Rank: Rank 1
 Sound Path: Vo\misc\guardian_whisper.wav
 Result: |

@@ -22,6 +22,7 @@ pub struct ParsedHeader {
 
 #[derive(Debug, Default)]
 pub struct ParsedInfo {
+    pub source_path: String,
     pub topic: String,
     pub frontmatter: ParsedInfoFrontmatter,
     pub text: String,
@@ -193,6 +194,7 @@ pub fn parse_project_files(
             .unwrap_or(directory_topic);
 
         infos.push(ParsedInfo {
+            source_path: relative_path,
             topic,
             frontmatter,
             text,

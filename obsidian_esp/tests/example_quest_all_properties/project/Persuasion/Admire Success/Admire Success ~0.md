@@ -3,20 +3,20 @@ Type: Persuasion
 Topic: Admire Success
 DiagID: 3003003000
 PrevID:
-ID: hrisskar flat-foot
+ID: Aumsi
 Disposition: 45
-Race: Nord
-Sex: Male
+Race: Breton
+Sex: Female
 Class: Agent
-Faction: Thieves Guild
+Faction: Blades
 Rank: Rank 2
-Cell: Arrille's Tradehouse
-PC Faction: Thieves Guild
+Cell: Ald Daedroth
+PC Faction: Blades
 PC Rank: Rank 1
 Result: |
   ModDisposition 5
 Function0: NotId
-Variable0: fargoth = 0
+Variable0: Aumsi = 0
 Function1: NotFaction
 Variable1: Census and Excise Office = 0
 Function2: NotClass

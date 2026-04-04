@@ -8,6 +8,7 @@ use tes3::esp::{
 };
 
 pub mod resolve;
+pub mod validate;
 
 use std::collections::{HashMap, HashSet};
 

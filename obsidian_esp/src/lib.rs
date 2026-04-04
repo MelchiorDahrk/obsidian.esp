@@ -76,6 +76,7 @@ pub fn collect_master_paths(master_names: &[String]) -> (Vec<PathBuf>, Vec<(Stri
 }
 
 use js_sys::{Array, Uint8Array};
+use js_sys::{Object, Reflect};
 use serde_wasm_bindgen::{from_value, to_value};
 use wasm_bindgen::prelude::*;
 
@@ -93,10 +94,22 @@ pub fn compile_project_files(
     allow_default_header: bool,
     force_esp: bool,
 ) -> Result<Vec<u8>, String> {
+    compile_project_files_with_log(files, allow_default_header, force_esp, vec![])
+        .map(|(bytes, _log)| bytes)
+}
+
+pub fn compile_project_files_with_log(
+    files: Vec<(String, String)>,
+    allow_default_header: bool,
+    force_esp: bool,
+    masters: Vec<(String, Vec<u8>)>,
+) -> Result<(Vec<u8>, String), String> {
     let default_header = allow_default_header.then(default_header);
     let parsed =
         parse::parse_project_files(files, default_header).map_err(|error| error.to_string())?;
     let authored_masters = parsed.header.masters.clone();
+    let log =
+        compile::validate::validate_project(&parsed, &masters).map_err(|error| error.to_string())?;
 
     let mut compiled = compile::compile(parsed).map_err(|error| error.to_string())?;
     compiled.header.masters = authored_masters
@@ -112,7 +125,8 @@ pub fn compile_project_files(
         header.file_type = tes3::esp::FileType::Esp;
     }
 
-    plugin.save_bytes().map_err(|error| error.to_string())
+    let bytes = plugin.save_bytes().map_err(|error| error.to_string())?;
+    Ok((bytes, log))
 }
 
 #[wasm_bindgen]
@@ -180,4 +194,31 @@ pub fn compile_project(files: JsValue, allow_default_header: bool) -> Result<Uin
     array.copy_from(&bytes);
 
     Ok(array)
+}
+
+#[wasm_bindgen]
+pub fn compile_project_with_log(
+    files: JsValue,
+    allow_default_header: bool,
+    masters: JsValue,
+) -> Result<JsValue, JsValue> {
+    let files: Vec<(String, String)> = from_value(files)?;
+    let masters: Vec<(String, Vec<u8>)> = from_value(masters)?;
+    let (bytes, log) = compile_project_files_with_log(
+        files,
+        allow_default_header,
+        /*force_esp*/ true,
+        masters,
+    )
+    .map_err(JsValue::from)?;
+
+    let length = u32::try_from(bytes.len()).map_err(|error| JsValue::from(error.to_string()))?;
+    let array = Uint8Array::new_with_length(length);
+    array.copy_from(&bytes);
+
+    let result = Object::new();
+    Reflect::set(&result, &JsValue::from_str("bytes"), &array.into())?;
+    Reflect::set(&result, &JsValue::from_str("log"), &JsValue::from_str(&log))?;
+
+    Ok(result.into())
 }

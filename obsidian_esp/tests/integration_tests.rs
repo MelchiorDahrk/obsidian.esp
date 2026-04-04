@@ -6,7 +6,9 @@ use std::fs;
 use std::iter::zip;
 use std::path::Path;
 use tes3::esp::{
-    Dialogue, DialogueData, DialogueInfo, DialogueType, DialogueType2, ObjectFlags, Plugin, Sex,
+    Cell, Class, Dialogue, DialogueData, DialogueInfo, DialogueType, DialogueType2, Faction,
+    FileType, GlobalValue, GlobalVariable, Header, Npc, ObjectFlags, Plugin, Race, Sex,
+    TES3Object,
 };
 use uncased::AsUncased;
 
@@ -414,6 +416,123 @@ fn test_example_quest_all_properties_compiles() -> Result<()> {
     Ok(())
 }
 
+fn build_validation_master_bytes() -> Result<Vec<u8>> {
+    let mut plugin = Plugin {
+        objects: vec![
+            TES3Object::Header(Header {
+                flags: ObjectFlags::empty(),
+                version: 1.3,
+                file_type: FileType::Esm,
+                author: String::new().into(),
+                description: String::new().into(),
+                num_objects: 0,
+                masters: vec![],
+            }),
+            TES3Object::GlobalVariable(GlobalVariable {
+                flags: ObjectFlags::empty(),
+                id: "GameHour".to_string(),
+                value: GlobalValue::Float(12.0),
+            }),
+            TES3Object::Faction(Faction {
+                flags: ObjectFlags::empty(),
+                id: "Blades".to_string(),
+                name: "Blades".to_string(),
+                ..Default::default()
+            }),
+            TES3Object::Race(Race {
+                flags: ObjectFlags::empty(),
+                id: "Breton".to_string(),
+                name: "Breton".to_string(),
+                ..Default::default()
+            }),
+            TES3Object::Class(Class {
+                flags: ObjectFlags::empty(),
+                id: "Agent".to_string(),
+                name: "Agent".to_string(),
+                ..Default::default()
+            }),
+            TES3Object::Npc(Npc {
+                flags: ObjectFlags::empty(),
+                id: "Aumsi".to_string(),
+                name: "Aumsi".to_string(),
+                race: "Breton".to_string(),
+                class: "Agent".to_string(),
+                faction: "Blades".to_string(),
+                ..Default::default()
+            }),
+            TES3Object::Cell(Cell {
+                flags: ObjectFlags::empty(),
+                name: "Ald Daedroth".to_string(),
+                ..Default::default()
+            }),
+            TES3Object::Dialogue(Dialogue {
+                flags: ObjectFlags::empty(),
+                id: "existing journal".to_string(),
+                dialogue_type: DialogueType2::Journal,
+            }),
+        ],
+    };
+
+    Ok(plugin.save_bytes()?)
+}
+
+#[test]
+fn test_compile_project_files_with_log_reports_invalid_references() -> Result<()> {
+    let files = vec![
+        (
+            "header.md".to_string(),
+            "---\nAuthor: Example\nDescription: validation test\nFile Type: ESP\nMasters:\n  - Morrowind.esm\n---\n"
+                .to_string(),
+        ),
+        (
+            "Topic/sample/sample ~0.md".to_string(),
+            "---\nType: Topic\nTopic: sample\nID: Aumsi\nRace: Breton\nClass: Agent\nFaction: Blades\nCell: Ald Daedroth\nPC Faction: Blades\nFunction0: Global\nVariable0: GameHour >= 0\nFunction1: Global\nVariable1: MissingGlobal >= 1\n---\nValid and invalid references.\n"
+                .to_string(),
+        ),
+        (
+            "Topic/sample/sample ~1.md".to_string(),
+            "---\nType: Topic\nTopic: sample\nID: MissingNpc\nRace: Breton\nClass: Agent\nFaction: MissingFaction\nCell: Missing Cell\nPC Faction: Blades\nFunction0: Journal\nVariable0: existing journal >= 10\n---\nMore validation.\n"
+                .to_string(),
+        ),
+    ];
+
+    let (bytes, log) = obsidian_esp::compile_project_files_with_log(
+        files,
+        false,
+        false,
+        vec![("Morrowind.esm".to_string(), build_validation_master_bytes()?)],
+    )
+    .map_err(anyhow::Error::msg)?;
+
+    let mut plugin = Plugin::new();
+    plugin.load_bytes(&bytes)?;
+
+    assert!(
+        !log.contains("ID 'Aumsi' was not found"),
+        "{log}"
+    );
+    assert!(
+        !log.contains("Variable0 'GameHour' was not found"),
+        "{log}"
+    );
+    assert!(
+        !log.contains("Variable0 'existing journal' was not found"),
+        "{log}"
+    );
+    assert!(
+        log.contains("Variable1 'MissingGlobal' was not found"),
+        "{log}"
+    );
+    assert!(log.contains("ID 'MissingNpc' was not found"), "{log}");
+    assert!(
+        log.contains("Faction 'MissingFaction' was not found"),
+        "{log}"
+    );
+    assert!(log.contains("Cell 'Missing Cell' was not found"), "{log}");
+
+    Ok(())
+}
+
 #[test]
 fn test_invalid_voice_topic_is_rejected() {
     let parsed = obsidian_esp::parse::ParsedPlugin {
@@ -424,6 +543,7 @@ fn test_invalid_voice_topic_is_rejected() {
             masters: vec!["Morrowind.esm".to_string()],
         },
         infos: vec![obsidian_esp::parse::ParsedInfo {
+            source_path: "Voice/guardian whisper/guardian whisper ~0.md".to_string(),
             topic: "guardian whisper".to_string(),
             frontmatter: obsidian_esp::parse::ParsedInfoFrontmatter {
                 dialogue_type: Some(DialogueType2::Voice),

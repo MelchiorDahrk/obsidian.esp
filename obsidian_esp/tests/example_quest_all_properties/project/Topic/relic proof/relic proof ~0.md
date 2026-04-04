@@ -3,14 +3,14 @@ Type: Topic
 Topic: relic proof
 DiagID: 5005005000
 PrevID:
-ID: caius cosades
+ID: Aumsi
 Disposition: 60
 Race: Breton
-Sex: Male
-Class: Spymaster
+Sex: Female
+Class: Agent
 Faction: Blades
 Rank: Rank 9
-Cell: Balmora, Caius Cosades' House
+Cell: Ald Daedroth
 PC Faction: Blades
 PC Rank: Rank 0
 Result: |

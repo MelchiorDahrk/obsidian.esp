@@ -3,14 +3,14 @@ Type: Topic
 Topic: relic lead
 DiagID: 4004004000
 PrevID:
-ID: fargoth
+ID: Aumsi
 Disposition: 40
-Race: Wood Elf
-Sex: Male
-Class: Scout
-Faction: Thieves Guild
+Race: Breton
+Sex: Female
+Class: Agent
+Faction: Blades
 Rank: Rank 1
-Cell: Seyda Neen
+Cell: Ald Daedroth
 PC Faction: Blades
 PC Rank: Rank 0
 Result: |
@@ -19,14 +19,14 @@ Result: |
 Function0: Function
 Variable0: PcLevel >= 1
 Function1: Global
-Variable1: aa_example_started >= 1
+Variable1: GameHour >= 0
 Function2: Local
 Variable2: aa_example_local >= 0
 Function3: Journal
 Variable3: aa_example_reliquary >= 10
 Function4: Item
-Variable4: bk_a1_1_a Dance in Fire v1 >= 1
+Variable4: aa_example_missing_item >= 1
 Function5: Dead
-Variable5: snowy_granius = 0
+Variable5: aa_example_missing_actor = 0
 ---
 The key was traded to a smuggler who hid it behind a loose stone in the shrine cellar.
