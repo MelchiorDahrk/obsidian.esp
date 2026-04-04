@@ -115,7 +115,7 @@ These keys are recognized by the parser.
 | `Type` | Dialogue type: `Topic`, `Journal`, `Voice`, `Greeting`, or `Persuasion` |
 | `Topic` | Overrides the topic id derived from the filename |
 | `DiagID` | Preserved TES3 `DialogueInfo.id`; must be numeric if present |
-| `PrevID` | TES3 `prev_id`; must be numeric if present |
+| `PrevID` | TES3 `prev_id`; preserved as an opaque string identifier |
 | `ID` | `speaker_id` |
 | `Disposition` | Dialogue disposition for non-journal entries |
 | `Index` | Journal index; parsed into the same internal `disposition` field |
@@ -176,10 +176,9 @@ If omitted, the compiler defaults to `Topic`.
 
 `PrevID` controls insertion ordering.
 
-- Must contain only ASCII digits if present.
+- `PrevID` is treated as a string identifier reference, not a numeric value.
 - If omitted, the compiler links the entry after the previously compiled entry for the same topic.
 - If present, it is preserved verbatim during compile.
-- During resolve, rounded authored `PrevID` values may be reconciled to exact master ids when possible.
 
 ### `Disposition` and `Index`
 
@@ -432,7 +431,7 @@ Because the real topic id is also written in `Topic:`, the original TES3 dialogu
 
 - One file corresponds to one `DialogueInfo`, not one whole topic block.
 - `DiagID` is optional for hand-authored content but always present in exported content.
-- `PrevID` should be numeric if used.
+- `PrevID` should be treated as an exact identifier string.
 - If you are modifying existing master dialogue, include complete and correct `Masters` in `header.md`.
 - If you are importing/exporting existing plugin data, preserve `DiagID` and `PrevID` values when present.
 
