@@ -1,7 +1,7 @@
 ---
 Type:
   - Greeting
-DiagID: 891314329736518839
+DiagID:
 PrevID: 3190558963063415128
 ID:
 Disposition:
