@@ -1,102 +1,112 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin } from 'obsidian';
-import { DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab } from "./settings";
+import { Notice, Plugin, TFolder, normalizePath } from 'obsidian';
+import { initSync, unpack_plugin } from '../pkg/obsidian_esp.js';
+import { DEFAULT_SETTINGS, ObsidianEspSettings, ObsidianEspSettingTab } from './settings';
 
-import init, { load_objects, save_objects } from '../pkg/obsidian_esp.js';
-
-// Remember to rename these classes and interfaces!
-
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class ObsidianEsp extends Plugin {
+	settings: ObsidianEspSettings;
+	wasmReady = false;
 
 	async onload() {
-		await init();
 		await this.loadSettings();
 
-		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('dice', 'Sample', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
+		await this.initWasm();
+
+		this.addRibbonIcon('file-input', 'Unpack TES3 plugin', () => {
+			this.promptForFile();
 		});
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status bar text');
-
-		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
-			id: 'open-modal-simple',
-			name: 'Open modal (simple)',
+			id: 'unpack',
+			name: 'Unpack TES3 plugin file',
 			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'replace-selected',
-			name: 'Replace selected content',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				editor.replaceSelection('Sample editor command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-modal-complex',
-			name: 'Open modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-				return false;
-			}
+				this.promptForFile();
+			},
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			new Notice("Click");
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-
+		this.addSettingTab(new ObsidianEspSettingTab(this.app, this));
 	}
 
-	onunload() {
+	async initWasm() {
+		const wasmPath = normalizePath(
+			`${this.manifest.dir}/pkg/obsidian_esp_bg.wasm`,
+		);
+		const wasmBuffer = await this.app.vault.adapter.readBinary(wasmPath);
+		initSync({ module: new Uint8Array(wasmBuffer) });
+		this.wasmReady = true;
+	}
+
+	promptForFile() {
+		if (!this.wasmReady) {
+			new Notice('WASM module is not ready yet.');
+			return;
+		}
+
+		const input = document.createElement('input');
+		input.type = 'file';
+		input.accept = '.esp,.esm,.ESP,.ESM';
+
+		input.addEventListener('change', async () => {
+			const file = input.files?.[0];
+			if (!file) return;
+
+			try {
+				await this.unpackFile(file);
+			} catch (e) {
+				const message =
+					e instanceof Error ? e.message : String(e);
+				new Notice(`Failed to unpack: ${message}`);
+			}
+		});
+
+		input.click();
+	}
+
+	async unpackFile(file: File) {
+		const buffer = await file.arrayBuffer();
+		const bytes = new Uint8Array(buffer);
+
+		const files: [string, string][] = unpack_plugin(bytes);
+
+		const baseName = file.name.replace(/\.[^.]+$/, '');
+		const outputDir = normalizePath(
+			`${this.settings.outputFolder}/${baseName}`,
+		);
+
+		let created = 0;
+		for (const [relativePath, content] of files) {
+			const fullPath = normalizePath(`${outputDir}/${relativePath}`);
+
+			const parentDir = fullPath.substring(
+				0,
+				fullPath.lastIndexOf('/'),
+			);
+			if (parentDir) {
+				await this.ensureFolder(parentDir);
+			}
+
+			await this.app.vault.create(fullPath, content);
+			created++;
+		}
+
+		new Notice(`Unpacked ${created} files to ${outputDir}`);
+	}
+
+	async ensureFolder(path: string) {
+		const existing = this.app.vault.getAbstractFileByPath(path);
+		if (existing instanceof TFolder) return;
+		if (existing) return;
+		await this.app.vault.createFolder(path);
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<MyPluginSettings>);
+		this.settings = Object.assign(
+			{},
+			DEFAULT_SETTINGS,
+			(await this.loadData()) as Partial<ObsidianEspSettings>,
+		);
 	}
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-	}
-}
-
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		let { contentEl } = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const { contentEl } = this;
-		contentEl.empty();
 	}
 }

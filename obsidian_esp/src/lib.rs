@@ -75,7 +75,7 @@ pub fn collect_master_paths(master_names: &[String]) -> (Vec<PathBuf>, Vec<(Stri
     (master_paths, master_sizes)
 }
 
-use js_sys::Uint8Array;
+use js_sys::{Array, Uint8Array};
 use serde_wasm_bindgen::{from_value, to_value};
 use wasm_bindgen::prelude::*;
 
@@ -85,9 +85,6 @@ pub fn load_objects(array: Uint8Array) -> Result<JsValue, JsValue> {
     plugin
         .load_bytes(array.to_vec().as_ref())
         .map_err(|e| JsValue::from(e.to_string()))?;
-
-    // Example of getting a `PluginData` from WASM via `Plugin`:
-    // PluginData::from_plugin(plugin);
 
     let value = to_value(&plugin.objects)?;
 
@@ -111,4 +108,27 @@ pub fn save_objects(value: JsValue) -> Result<Uint8Array, JsValue> {
     array.copy_from(&bytes);
 
     Ok(array)
+}
+
+/// Takes raw ESP/ESM bytes and returns an array of [path, content] pairs
+/// representing the markdown project files.
+#[wasm_bindgen]
+pub fn unpack_plugin(array: Uint8Array) -> Result<JsValue, JsValue> {
+    let mut plugin = Plugin::new();
+    plugin
+        .load_bytes(array.to_vec().as_ref())
+        .map_err(|e| JsValue::from(e.to_string()))?;
+
+    let plugin_data = PluginData::from_plugin(plugin);
+    let files = export::collect_project_files(&plugin_data);
+
+    let result = Array::new();
+    for (path, content) in files {
+        let pair = Array::new();
+        pair.push(&JsValue::from_str(&path));
+        pair.push(&JsValue::from_str(&content));
+        result.push(&pair);
+    }
+
+    Ok(result.into())
 }

@@ -1,36 +1,39 @@
-import {App, PluginSettingTab, Setting} from "obsidian";
-import MyPlugin from "./main";
+import { App, PluginSettingTab, Setting } from 'obsidian';
+import ObsidianEsp from './main';
 
-export interface MyPluginSettings {
-	mySetting: string;
+export interface ObsidianEspSettings {
+	outputFolder: string;
 }
 
-export const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
+export const DEFAULT_SETTINGS: ObsidianEspSettings = {
+	outputFolder: 'TES3 Plugins',
+};
 
-export class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+export class ObsidianEspSettingTab extends PluginSettingTab {
+	plugin: ObsidianEsp;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: ObsidianEsp) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
 
 	display(): void {
-		const {containerEl} = this;
-
+		const { containerEl } = this;
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Settings #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
+			.setName('Output folder')
+			.setDesc(
+				'Vault folder where unpacked plugin files are written.',
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder('TES3 Plugins')
+					.setValue(this.plugin.settings.outputFolder)
+					.onChange(async (value) => {
+						this.plugin.settings.outputFolder = value;
+						await this.plugin.saveSettings();
+					}),
+			);
 	}
 }

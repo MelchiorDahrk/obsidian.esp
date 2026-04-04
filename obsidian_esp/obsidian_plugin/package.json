@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
-	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"name": "obsidian-esp",
+	"version": "0.1.0",
+	"description": "Unpack TES3 plugin files into markdown for Obsidian",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {

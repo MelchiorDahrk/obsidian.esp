@@ -307,47 +307,65 @@ fn render_info(topic: &str, info: &DialogueInfo) -> String {
     output
 }
 
-pub fn write_project_directory(plugin: &PluginData, output_dir: &Path) -> Result<()> {
-    std::fs::create_dir_all(output_dir)
-        .with_context(|| format!("Failed to create directory: {}", output_dir.display()))?;
-
-    let header_path = output_dir.join("header.md");
-    std::fs::write(&header_path, render_header(plugin))
-        .with_context(|| format!("Failed to write file: {}", header_path.display()))?;
-
-    let dialogue_priority = |dialogue_type| match dialogue_type {
+fn dialogue_priority(dialogue_type: tes3::esp::DialogueType2) -> u8 {
+    match dialogue_type {
         tes3::esp::DialogueType2::Journal => 0,
         tes3::esp::DialogueType2::Topic => 1,
         tes3::esp::DialogueType2::Voice => 2,
         tes3::esp::DialogueType2::Greeting => 3,
         tes3::esp::DialogueType2::Persuasion => 4,
-    };
+    }
+}
 
-    let dialogue_groups = plugin.dialogues.values().sorted_by(|left, right| {
-        dialogue_priority(left.dialogue.dialogue_type)
-            .cmp(&dialogue_priority(right.dialogue.dialogue_type))
-            .then_with(|| {
-                left.dialogue
-                    .id
-                    .as_uncased()
-                    .cmp(right.dialogue.id.as_uncased())
-            })
-    });
+fn sorted_dialogue_groups(plugin: &PluginData) -> Vec<&merge_to_master::DialogueGroup> {
+    plugin
+        .dialogues
+        .values()
+        .sorted_by(|left, right| {
+            dialogue_priority(left.dialogue.dialogue_type)
+                .cmp(&dialogue_priority(right.dialogue.dialogue_type))
+                .then_with(|| {
+                    left.dialogue
+                        .id
+                        .as_uncased()
+                        .cmp(right.dialogue.id.as_uncased())
+                })
+        })
+        .collect()
+}
 
-    for group in dialogue_groups {
-        let type_dir = output_dir.join(format_type_directory(group.dialogue.dialogue_type));
-        let name_dir = type_dir.join(sanitize_file_stem(&group.dialogue.id));
-        std::fs::create_dir_all(&name_dir)
-            .with_context(|| format!("Failed to create directory: {}", name_dir.display()))?;
+/// Returns a list of (relative_path, content) pairs representing the project files.
+pub fn collect_project_files(plugin: &PluginData) -> Vec<(String, String)> {
+    let mut files = Vec::new();
 
+    files.push(("header.md".to_string(), render_header(plugin)));
+
+    for group in sorted_dialogue_groups(plugin) {
+        let type_dir = format_type_directory(group.dialogue.dialogue_type);
         let stem = sanitize_file_stem(&group.dialogue.id);
+
         for (index, info) in group.infos.iter().enumerate() {
-            let mut file_name = String::new();
-            write!(&mut file_name, "{stem} ~{index}.md").unwrap();
-            let output_path = name_dir.join(file_name);
-            std::fs::write(&output_path, render_info(&group.dialogue.id, info))
-                .with_context(|| format!("Failed to write file: {}", output_path.display()))?;
+            let path = format!("{type_dir}/{stem}/{stem} ~{index}.md");
+            let content = render_info(&group.dialogue.id, info);
+            files.push((path, content));
         }
+    }
+
+    files
+}
+
+pub fn write_project_directory(plugin: &PluginData, output_dir: &Path) -> Result<()> {
+    std::fs::create_dir_all(output_dir)
+        .with_context(|| format!("Failed to create directory: {}", output_dir.display()))?;
+
+    for (relative_path, content) in collect_project_files(plugin) {
+        let full_path = output_dir.join(&relative_path);
+        if let Some(parent) = full_path.parent() {
+            std::fs::create_dir_all(parent)
+                .with_context(|| format!("Failed to create directory: {}", parent.display()))?;
+        }
+        std::fs::write(&full_path, &content)
+            .with_context(|| format!("Failed to write file: {}", full_path.display()))?;
     }
 
     Ok(())
