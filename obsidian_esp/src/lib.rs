@@ -86,6 +86,9 @@ pub fn load_objects(array: Uint8Array) -> Result<JsValue, JsValue> {
         .load_bytes(array.to_vec().as_ref())
         .map_err(|e| JsValue::from(e.to_string()))?;
 
+    // Example of getting a `PluginData` from WASM via `Plugin`:
+    // PluginData::from_plugin(plugin);
+
     let value = to_value(&plugin.objects)?;
 
     Ok(value)
