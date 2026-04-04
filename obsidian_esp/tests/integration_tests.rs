@@ -381,3 +381,63 @@ fn test_compile_project_files_generates_esp_bytes() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_example_quest_all_properties_compiles() -> Result<()> {
+    let markdown_path = Path::new("tests/example_quest_all_properties/project");
+    let bytes = obsidian_esp::compile_project_files(
+        collect_project_files(markdown_path)?,
+        false,
+        false,
+    )
+        .map_err(anyhow::Error::msg)?;
+
+    let mut plugin = Plugin::new();
+    plugin.load_bytes(&bytes)?;
+
+    let header = plugin.header().expect("compiled plugin should contain a header");
+    assert_eq!(header.author.to_string(), "Example Author");
+    assert_eq!(
+        header.description.to_string(),
+        "full dialogue property coverage example"
+    );
+    assert_eq!(header.file_type, tes3::esp::FileType::Esp);
+    assert_eq!(
+        header
+            .masters
+            .iter()
+            .map(|(name, _)| name.as_str())
+            .collect_vec(),
+        vec!["Morrowind.esm", "Tribunal.esm", "Bloodmoon.esm"]
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_invalid_voice_topic_is_rejected() {
+    let parsed = obsidian_esp::parse::ParsedPlugin {
+        header: obsidian_esp::parse::ParsedHeader {
+            author: String::new(),
+            description: String::new(),
+            file_type: "ESP".to_string(),
+            masters: vec!["Morrowind.esm".to_string()],
+        },
+        infos: vec![obsidian_esp::parse::ParsedInfo {
+            topic: "guardian whisper".to_string(),
+            frontmatter: obsidian_esp::parse::ParsedInfoFrontmatter {
+                dialogue_type: Some(DialogueType2::Voice),
+                ..Default::default()
+            },
+            text: "Invalid voice topic".to_string(),
+        }],
+    };
+
+    let error = obsidian_esp::compile::compile(parsed).expect_err("voice topic should be rejected");
+    assert!(
+        error
+            .to_string()
+            .contains("Invalid Voice topic 'guardian whisper'"),
+        "{error}"
+    );
+}

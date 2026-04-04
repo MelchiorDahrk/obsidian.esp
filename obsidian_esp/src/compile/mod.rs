@@ -11,6 +11,43 @@ pub mod resolve;
 
 use std::collections::{HashMap, HashSet};
 
+const VALID_GREETING_TOPICS: &[&str] = &[
+    "Greeting 0",
+    "Greeting 1",
+    "Greeting 2",
+    "Greeting 3",
+    "Greeting 4",
+    "Greeting 5",
+    "Greeting 6",
+    "Greeting 7",
+    "Greeting 8",
+    "Greeting 9",
+];
+
+const VALID_PERSUASION_TOPICS: &[&str] = &[
+    "Admire Fail",
+    "Admire Success",
+    "Bribe Fail",
+    "Bribe Success",
+    "Info Refusal",
+    "Intimidate Fail",
+    "Intimidate Success",
+    "Service Refusal",
+    "Taunt Fail",
+    "Taunt Success",
+];
+
+const VALID_VOICE_TOPICS: &[&str] = &[
+    "Alarm",
+    "Attack",
+    "Flee",
+    "Hello",
+    "Hit",
+    "Idle",
+    "Intruder",
+    "Thief",
+];
+
 fn generate_info_id(existing_ids: &HashSet<String>) -> String {
     let mut id = String::new();
     loop {
@@ -176,6 +213,34 @@ fn repair_next_links(group: &mut DialogueGroup) {
     }
 }
 
+fn validate_dialogue_topic(dialogue_type: tes3::esp::DialogueType2, topic: &str) -> Result<()> {
+    let valid_topics = match dialogue_type {
+        tes3::esp::DialogueType2::Greeting => Some(VALID_GREETING_TOPICS),
+        tes3::esp::DialogueType2::Persuasion => Some(VALID_PERSUASION_TOPICS),
+        tes3::esp::DialogueType2::Voice => Some(VALID_VOICE_TOPICS),
+        tes3::esp::DialogueType2::Topic | tes3::esp::DialogueType2::Journal => None,
+    };
+
+    if let Some(valid_topics) = valid_topics {
+        ensure!(
+            valid_topics
+                .iter()
+                .any(|valid_topic| valid_topic.eq_ignore_ascii_case(topic)),
+            "Invalid {} topic '{}'. Expected one of: {}",
+            match dialogue_type {
+                tes3::esp::DialogueType2::Greeting => "Greeting",
+                tes3::esp::DialogueType2::Persuasion => "Persuasion",
+                tes3::esp::DialogueType2::Voice => "Voice",
+                tes3::esp::DialogueType2::Topic | tes3::esp::DialogueType2::Journal => unreachable!(),
+            },
+            topic,
+            valid_topics.join(", ")
+        );
+    }
+
+    Ok(())
+}
+
 pub fn compile(parsed: ParsedPlugin) -> Result<PluginData> {
     let mut plugin = PluginData::new();
     let mut groups_with_preserved_links = HashSet::new();
@@ -203,6 +268,7 @@ pub fn compile(parsed: ParsedPlugin) -> Result<PluginData> {
             .frontmatter
             .dialogue_type
             .unwrap_or(tes3::esp::DialogueType2::Topic);
+        validate_dialogue_topic(dialogue_type, &parsed_info.topic)?;
 
         let topic_key = parsed_info.topic.to_ascii_lowercase();
         if parsed_info.frontmatter.diag_id.is_some() || parsed_info.frontmatter.prev_id.is_some() {

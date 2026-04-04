@@ -174,6 +174,46 @@ Recognized values:
 
 If omitted, the compiler uses the parent `Type` directory.
 
+For `Greeting`, `Persuasion`, and `Voice`, the topic id is not free-form.
+It must be one of the engine's built-in dialogue ids for that type.
+
+Valid `Greeting` topics:
+
+- `Greeting 0`
+- `Greeting 1`
+- `Greeting 2`
+- `Greeting 3`
+- `Greeting 4`
+- `Greeting 5`
+- `Greeting 6`
+- `Greeting 7`
+- `Greeting 8`
+- `Greeting 9`
+
+Valid `Persuasion` topics:
+
+- `Admire Fail`
+- `Admire Success`
+- `Bribe Fail`
+- `Bribe Success`
+- `Info Refusal`
+- `Intimidate Fail`
+- `Intimidate Success`
+- `Service Refusal`
+- `Taunt Fail`
+- `Taunt Success`
+
+Valid `Voice` topics:
+
+- `Alarm`
+- `Attack`
+- `Flee`
+- `Hello`
+- `Hit`
+- `Idle`
+- `Intruder`
+- `Thief`
+
 ### `DiagID`
 
 `DiagID` preserves an exact TES3 INFO id during import/export.
