@@ -13,10 +13,6 @@ Rank:
 Cell: Abaelun Mine
 PC Faction:
 PC Rank:
-Sound Path:
-Quest Name: false
-Finished: false
-Restart: false
 Function0: Dead
 Variable0: a smuggler boss = 1
 ---

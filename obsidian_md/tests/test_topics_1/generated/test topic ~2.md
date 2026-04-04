@@ -13,11 +13,7 @@ Rank:
 Cell:
 PC Faction: Ashlanders
 PC Rank: Rank 3
-Sound Path:
 Result: Choice "First option" 1 "Second option" 2
-Quest Name: false
-Finished: false
-Restart: false
 ---
 
 This is the third response to the "test topic" topic.

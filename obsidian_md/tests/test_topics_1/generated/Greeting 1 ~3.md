@@ -13,11 +13,7 @@ Rank:
 Cell: Vivec, Arena Pit
 PC Faction:
 PC Rank:
-Sound Path:
 Result: Goodbye
-Quest Name: false
-Finished: false
-Restart: false
 Function3: Journal
 Variable3: HH_BeroSupport >= 70
 ---

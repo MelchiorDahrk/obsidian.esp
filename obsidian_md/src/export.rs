@@ -165,6 +165,8 @@ fn render_header(plugin: &PluginData) -> String {
 
 fn render_info(topic: &str, info: &DialogueInfo) -> String {
     let mut output = String::from("---\n");
+    let is_journal = info.data.dialogue_type == tes3::esp::DialogueType::Journal;
+    let is_voice = info.data.dialogue_type == tes3::esp::DialogueType::Voice;
 
     push_field(
         &mut output,
@@ -193,75 +195,86 @@ fn render_info(topic: &str, info: &DialogueInfo) -> String {
         );
     }
 
-    push_field(
-        &mut output,
-        "ID",
-        (!info.speaker_id.is_empty()).then_some(info.speaker_id.as_str()),
-    );
-    push_field(
-        &mut output,
-        "Race",
-        (!info.speaker_race.is_empty()).then_some(info.speaker_race.as_str()),
-    );
-    push_field(&mut output, "Sex", Some(format_sex(info.data.speaker_sex)));
-    push_field(
-        &mut output,
-        "Class",
-        (!info.speaker_class.is_empty()).then_some(info.speaker_class.as_str()),
-    );
-    push_field(
-        &mut output,
-        "Faction",
-        (!info.speaker_faction.is_empty()).then_some(info.speaker_faction.as_str()),
-    );
-    push_field(&mut output, "Rank", format_rank(info.data.speaker_rank));
-    push_field(
-        &mut output,
-        "Cell",
-        (!info.speaker_cell.is_empty()).then_some(info.speaker_cell.as_str()),
-    );
-    push_field(
-        &mut output,
-        "PC Faction",
-        (!info.player_faction.is_empty()).then_some(info.player_faction.as_str()),
-    );
-    push_field(&mut output, "PC Rank", format_rank(info.data.player_rank));
-    push_field(
-        &mut output,
-        "Sound Path",
-        (!info.sound_path.is_empty()).then_some(info.sound_path.as_str()),
-    );
+    if !is_journal {
+        push_field(
+            &mut output,
+            "ID",
+            (!info.speaker_id.is_empty()).then_some(info.speaker_id.as_str()),
+        );
+        push_field(
+            &mut output,
+            "Race",
+            (!info.speaker_race.is_empty()).then_some(info.speaker_race.as_str()),
+        );
+        push_field(&mut output, "Sex", Some(format_sex(info.data.speaker_sex)));
+        push_field(
+            &mut output,
+            "Class",
+            (!info.speaker_class.is_empty()).then_some(info.speaker_class.as_str()),
+        );
+        push_field(
+            &mut output,
+            "Faction",
+            (!info.speaker_faction.is_empty()).then_some(info.speaker_faction.as_str()),
+        );
+        push_field(&mut output, "Rank", format_rank(info.data.speaker_rank));
+        push_field(
+            &mut output,
+            "Cell",
+            (!info.speaker_cell.is_empty()).then_some(info.speaker_cell.as_str()),
+        );
+        push_field(
+            &mut output,
+            "PC Faction",
+            (!info.player_faction.is_empty()).then_some(info.player_faction.as_str()),
+        );
+        push_field(&mut output, "PC Rank", format_rank(info.data.player_rank));
+    }
+
+    if is_voice {
+        push_field(
+            &mut output,
+            "Sound Path",
+            (!info.sound_path.is_empty()).then_some(info.sound_path.as_str()),
+        );
+    }
+
     if !info.script_text.is_empty() {
         push_multiline_field(&mut output, "Result", Some(&info.script_text));
     }
-    push_field(
-        &mut output,
-        "Quest Name",
-        Some(format_quest_flag(info.quest_state, QuestState::Name)),
-    );
-    push_field(
-        &mut output,
-        "Finished",
-        Some(format_quest_flag(info.quest_state, QuestState::Finished)),
-    );
-    push_field(
-        &mut output,
-        "Restart",
-        Some(format_quest_flag(info.quest_state, QuestState::Restart)),
-    );
 
-    for filter in &info.filters {
-        let i = filter.index;
+    if is_journal {
         push_field(
             &mut output,
-            &format!("Function{i}"),
-            Some(format_filter_type(filter.filter_type)),
+            "Quest Name",
+            Some(format_quest_flag(info.quest_state, QuestState::Name)),
         );
         push_field(
             &mut output,
-            &format!("Variable{i}"),
-            Some(format_filter_variable(filter)),
+            "Finished",
+            Some(format_quest_flag(info.quest_state, QuestState::Finished)),
         );
+        push_field(
+            &mut output,
+            "Restart",
+            Some(format_quest_flag(info.quest_state, QuestState::Restart)),
+        );
+    }
+
+    if !is_journal {
+        for filter in &info.filters {
+            let i = filter.index;
+            push_field(
+                &mut output,
+                &format!("Function{i}"),
+                Some(format_filter_type(filter.filter_type)),
+            );
+            push_field(
+                &mut output,
+                &format!("Variable{i}"),
+                Some(format_filter_variable(filter)),
+            );
+        }
     }
 
     output.push_str("---\n");

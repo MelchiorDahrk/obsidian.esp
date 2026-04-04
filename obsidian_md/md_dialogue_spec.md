@@ -127,14 +127,14 @@ These keys are recognized by the parser.
 | `Cell` | `speaker_cell` |
 | `PC Faction` | `player_faction` |
 | `PC Rank` | `player_rank`; accepts `-1`, raw integers, or `Rank <n>` |
-| `Sound Path` | `sound_path` |
+| `Sound Path` | `sound_path`; **Voice only** |
 | `SoundPath` | Alias for `Sound Path` |
 | `Result` | `script_text`; supports escaped `\\r\\n` or standard YAML literal block scalars (`\|`) |
-| `Quest Name` | If `true`, sets journal quest state to `Name` |
-| `Finished` | If `true`, sets journal quest state to `Finished` |
-| `Restart` | If `true`, sets journal quest state to `Restart` |
-| `Function<n>` | Filter type name for filter slot `n` |
-| `Variable<n>` | Filter expression for filter slot `n` |
+| `Quest Name` | If `true`, sets journal quest state to `Name`; **Journal only** |
+| `Finished` | If `true`, sets journal quest state to `Finished`; **Journal only** |
+| `Restart` | If `true`, sets journal quest state to `Restart`; **Journal only** |
+| `Function<n>` | Filter type name for filter slot `n`; **Not for Journal** |
+| `Variable<n>` | Filter expression for filter slot `n`; **Not for Journal** |
 
 Unknown keys are ignored by the parser.
 

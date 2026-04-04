@@ -4,16 +4,6 @@ Topic: 11111 test journal
 DiagID: 128914348295877816
 PrevID:
 Index: 10
-ID:
-Race:
-Sex: Any
-Class:
-Faction:
-Rank:
-Cell:
-PC Faction:
-PC Rank:
-Sound Path:
 Quest Name: false
 Finished: false
 Restart: false

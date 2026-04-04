@@ -13,13 +13,9 @@ Rank:
 Cell:
 PC Faction:
 PC Rank:
-Sound Path:
 Result: |
   ModDisposition -10
   Goodbye
-Quest Name: false
-Finished: false
-Restart: false
 Function0: Journal
 Variable0: 11111 test journal = 50
 ---

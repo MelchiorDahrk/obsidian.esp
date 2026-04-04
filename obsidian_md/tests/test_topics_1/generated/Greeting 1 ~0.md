@@ -13,10 +13,6 @@ Rank:
 Cell:
 PC Faction:
 PC Rank:
-Sound Path:
-Quest Name: false
-Finished: false
-Restart: false
 ---
 
 Just between you and me, I always rest here between pilgrimages.

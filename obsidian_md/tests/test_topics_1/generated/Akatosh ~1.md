@@ -13,11 +13,7 @@ Rank:
 Cell:
 PC Faction:
 PC Rank:
-Sound Path:
 Result: ;Imperial cult priests; monks; healers;
-Quest Name: false
-Finished: false
-Restart: false
 Function1: Global
 Variable1: Random100 < 66
 ---

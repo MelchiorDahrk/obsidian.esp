@@ -13,11 +13,7 @@ Rank:
 Cell:
 PC Faction:
 PC Rank:
-Sound Path:
 Result: SetFight 100
-Quest Name: false
-Finished: false
-Restart: false
 Function0: Global
 Variable0: abelmawiaCounter != 1
 ---

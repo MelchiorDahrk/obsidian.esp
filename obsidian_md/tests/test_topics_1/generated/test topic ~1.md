@@ -13,10 +13,6 @@ Rank:
 Cell:
 PC Faction: Ashlanders
 PC Rank: Rank 3
-Sound Path:
-Quest Name: false
-Finished: false
-Restart: false
 Function0: Function
 Variable0: Choice = 1
 ---

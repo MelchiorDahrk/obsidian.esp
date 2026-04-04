@@ -13,11 +13,7 @@ Rank:
 Cell:
 PC Faction:
 PC Rank:
-Sound Path:
 Result: Goodbye
-Quest Name: false
-Finished: false
-Restart: false
 Function0: Local
 Variable0: dancingGirl = 1
 Function1: Function
