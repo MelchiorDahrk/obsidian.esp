@@ -63,38 +63,50 @@ async function collectProjectFiles(
 	);
 }
 
-function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-	return bytes.slice().buffer;
+async function writePluginFile(
+	app: App,
+	outputPath: string,
+	bytes: Uint8Array,
+): Promise<void> {
+	const existingFile = app.vault.getAbstractFileByPath(outputPath);
+	const arrayBuffer = bytes.slice().buffer;
+
+	if (existingFile instanceof TFile) {
+		await app.vault.modifyBinary(existingFile, arrayBuffer);
+		return;
+	}
+
+	await app.vault.createBinary(outputPath, arrayBuffer);
 }
 
 export async function compileVaultFolder(app: App): Promise<void> {
-	const folder = await selectVaultFolder(app);
-	if (!folder) {
-		return;
-	}
-
-	const projectFiles = await collectProjectFiles(app, folder);
-	const hasHeader = fileExists(folder, 'header.md', app);
-	if (!hasHeader) {
-		const shouldContinue = await confirmDefaultHeader(app, folder.name);
-		if (!shouldContinue) {
+	try {
+		const folder = await selectVaultFolder(app);
+		if (!folder) {
 			return;
 		}
-	}
 
-	const hasDialogueMarkdown = projectFiles.some(
-		([relativePath]) => relativePath.toLowerCase() !== 'header.md',
-	);
-	if (!hasDialogueMarkdown) {
-		new Notice('No dialogue files were found.');
-		return;
-	}
+		const projectFiles = await collectProjectFiles(app, folder);
+		const hasHeader = fileExists(folder, 'header.md', app);
+		if (!hasHeader) {
+			const shouldContinue = await confirmDefaultHeader(app, folder.name);
+			if (!shouldContinue) {
+				return;
+			}
+		}
 
-	try {
+		const hasDialogueMarkdown = projectFiles.some(
+			([relativePath]) => relativePath.toLowerCase() !== 'header.md',
+		);
+		if (!hasDialogueMarkdown) {
+			new Notice('No dialogue files were found.');
+			return;
+		}
+
 		const bytes = compile_project(projectFiles, !hasHeader);
 		const outputFileName = `${folder.name}_dialogue.esp`;
 		const outputPath = normalizePath(`${folder.path}/${outputFileName}`);
-		await app.vault.adapter.writeBinary(outputPath, toArrayBuffer(bytes));
+		await writePluginFile(app, outputPath, bytes);
 		new Notice(`Created ${outputFileName}`);
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
