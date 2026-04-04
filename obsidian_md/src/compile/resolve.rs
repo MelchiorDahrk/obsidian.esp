@@ -3,48 +3,7 @@ use merge_to_master::traits::MergeInto;
 use merge_to_master::{DialogueGroup, Exterior, Interior, PluginData, merge_load_order};
 use std::collections::HashSet;
 use std::path::PathBuf;
-use tes3::esp::{DialogueInfo, DialogueType2, ObjectFlags, ObjectInfo};
-
-fn matches_existing_info(candidate: &DialogueInfo, authored: &DialogueInfo) -> bool {
-    candidate.data == authored.data
-        && candidate.speaker_id == authored.speaker_id
-        && candidate.speaker_race == authored.speaker_race
-        && candidate.speaker_class == authored.speaker_class
-        && candidate.speaker_faction == authored.speaker_faction
-        && candidate.speaker_cell == authored.speaker_cell
-        && candidate.player_faction == authored.player_faction
-        && candidate.sound_path == authored.sound_path
-        && candidate.quest_state == authored.quest_state
-        && candidate.filters == authored.filters
-}
-
-fn reconcile_modified_info_ids(plugin: &mut PluginData, master_data: &PluginData) {
-    for (dialogue_id, plugin_group) in plugin.dialogues.iter_mut() {
-        let Some(master_group) = master_data.dialogues.get(dialogue_id) else {
-            continue;
-        };
-
-        for info in plugin_group.infos.iter_mut() {
-            let mut matching_infos = master_group
-                .infos
-                .iter()
-                .filter(|master_info| matches_existing_info(master_info, info));
-
-            let replacement = matching_infos
-                .clone()
-                .find(|master_info| master_info.prev_id == info.prev_id)
-                .or_else(|| {
-                    let only_match = matching_infos.next()?;
-                    matching_infos.next().is_none().then_some(only_match)
-                });
-
-            if let Some(replacement) = replacement {
-                info.id.clear();
-                info.id.push_str(&replacement.id);
-            }
-        }
-    }
-}
+use tes3::esp::{DialogueType2, ObjectFlags, ObjectInfo};
 
 pub trait RemoveUnmodified {
     fn remove_unmodified(&mut self);
@@ -116,10 +75,6 @@ pub fn resolve(
 
     // 1. Merge load order to get masters
     let mut master_data = merge_load_order(master_paths)?;
-
-    // Recover exact master INFO ids using structured dialogue fields rather than
-    // body-text markers like "Original text:".
-    reconcile_modified_info_ids(&mut plugin, &master_data);
 
     // 2. Set modified=false on masters
     master_data.set_all_modified(false);

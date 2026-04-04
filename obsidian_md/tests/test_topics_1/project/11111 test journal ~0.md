@@ -1,7 +1,7 @@
 ---
 Type:
   - Journal
-DiagID:
+DiagID: 128914348295877816
 PrevID:
 Quest Name: false
 Finished: false

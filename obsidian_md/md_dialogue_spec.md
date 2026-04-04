@@ -179,6 +179,7 @@ If omitted, the compiler defaults to `Topic`.
 - `PrevID` is treated as a string identifier reference, not a numeric value.
 - If omitted, the compiler links the entry after the previously compiled entry for the same topic.
 - If present, it is preserved verbatim during compile.
+- For edits to existing dialogue, `PrevID` should be the exact upstream INFO id you want to link after.
 
 ### `Disposition` and `Index`
 
@@ -355,6 +356,8 @@ When compiling against masters, the resolve pass:
 3. normalizes touched journal topics by journal index
 4. removes unmodified records
 5. restores the original authored masters list and sets the output file type to `ESP`
+
+The resolver does not infer or recover missing dialogue ids from body text. Existing-record edits should carry the exact `DiagID` and any needed exact `PrevID` values in Markdown.
 
 ---
 
