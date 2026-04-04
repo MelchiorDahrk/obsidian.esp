@@ -13,20 +13,25 @@
 A dialogue project directory contains:
 
 - exactly one `header.md`
-- zero or more dialogue entry files named like `<Topic> ~<N>.md`
+- zero or more dialogue entry files stored under `Type/Name/`
 
 Example:
 
 ```text
 header.md
-Greeting 1 ~0.md
-Greeting 1 ~1.md
-test topic ~0.md
-test topic ~1.md
+Greeting/
+  Greeting 1/
+    Greeting 1 ~0.md
+    Greeting 1 ~1.md
+Topic/
+  test topic/
+    test topic ~0.md
+    test topic ~1.md
 ```
 
 Each non-header Markdown file represents exactly one `DialogueInfo`.
-The topic is normally derived from the filename, but can be overridden in frontmatter with `Topic:`.
+The topic is normally derived from the `Name` directory, and the dialogue type is derived from the `Type` directory.
+The topic can still be overridden in frontmatter with `Topic:`.
 
 ---
 
@@ -84,25 +89,30 @@ Variable0: Choice = 2
 This is the response text.
 ```
 
-### Filename rules
+### Directory and filename rules
 
-The parser looks for files ending in ` ~<number>.md`.
+The parser looks for files under this shape:
 
-- The portion before ` ~<number>` is treated as the topic id.
-- The numeric suffix is used only as a directory ordering hint.
+```text
+<Type>/<Name>/<Name> ~<number>.md
+```
+
+- `<Type>` must be one of `Topic`, `Journal`, `Voice`, `Greeting`, or `Persuasion`.
+- `<Name>` is treated as the topic id by default.
+- The filename ending in ` ~<number>.md` is used as an ordering hint within that topic directory.
 - Files are sorted by that numeric suffix before compilation.
 - If a file has no ` ~<number>` suffix, it sorts last.
 
 ### `Topic:` override
 
-The frontmatter may override the filename-derived topic:
+The frontmatter may override the directory-derived topic:
 
 ```yaml
 Type: Topic
 Topic: Greeting 0
 ```
 
-This is primarily used by the TES3-to-Markdown exporter so it can generate safe filenames while preserving the original TES3 topic id exactly.
+This is primarily used by the TES3-to-Markdown exporter so it can generate safe directory/file names while preserving the original TES3 topic id exactly.
 
 ---
 
@@ -113,7 +123,7 @@ These keys are recognized by the parser.
 | Key | Meaning |
 |---|---|
 | `Type` | Dialogue type: `Topic`, `Journal`, `Voice`, `Greeting`, or `Persuasion` |
-| `Topic` | Overrides the topic id derived from the filename |
+| `Topic` | Overrides the topic id derived from the `Name` directory |
 | `DiagID` | Preserved TES3 `DialogueInfo.id`; must be numeric if present |
 | `PrevID` | TES3 `prev_id`; preserved as an opaque string identifier |
 | `ID` | `speaker_id` |
@@ -162,7 +172,7 @@ Recognized values:
 - `Greeting`
 - `Persuasion`
 
-If omitted, the compiler defaults to `Topic`.
+If omitted, the compiler uses the parent `Type` directory.
 
 ### `DiagID`
 
@@ -406,17 +416,17 @@ Dialogue groups are exported in TES3 serialization order:
 
 Within a type, groups are sorted alphabetically by dialogue id.
 
-Within a group, files are written in the existing INFO order as:
+Within a group, files are written into `Type/Name/` in the existing INFO order as:
 
 ```text
-<safe topic stem> ~0.md
-<safe topic stem> ~1.md
-<safe topic stem> ~2.md
+<Type>/<safe topic stem>/<safe topic stem> ~0.md
+<Type>/<safe topic stem>/<safe topic stem> ~1.md
+<Type>/<safe topic stem>/<safe topic stem> ~2.md
 ```
 
-### Safe filenames
+### Safe directory and filenames
 
-The exporter sanitizes Windows-invalid filename characters:
+The exporter sanitizes Windows-invalid directory and filename characters:
 
 - `<`
 - `>`
@@ -429,7 +439,7 @@ The exporter sanitizes Windows-invalid filename characters:
 - `*`
 
 It replaces them with `_`, trims trailing spaces and periods, and falls back to `dialogue` if needed.
-Because the real topic id is also written in `Topic:`, the original TES3 dialogue id still round-trips even when the filename is sanitized.
+Because the real topic id is also written in `Topic:`, the original TES3 dialogue id still round-trips even when the directory/file names are sanitized.
 
 ---
 
@@ -472,6 +482,12 @@ Variable0: Choice = 2
 This is the first response.
 ```
 
+Stored as:
+
+```text
+Topic/My Topic/My Topic ~0.md
+```
+
 ### Export-style preserved entry
 
 ```yaml
@@ -490,4 +506,10 @@ Function2: Function
 Variable2: SameSex = 1
 ---
 If you want a job here, you'll have to talk to Helviane. Excuse me.
+```
+
+Stored as:
+
+```text
+Greeting/Greeting 1/Greeting 1 ~0.md
 ```
