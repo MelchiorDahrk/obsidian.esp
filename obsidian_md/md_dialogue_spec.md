@@ -231,6 +231,7 @@ Result: |
 
 The parser reconstructs the script by joining these indented lines with `\r\n`.
 Alternatively, inline `\r\n` and `\n` escape sequences are decoded by the parser if used on a single line.
+For `Voice` entries, the exporter always writes a `Result:` field even when the script text is empty.
 
 ### Body text
 
@@ -390,6 +391,8 @@ The exporter writes:
 - `Finished`
 - `Restart`
 - zero or more indexed filter pairs
+
+For `Voice` entries specifically, `Result:` is always emitted so the Markdown shape stays stable even when the TES3 `script_text` is empty.
 
 ### Export ordering
 

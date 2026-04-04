@@ -61,6 +61,15 @@ fn push_multiline_field(output: &mut String, key: &str, value: Option<impl AsRef
     }
 }
 
+fn push_multiline_field_or_empty(output: &mut String, key: &str, value: &str) {
+    if value.is_empty() {
+        output.push_str(key);
+        output.push_str(":\n");
+    } else {
+        push_multiline_field(output, key, Some(value));
+    }
+}
+
 fn format_file_type(file_type: FileType) -> &'static str {
     match file_type {
         FileType::Esp => "ESP",
@@ -239,7 +248,9 @@ fn render_info(topic: &str, info: &DialogueInfo) -> String {
         );
     }
 
-    if !info.script_text.is_empty() {
+    if is_voice {
+        push_multiline_field_or_empty(&mut output, "Result", &info.script_text);
+    } else if !info.script_text.is_empty() {
         push_multiline_field(&mut output, "Result", Some(&info.script_text));
     }
 

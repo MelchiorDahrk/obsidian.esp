@@ -5,6 +5,7 @@ use obsidian_md::collect_master_paths;
 use std::fs;
 use std::iter::zip;
 use std::path::Path;
+use tes3::esp::{Dialogue, DialogueData, DialogueInfo, DialogueType, DialogueType2, ObjectFlags, Sex};
 use uncased::AsUncased;
 
 fn assert_infos_match_ignoring_next_id(
@@ -185,6 +186,60 @@ fn test_export_round_trip() -> Result<()> {
         assert_eq!(recompiled_group.dialogue, expected_group.dialogue);
         assert_infos_match_ignoring_next_id(&expected_group.infos, &recompiled_group.infos);
     }
+
+    Ok(())
+}
+
+#[test]
+fn test_voice_export_includes_empty_result_field() -> Result<()> {
+    let mut plugin = PluginData::new();
+    plugin.dialogues.insert(
+        "hello".to_string(),
+        merge_to_master::DialogueGroup {
+            dialogue: Dialogue {
+                flags: ObjectFlags::empty(),
+                id: "Hello".to_string(),
+                dialogue_type: DialogueType2::Voice,
+            },
+            infos: std::collections::VecDeque::from([DialogueInfo {
+                flags: ObjectFlags::empty(),
+                id: "123456".to_string(),
+                prev_id: String::new(),
+                next_id: String::new(),
+                data: DialogueData {
+                    dialogue_type: DialogueType::Voice,
+                    disposition: 0,
+                    speaker_rank: -1,
+                    speaker_sex: Sex::Any,
+                    player_rank: -1,
+                },
+                sound_path: "Vo\\hello.wav".to_string(),
+                text: "Hello there.".to_string(),
+                ..Default::default()
+            }]),
+        },
+    );
+
+    let export_path = Path::new("tests/test_voice_export/generated");
+    if export_path.exists() {
+        fs::remove_dir_all(export_path)?;
+    }
+    fs::create_dir_all(export_path)?;
+
+    obsidian_md::export::write_project_directory(&plugin, export_path)?;
+
+    let exported = fs::read_to_string(export_path.join("Hello ~0.md"))?;
+    assert!(exported.contains("Type: Voice\n"));
+    assert!(exported.contains("Sound Path: Vo\\hello.wav\n"));
+    assert!(exported.contains("Result:\n"));
+
+    let reparsed = obsidian_md::parse::parse_project_directory(export_path)?;
+    let recompiled = obsidian_md::compile::compile(reparsed)?;
+    let recompiled_group = recompiled.dialogues.get("hello").unwrap();
+    let recompiled_info = recompiled_group.infos.front().unwrap();
+    assert_eq!(recompiled_info.data.dialogue_type, DialogueType::Voice);
+    assert_eq!(recompiled_info.sound_path, "Vo\\hello.wav");
+    assert_eq!(recompiled_info.script_text, "");
 
     Ok(())
 }
