@@ -6,7 +6,7 @@ PrevID: 5182288681931617351
 Disposition: 30
 ID:
 Race:
-Sex: Any
+Sex:
 Class: Healer Service
 Faction: Imperial Cult
 Rank:

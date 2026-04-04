@@ -31,6 +31,7 @@ pub fn parse_sex<'s>(input: &mut &'s str) -> Result<i32> {
         Caseless("male").value(0),
         Caseless("female").value(1),
         Caseless("any").value(-1),
+        "".value(-1),
     ))
     .parse_next(input)
 }

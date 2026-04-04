@@ -6,7 +6,7 @@ PrevID: 2388613752739223814
 Disposition: 30
 ID:
 Race:
-Sex: Any
+Sex:
 Class: Monk
 Faction: Imperial Cult
 Rank:

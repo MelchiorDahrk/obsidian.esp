@@ -136,6 +136,16 @@ These keys are recognized by the parser.
 | `Function<n>` | Filter type name for filter slot `n`; **Not for Journal** |
 | `Variable<n>` | Filter expression for filter slot `n`; **Not for Journal** |
 
+### `Sex`
+
+Accepted values:
+
+- `Any` (or blank)
+- `Male`
+- `Female`
+
+If omitted or blank, the compiler uses `Any`. The exporter only writes `Sex` if it is `Male` or `Female`.
+
 Unknown keys are ignored by the parser.
 
 ---

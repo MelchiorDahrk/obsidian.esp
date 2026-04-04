@@ -6,7 +6,7 @@ PrevID:
 Disposition: 0
 ID:
 Race:
-Sex: Any
+Sex:
 Class:
 Faction: Ashlanders
 Rank:

@@ -6,7 +6,7 @@ PrevID: 184615655170866801
 Disposition: 0
 ID:
 Race:
-Sex: Any
+Sex:
 Class:
 Faction: Ashlanders
 Rank:

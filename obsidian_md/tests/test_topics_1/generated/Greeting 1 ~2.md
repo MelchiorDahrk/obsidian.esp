@@ -6,7 +6,7 @@ PrevID: 891314329736518839
 Disposition: 0
 ID:
 Race:
-Sex: Any
+Sex:
 Class:
 Faction:
 Rank:

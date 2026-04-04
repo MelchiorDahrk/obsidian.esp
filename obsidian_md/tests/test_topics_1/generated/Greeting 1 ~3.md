@@ -6,7 +6,7 @@ PrevID: 25867274131901607
 Disposition: 0
 ID: garding
 Race:
-Sex: Any
+Sex:
 Class:
 Faction:
 Rank:

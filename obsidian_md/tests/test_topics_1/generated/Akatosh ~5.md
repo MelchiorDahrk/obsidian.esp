@@ -6,7 +6,7 @@ PrevID: 9578241642750319064
 Disposition: 0
 ID: a shady smuggler
 Race:
-Sex: Any
+Sex:
 Class:
 Faction:
 Rank:

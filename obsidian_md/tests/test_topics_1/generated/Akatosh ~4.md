@@ -6,7 +6,7 @@ PrevID: 2689628848191534580
 Disposition: 30
 ID:
 Race:
-Sex: Any
+Sex:
 Class: Priest
 Faction: Imperial Cult
 Rank:

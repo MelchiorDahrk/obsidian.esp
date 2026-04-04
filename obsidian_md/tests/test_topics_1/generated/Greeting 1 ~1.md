@@ -6,7 +6,7 @@ PrevID: 3190558963063415128
 Disposition: 0
 ID:
 Race: Dark Elf
-Sex: Any
+Sex:
 Class: Merchant
 Faction:
 Rank:

@@ -6,7 +6,7 @@ PrevID: 3067862222658526395
 Disposition: 0
 ID: tirnur thirano
 Race:
-Sex: Any
+Sex:
 Class:
 Faction:
 Rank:

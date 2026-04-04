@@ -6,7 +6,7 @@ PrevID: 2232273551681116076
 Disposition: 80
 ID:
 Race:
-Sex: Any
+Sex:
 Class:
 Faction: Ashlanders
 Rank:

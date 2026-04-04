@@ -69,11 +69,11 @@ fn format_file_type(file_type: FileType) -> &'static str {
     }
 }
 
-fn format_sex(sex: Sex) -> &'static str {
+fn format_sex(sex: Sex) -> Option<&'static str> {
     match sex {
-        Sex::Any => "Any",
-        Sex::Male => "Male",
-        Sex::Female => "Female",
+        Sex::Any => None,
+        Sex::Male => Some("Male"),
+        Sex::Female => Some("Female"),
     }
 }
 
@@ -206,7 +206,7 @@ fn render_info(topic: &str, info: &DialogueInfo) -> String {
             "Race",
             (!info.speaker_race.is_empty()).then_some(info.speaker_race.as_str()),
         );
-        push_field(&mut output, "Sex", Some(format_sex(info.data.speaker_sex)));
+        push_field(&mut output, "Sex", format_sex(info.data.speaker_sex));
         push_field(
             &mut output,
             "Class",
