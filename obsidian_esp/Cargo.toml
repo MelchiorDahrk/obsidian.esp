@@ -6,6 +6,10 @@ edition = "2024"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[[bin]]
+name = "obsidian_esp_cli"
+path = "src/main.rs"
+
 [dependencies]
 anyhow = "^1.0"
 hashbrown = { version = "^0.16", features = ["nightly", "rayon"] }
