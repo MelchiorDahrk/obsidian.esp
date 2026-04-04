@@ -5,51 +5,6 @@ use std::collections::HashSet;
 use std::path::PathBuf;
 use tes3::esp::{DialogueType, DialogueType2, ObjectFlags, ObjectInfo};
 
-fn extract_original_text(text: &str) -> Option<&str> {
-    text.lines().find_map(|line| {
-        line.trim()
-            .strip_prefix("Original text: ")
-            .map(str::trim)
-            .filter(|s| !s.is_empty())
-    })
-}
-
-fn reconcile_rounded_prev_id(info: &mut tes3::esp::DialogueInfo, master_group: &DialogueGroup) {
-    if info.prev_id.is_empty()
-        || master_group.find(&info.prev_id).is_some()
-        || !info.prev_id.chars().all(|c| c.is_ascii_digit())
-    {
-        return;
-    }
-
-    let Ok(prev_id) = info.prev_id.parse::<i128>() else {
-        return;
-    };
-
-    let mut candidates = master_group
-        .infos
-        .iter()
-        .filter_map(|master_info| {
-            let master_id = master_info.id.parse::<i128>().ok()?;
-            let distance = (master_id - prev_id).abs();
-            (distance <= 1_000).then_some((distance, master_info.id.as_str()))
-        })
-        .collect::<Vec<_>>();
-
-    candidates.sort_by_key(|(distance, id)| (*distance, id.len()));
-
-    if let Some((best_distance, best_id)) = candidates.first().copied()
-        && candidates
-            .iter()
-            .filter(|(distance, _)| *distance == best_distance)
-            .count()
-            == 1
-    {
-        info.prev_id.clear();
-        info.prev_id.push_str(best_id);
-    }
-}
-
 fn reconcile_modified_info_ids(plugin: &mut PluginData, master_data: &PluginData) {
     for (dialogue_id, plugin_group) in plugin.dialogues.iter_mut() {
         let Some(master_group) = master_data.dialogues.get(dialogue_id) else {
@@ -57,14 +12,8 @@ fn reconcile_modified_info_ids(plugin: &mut PluginData, master_data: &PluginData
         };
 
         for info in plugin_group.infos.iter_mut() {
-            reconcile_rounded_prev_id(info, master_group);
-
-            let original_text = extract_original_text(&info.text);
-
             let mut matching_infos = master_group.infos.iter().filter(|master_info| {
-                if let Some(original_text) = original_text {
-                    master_info.text == original_text
-                } else if info.data.dialogue_type == DialogueType::Journal {
+                if info.data.dialogue_type == DialogueType::Journal {
                     master_info.data.disposition == info.data.disposition
                         && master_info.quest_state == info.quest_state
                 } else {

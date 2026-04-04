@@ -352,24 +352,10 @@ This distinction lets authored Markdown keep its simpler sequential behavior whi
 When compiling against masters, the resolve pass:
 
 1. loads the master plugins from the current OpenMW load order
-2. reconciles modified INFO ids by matching `Original text: ...` markers when present
-3. also attempts to reconcile rounded numeric `PrevID` values against exact master ids
-4. merges the authored plugin into the master data
-5. normalizes touched journal topics by journal index
-6. removes unmodified records
-7. restores the original authored masters list and sets the output file type to `ESP`
-
-### `Original text:` convention
-
-The code recognizes this marker inside body text:
-
-```text
-Original text: Enough %PCName. You beat me fairly.
-```
-
-When present, resolve uses it to locate the original master INFO and recover the exact TES3 INFO id.
-
-This is especially important for modifying existing dialogue imported from a plugin.
+2. merges the authored plugin into the master data
+3. normalizes touched journal topics by journal index
+4. removes unmodified records
+5. restores the original authored masters list and sets the output file type to `ESP`
 
 ---
 
@@ -448,8 +434,7 @@ Because the real topic id is also written in `Topic:`, the original TES3 dialogu
 - `DiagID` is optional for hand-authored content but always present in exported content.
 - `PrevID` should be numeric if used.
 - If you are modifying existing master dialogue, include complete and correct `Masters` in `header.md`.
-- If you are importing/exporting existing plugin data, preserve `DiagID`, `PrevID`, and `Original text:` lines when present.
-- The body text is not parsed for semantic fields except for the optional `Original text:` reconciliation helper used during resolve.
+- If you are importing/exporting existing plugin data, preserve `DiagID` and `PrevID` values when present.
 
 ---
 
