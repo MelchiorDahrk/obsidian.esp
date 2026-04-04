@@ -1,6 +1,11 @@
 import { Notice, Plugin, TFolder, normalizePath } from 'obsidian';
 import { initSync, unpack_plugin } from '../pkg/obsidian_esp.js';
-import { DEFAULT_SETTINGS, ObsidianEspSettings, ObsidianEspSettingTab } from './settings';
+import { compileVaultFolder } from './features/compile-folder';
+import {
+	DEFAULT_SETTINGS,
+	ObsidianEspSettings,
+	ObsidianEspSettingTab,
+} from './settings';
 
 export default class ObsidianEsp extends Plugin {
 	settings: ObsidianEspSettings;
@@ -8,18 +13,29 @@ export default class ObsidianEsp extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
-
 		await this.initWasm();
 
-		this.addRibbonIcon('file-input', 'Unpack TES3 plugin', () => {
+		this.addRibbonIcon('file-input', 'Unpack plugin file', () => {
 			this.promptForFile();
+		});
+
+		this.addRibbonIcon('folder', 'Compile dialogue folder', () => {
+			void this.compileFolder();
 		});
 
 		this.addCommand({
 			id: 'unpack',
-			name: 'Unpack TES3 plugin file',
+			name: 'Unpack plugin file',
 			callback: () => {
 				this.promptForFile();
+			},
+		});
+
+		this.addCommand({
+			id: 'compile-folder',
+			name: 'Compile dialogue folder',
+			callback: () => {
+				void this.compileFolder();
 			},
 		});
 
@@ -37,36 +53,44 @@ export default class ObsidianEsp extends Plugin {
 
 	promptForFile() {
 		if (!this.wasmReady) {
-			new Notice('WASM module is not ready yet.');
+			new Notice('Wasm module is not ready yet.');
 			return;
 		}
 
 		const input = document.createElement('input');
 		input.type = 'file';
 		input.accept = '.esp,.esm,.ESP,.ESM';
-
-		input.addEventListener('change', async () => {
-			const file = input.files?.[0];
-			if (!file) return;
-
-			try {
-				await this.unpackFile(file);
-			} catch (e) {
-				const message =
-					e instanceof Error ? e.message : String(e);
-				new Notice(`Failed to unpack: ${message}`);
-			}
+		input.addEventListener('change', () => {
+			void this.handleSelectedFile(input);
 		});
-
 		input.click();
+	}
+
+	async handleSelectedFile(input: HTMLInputElement) {
+		const file = input.files?.[0];
+		if (!file) {
+			return;
+		}
+
+		try {
+			await this.unpackFile(file);
+		} catch (error) {
+			const message =
+				error instanceof Error ? error.message : String(error);
+			new Notice(`Failed to unpack: ${message}`);
+		}
 	}
 
 	async unpackFile(file: File) {
 		const buffer = await file.arrayBuffer();
 		const bytes = new Uint8Array(buffer);
+		const unpackedFiles = unpack_plugin(bytes) as unknown;
 
-		const files: [string, string][] = unpack_plugin(bytes);
+		if (!Array.isArray(unpackedFiles)) {
+			throw new Error('Unexpected unpacked plugin output.');
+		}
 
+		const files = unpackedFiles as [string, string][];
 		const baseName = file.name.replace(/\.[^.]+$/, '');
 		const outputDir = normalizePath(
 			`${this.settings.outputFolder}/${baseName}`,
@@ -75,11 +99,11 @@ export default class ObsidianEsp extends Plugin {
 		let created = 0;
 		for (const [relativePath, content] of files) {
 			const fullPath = normalizePath(`${outputDir}/${relativePath}`);
-
 			const parentDir = fullPath.substring(
 				0,
 				fullPath.lastIndexOf('/'),
 			);
+
 			if (parentDir) {
 				await this.ensureFolder(parentDir);
 			}
@@ -91,10 +115,25 @@ export default class ObsidianEsp extends Plugin {
 		new Notice(`Unpacked ${created} files to ${outputDir}`);
 	}
 
+	async compileFolder() {
+		if (!this.wasmReady) {
+			new Notice('Wasm module is not ready yet.');
+			return;
+		}
+
+		await compileVaultFolder(this.app);
+	}
+
 	async ensureFolder(path: string) {
 		const existing = this.app.vault.getAbstractFileByPath(path);
-		if (existing instanceof TFolder) return;
-		if (existing) return;
+		if (existing instanceof TFolder) {
+			return;
+		}
+
+		if (existing) {
+			return;
+		}
+
 		await this.app.vault.createFolder(path);
 	}
 

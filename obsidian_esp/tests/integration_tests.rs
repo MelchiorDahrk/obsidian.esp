@@ -6,7 +6,7 @@ use std::fs;
 use std::iter::zip;
 use std::path::Path;
 use tes3::esp::{
-    Dialogue, DialogueData, DialogueInfo, DialogueType, DialogueType2, ObjectFlags, Sex,
+    Dialogue, DialogueData, DialogueInfo, DialogueType, DialogueType2, ObjectFlags, Plugin, Sex,
 };
 use uncased::AsUncased;
 
@@ -33,6 +33,59 @@ fn assert_infos_match_ignoring_next_id(
         assert_eq!(expected_info.filters, actual_info.filters);
         assert_eq!(expected_info.script_text, actual_info.script_text);
     }
+}
+
+fn collect_project_files(path: &Path) -> Result<Vec<(String, String)>> {
+    let mut files = Vec::new();
+
+    for entry in fs::read_dir(path)? {
+        let entry = entry?;
+        let entry_path = entry.path();
+
+        if entry.file_type()?.is_file() {
+            if entry_path.extension().and_then(|ext| ext.to_str()) != Some("md") {
+                continue;
+            }
+
+            files.push((
+                entry_path
+                    .strip_prefix(path)?
+                    .to_string_lossy()
+                    .into_owned(),
+                fs::read_to_string(&entry_path)?,
+            ));
+            continue;
+        }
+
+        for topic_dir in fs::read_dir(&entry_path)? {
+            let topic_dir = topic_dir?;
+            if !topic_dir.file_type()?.is_dir() {
+                continue;
+            }
+
+            for file in fs::read_dir(topic_dir.path())? {
+                let file = file?;
+                if !file.file_type()?.is_file() {
+                    continue;
+                }
+
+                let file_path = file.path();
+                if file_path.extension().and_then(|ext| ext.to_str()) != Some("md") {
+                    continue;
+                }
+
+                files.push((
+                    file_path
+                        .strip_prefix(path)?
+                        .to_string_lossy()
+                        .into_owned(),
+                    fs::read_to_string(&file_path)?,
+                ));
+            }
+        }
+    }
+
+    Ok(files)
 }
 
 #[test]
@@ -260,6 +313,59 @@ fn test_voice_export_includes_empty_result_field() -> Result<()> {
     assert_eq!(recompiled_info.data.dialogue_type, DialogueType::Voice);
     assert_eq!(recompiled_info.sound_path, "Vo\\hello.wav");
     assert_eq!(recompiled_info.script_text, "");
+
+    Ok(())
+}
+
+#[test]
+fn test_parse_project_files_with_default_header() -> Result<()> {
+    let markdown_path = Path::new("tests/test_topics_1/project");
+    let project_files = collect_project_files(markdown_path)?
+        .into_iter()
+        .filter(|(path, _)| !path.eq_ignore_ascii_case("header.md"))
+        .collect_vec();
+
+    let parsed = obsidian_esp::parse::parse_project_files(
+        project_files,
+        Some(obsidian_esp::parse::ParsedHeader {
+            author: String::new(),
+            description: String::new(),
+            file_type: "ESP".to_string(),
+            masters: vec!["Morrowind.esm".to_string()],
+        }),
+    )?;
+
+    assert_eq!(parsed.header.author, "");
+    assert_eq!(parsed.header.description, "");
+    assert_eq!(parsed.header.file_type, "ESP");
+    assert_eq!(parsed.header.masters, vec!["Morrowind.esm".to_string()]);
+    assert!(!parsed.infos.is_empty());
+
+    Ok(())
+}
+
+#[test]
+fn test_compile_project_files_generates_esp_bytes() -> Result<()> {
+    let markdown_path = Path::new("tests/test_topics_1/project");
+    let bytes = obsidian_esp::compile_project_files(collect_project_files(markdown_path)?, false)
+        .map_err(anyhow::Error::msg)?;
+
+    let mut plugin = Plugin::new();
+    plugin.load_bytes(&bytes)?;
+
+    let header = plugin.header().expect("compiled plugin should contain a header");
+    assert_eq!(header.file_type, tes3::esp::FileType::Esp);
+    assert_eq!(header.author.to_string(), "Melchior Dahrk");
+    assert_eq!(header.description.to_string(), "dialogue test");
+    assert_eq!(
+        header
+            .masters
+            .iter()
+            .map(|(name, _)| name.as_str())
+            .collect_vec(),
+        vec!["Morrowind.esm"]
+    );
+    assert_eq!(header.masters[0].1, 0);
 
     Ok(())
 }

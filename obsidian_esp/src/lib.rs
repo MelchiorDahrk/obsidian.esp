@@ -79,6 +79,34 @@ use js_sys::{Array, Uint8Array};
 use serde_wasm_bindgen::{from_value, to_value};
 use wasm_bindgen::prelude::*;
 
+fn default_header() -> parse::ParsedHeader {
+    parse::ParsedHeader {
+        author: String::new(),
+        description: String::new(),
+        file_type: "ESP".to_string(),
+        masters: vec!["Morrowind.esm".to_string()],
+    }
+}
+
+pub fn compile_project_files(
+    files: Vec<(String, String)>,
+    allow_default_header: bool,
+) -> Result<Vec<u8>, String> {
+    let default_header = allow_default_header.then(default_header);
+    let parsed =
+        parse::parse_project_files(files, default_header).map_err(|error| error.to_string())?;
+    let authored_masters = parsed.header.masters.clone();
+
+    let mut compiled = compile::compile(parsed).map_err(|error| error.to_string())?;
+    compiled.header.masters = authored_masters
+        .into_iter()
+        .map(|master_name| (master_name, 0))
+        .collect();
+
+    let mut plugin = compiled.into_plugin();
+    plugin.save_bytes().map_err(|error| error.to_string())
+}
+
 #[wasm_bindgen]
 pub fn load_objects(array: Uint8Array) -> Result<JsValue, JsValue> {
     let mut plugin = Plugin::new();
@@ -131,4 +159,16 @@ pub fn unpack_plugin(array: Uint8Array) -> Result<JsValue, JsValue> {
     }
 
     Ok(result.into())
+}
+
+#[wasm_bindgen]
+pub fn compile_project(files: JsValue, allow_default_header: bool) -> Result<Uint8Array, JsValue> {
+    let files: Vec<(String, String)> = from_value(files)?;
+    let bytes = compile_project_files(files, allow_default_header).map_err(JsValue::from)?;
+
+    let length = u32::try_from(bytes.len()).map_err(|error| JsValue::from(error.to_string()))?;
+    let array = Uint8Array::new_with_length(length);
+    array.copy_from(&bytes);
+
+    Ok(array)
 }

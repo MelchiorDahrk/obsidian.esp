@@ -6,7 +6,7 @@ export interface ObsidianEspSettings {
 }
 
 export const DEFAULT_SETTINGS: ObsidianEspSettings = {
-	outputFolder: 'TES3 Plugins',
+	outputFolder: 'Plugin exports',
 };
 
 export class ObsidianEspSettingTab extends PluginSettingTab {
@@ -28,7 +28,7 @@ export class ObsidianEspSettingTab extends PluginSettingTab {
 			)
 			.addText((text) =>
 				text
-					.setPlaceholder('TES3 Plugins')
+					.setPlaceholder('Plugin exports')
 					.setValue(this.plugin.settings.outputFolder)
 					.onChange(async (value) => {
 						this.plugin.settings.outputFolder = value;
