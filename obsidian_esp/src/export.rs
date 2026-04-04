@@ -26,6 +26,16 @@ fn sanitize_file_stem(input: &str) -> String {
     }
 }
 
+fn format_type_directory(dialogue_type: tes3::esp::DialogueType2) -> &'static str {
+    match dialogue_type {
+        tes3::esp::DialogueType2::Topic => "Topic",
+        tes3::esp::DialogueType2::Journal => "Journal",
+        tes3::esp::DialogueType2::Voice => "Voice",
+        tes3::esp::DialogueType2::Greeting => "Greeting",
+        tes3::esp::DialogueType2::Persuasion => "Persuasion",
+    }
+}
+
 fn encode_inline_value(value: &str) -> String {
     value.replace("\r\n", "\\r\\n").replace('\n', "\\n")
 }
@@ -325,11 +335,16 @@ pub fn write_project_directory(plugin: &PluginData, output_dir: &Path) -> Result
     });
 
     for group in dialogue_groups {
+        let type_dir = output_dir.join(format_type_directory(group.dialogue.dialogue_type));
+        let name_dir = type_dir.join(sanitize_file_stem(&group.dialogue.id));
+        std::fs::create_dir_all(&name_dir)
+            .with_context(|| format!("Failed to create directory: {}", name_dir.display()))?;
+
         let stem = sanitize_file_stem(&group.dialogue.id);
         for (index, info) in group.infos.iter().enumerate() {
             let mut file_name = String::new();
             write!(&mut file_name, "{stem} ~{index}.md").unwrap();
-            let output_path = output_dir.join(file_name);
+            let output_path = name_dir.join(file_name);
             std::fs::write(&output_path, render_info(&group.dialogue.id, info))
                 .with_context(|| format!("Failed to write file: {}", output_path.display()))?;
         }

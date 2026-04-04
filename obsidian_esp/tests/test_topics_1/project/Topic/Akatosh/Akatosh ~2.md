@@ -1,0 +1,26 @@
+---
+Type:
+  - Topic
+DiagID:
+PrevID: 9578241642750319064
+ID:
+  - a shady smuggler
+Disposition:
+Race:
+Sex:
+Class:
+Faction:
+Rank:
+Cell: Abaelun Mine
+PC Faction:
+PC Rank:
+Result:
+Function0:
+  - Dead
+Variable0: a smuggler boss = 1
+---
+This is a new topic info for the "Akatosh" topic. It should be at the bottom of the list.
+
+ID: a shady smuggler
+Cell: Abaelun Mine
+Dead: a smuggler boss = 1

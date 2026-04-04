@@ -154,6 +154,24 @@ fn test_export_round_trip() -> Result<()> {
     let expected = PluginData::from_path(expected_path)?;
     obsidian_esp::export::write_project_directory(&expected, export_path)?;
 
+    assert!(export_path.join("header.md").exists());
+    assert!(export_path.join("Topic").join("Akatosh").join("Akatosh ~0.md").exists());
+    assert!(export_path.join("Topic").join("test topic").join("test topic ~0.md").exists());
+    assert!(
+        export_path
+            .join("Journal")
+            .join("11111 test journal")
+            .join("11111 test journal ~0.md")
+            .exists()
+    );
+    assert!(
+        export_path
+            .join("Greeting")
+            .join("Greeting 1")
+            .join("Greeting 1 ~0.md")
+            .exists()
+    );
+
     let reparsed = obsidian_esp::parse::parse_project_directory(export_path)?;
     assert_eq!(
         reparsed.header.masters,
@@ -230,7 +248,7 @@ fn test_voice_export_includes_empty_result_field() -> Result<()> {
 
     obsidian_esp::export::write_project_directory(&plugin, export_path)?;
 
-    let exported = fs::read_to_string(export_path.join("Hello ~0.md"))?;
+    let exported = fs::read_to_string(export_path.join("Voice").join("Hello").join("Hello ~0.md"))?;
     assert!(exported.contains("Type: Voice\n"));
     assert!(exported.contains("Sound Path: Vo\\hello.wav\n"));
     assert!(exported.contains("Result:\n"));
