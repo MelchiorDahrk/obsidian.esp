@@ -1,14 +1,17 @@
 [package]
-name = "obsidian_md"
+name = "obsidian_esp"
 version = "0.1.0"
 edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 anyhow = "^1.0"
 hashbrown = { version = "^0.16", features = ["nightly", "rayon"] }
 itertools = "^0.14"
 log = { version = "^0.4", features = ["release_max_level_off"] }
-mimalloc = { version = "^0.1", features = ["v3"] }
+# mimalloc = { version = "^0.1", features = ["v3"] }
 rayon = "^1.10"
 tracing = { version = "^0.1", features = ["release_max_level_info"] }
 tracing-appender = "^0.2"
@@ -17,13 +20,17 @@ uncased = "^0.9"
 vfstool_lib  = "^0.2"
 openmw-config = "^0.1"
 rand = "0.10.0"
+getrandom = { version = "0.4.2", features = ["wasm_js"] }
 winnow = "1.0.1"
+wasm-bindgen = "^0.2"
+serde-wasm-bindgen = "^0.6"
+js-sys = "^0.3"
 
 [dependencies.tes3]
 git = "https://github.com/Greatness7/tes3"
 default-features = false
-features = ["esp"]
+features = ["esp", "serde"]
 
 [dependencies.merge_to_master]
 git = "https://github.com/Greatness7/merge_to_master.git"
-rev = "52b70d63e7585194f14ce4a70356646a8673b9aa"
+rev = "b00368a4bf24f3c427409e47a0ca3240ac93c75d"

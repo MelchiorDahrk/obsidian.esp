@@ -1,7 +1,7 @@
 use anyhow::Result;
 use itertools::Itertools;
 use merge_to_master::PluginData;
-use obsidian_md::collect_master_paths;
+use obsidian_esp::collect_master_paths;
 use std::fs;
 use std::iter::zip;
 use std::path::Path;
@@ -38,11 +38,11 @@ fn test_topics_1() -> Result<()> {
     let markdown_path = Path::new("tests/test_topics_1/project");
     let expected_path = Path::new("tests/test_topics_1/expect/output.esp");
 
-    let parsed = obsidian_md::parse::parse_project_directory(&markdown_path)?;
+    let parsed = obsidian_esp::parse::parse_project_directory(&markdown_path)?;
     let (master_paths, master_sizes) = collect_master_paths(&parsed.header.masters);
 
-    let compiled = obsidian_md::compile::compile(parsed)?;
-    let resolved = obsidian_md::compile::resolve::resolve(compiled, &master_paths, master_sizes)?;
+    let compiled = obsidian_esp::compile::compile(parsed)?;
+    let resolved = obsidian_esp::compile::resolve::resolve(compiled, &master_paths, master_sizes)?;
     let expected = PluginData::from_path(&expected_path)?;
 
     assert_eq!(resolved.dialogues.len(), expected.dialogues.len());
@@ -150,9 +150,9 @@ fn test_export_round_trip() -> Result<()> {
     fs::create_dir_all(export_path)?;
 
     let expected = PluginData::from_path(expected_path)?;
-    obsidian_md::export::write_project_directory(&expected, export_path)?;
+    obsidian_esp::export::write_project_directory(&expected, export_path)?;
 
-    let reparsed = obsidian_md::parse::parse_project_directory(export_path)?;
+    let reparsed = obsidian_esp::parse::parse_project_directory(export_path)?;
     assert_eq!(
         reparsed.header.masters,
         expected
@@ -163,7 +163,7 @@ fn test_export_round_trip() -> Result<()> {
             .collect_vec()
     );
 
-    let recompiled = obsidian_md::compile::compile(reparsed)?;
+    let recompiled = obsidian_esp::compile::compile(reparsed)?;
 
     assert_eq!(recompiled.header.author, expected.header.author);
     assert_eq!(recompiled.header.description, expected.header.description);

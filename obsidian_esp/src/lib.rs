@@ -2,6 +2,7 @@
 
 pub mod logging;
 pub use logging::*;
+use tes3::esp::Plugin;
 
 pub mod compile;
 pub mod export;
@@ -72,4 +73,39 @@ pub fn collect_master_paths(master_names: &[String]) -> (Vec<PathBuf>, Vec<(Stri
     }
 
     (master_paths, master_sizes)
+}
+
+use js_sys::Uint8Array;
+use serde_wasm_bindgen::{from_value, to_value};
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+pub fn load_objects(array: Uint8Array) -> Result<JsValue, JsValue> {
+    let mut plugin = Plugin::new();
+    plugin
+        .load_bytes(array.to_vec().as_ref())
+        .map_err(|e| JsValue::from(e.to_string()))?;
+
+    let value = to_value(&plugin.objects)?;
+
+    Ok(value)
+}
+
+#[wasm_bindgen]
+pub fn save_objects(value: JsValue) -> Result<Uint8Array, JsValue> {
+    let mut plugin = Plugin {
+        objects: from_value(value)?,
+    };
+
+    let bytes = plugin
+        .save_bytes()
+        .map_err(|e| JsValue::from(e.to_string()))?;
+
+    let length = u32::try_from(bytes.len()) //
+        .map_err(|e| JsValue::from(e.to_string()))?;
+
+    let array = Uint8Array::new_with_length(length);
+    array.copy_from(&bytes);
+
+    Ok(array)
 }

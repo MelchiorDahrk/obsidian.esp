@@ -1,7 +1,7 @@
 # TES3 Markdown Dialogue Format
 
 > [!IMPORTANT]
-> This document describes the Markdown format currently implemented by `obsidian_md`.
+> This document describes the Markdown format currently implemented by `obsidian_esp`.
 > It covers both directions:
 > - authoring Markdown and compiling it into a TES3 plugin
 > - exporting a TES3 plugin back into Markdown

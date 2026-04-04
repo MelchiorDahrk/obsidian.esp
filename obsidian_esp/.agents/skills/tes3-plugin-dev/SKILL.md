@@ -5,7 +5,7 @@ description: Reference for working with the `tes3` and `merge_to_master` Rust cr
 
 # TES3 Plugin Development with `tes3` and `merge_to_master`
 
-This skill documents the two Rust libraries used in the `obsidian_md` project for reading, writing, merging, and querying TES3 (The Elder Scrolls III: Morrowind) plugin files.
+This skill documents the two Rust libraries used in the `obsidian_esp` project for reading, writing, merging, and querying TES3 (The Elder Scrolls III: Morrowind) plugin files.
 
 ## Crate Overview
 
@@ -284,7 +284,7 @@ use std::fmt::Write;
 
 fn generate_info_id() -> String {
     let mut id = String::new();
-    // note: `id_exists` is not provided by the crates; 
+    // note: `id_exists` is not provided by the crates;
     // you must implement it by checking the current topic's info list.
     while id.is_empty() || id.len() >= 32 || id_exists(&id) {
         id.clear();
