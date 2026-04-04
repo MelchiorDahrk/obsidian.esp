@@ -91,6 +91,7 @@ fn default_header() -> parse::ParsedHeader {
 pub fn compile_project_files(
     files: Vec<(String, String)>,
     allow_default_header: bool,
+    force_esp: bool,
 ) -> Result<Vec<u8>, String> {
     let default_header = allow_default_header.then(default_header);
     let parsed =
@@ -104,6 +105,13 @@ pub fn compile_project_files(
         .collect();
 
     let mut plugin = compiled.into_plugin();
+
+    if let Some(header) = plugin.header_mut()
+        && force_esp
+    {
+        header.file_type = tes3::esp::FileType::Esp;
+    }
+
     plugin.save_bytes().map_err(|error| error.to_string())
 }
 
@@ -164,7 +172,8 @@ pub fn unpack_plugin(array: Uint8Array) -> Result<JsValue, JsValue> {
 #[wasm_bindgen]
 pub fn compile_project(files: JsValue, allow_default_header: bool) -> Result<Uint8Array, JsValue> {
     let files: Vec<(String, String)> = from_value(files)?;
-    let bytes = compile_project_files(files, allow_default_header).map_err(JsValue::from)?;
+    let bytes = compile_project_files(files, allow_default_header, /*force_esp*/ true)
+        .map_err(JsValue::from)?;
 
     let length = u32::try_from(bytes.len()).map_err(|error| JsValue::from(error.to_string()))?;
     let array = Uint8Array::new_with_length(length);

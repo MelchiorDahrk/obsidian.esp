@@ -75,10 +75,7 @@ fn collect_project_files(path: &Path) -> Result<Vec<(String, String)>> {
                 }
 
                 files.push((
-                    file_path
-                        .strip_prefix(path)?
-                        .to_string_lossy()
-                        .into_owned(),
+                    file_path.strip_prefix(path)?.to_string_lossy().into_owned(),
                     fs::read_to_string(&file_path)?,
                 ));
             }
@@ -208,8 +205,20 @@ fn test_export_round_trip() -> Result<()> {
     obsidian_esp::export::write_project_directory(&expected, export_path)?;
 
     assert!(export_path.join("header.md").exists());
-    assert!(export_path.join("Topic").join("Akatosh").join("Akatosh ~0.md").exists());
-    assert!(export_path.join("Topic").join("test topic").join("test topic ~0.md").exists());
+    assert!(
+        export_path
+            .join("Topic")
+            .join("Akatosh")
+            .join("Akatosh ~0.md")
+            .exists()
+    );
+    assert!(
+        export_path
+            .join("Topic")
+            .join("test topic")
+            .join("test topic ~0.md")
+            .exists()
+    );
     assert!(
         export_path
             .join("Journal")
@@ -347,13 +356,16 @@ fn test_parse_project_files_with_default_header() -> Result<()> {
 #[test]
 fn test_compile_project_files_generates_esp_bytes() -> Result<()> {
     let markdown_path = Path::new("tests/test_topics_1/project");
-    let bytes = obsidian_esp::compile_project_files(collect_project_files(markdown_path)?, false)
-        .map_err(anyhow::Error::msg)?;
+    let bytes =
+        obsidian_esp::compile_project_files(collect_project_files(markdown_path)?, false, false)
+            .map_err(anyhow::Error::msg)?;
 
     let mut plugin = Plugin::new();
     plugin.load_bytes(&bytes)?;
 
-    let header = plugin.header().expect("compiled plugin should contain a header");
+    let header = plugin
+        .header()
+        .expect("compiled plugin should contain a header");
     assert_eq!(header.file_type, tes3::esp::FileType::Esp);
     assert_eq!(header.author.to_string(), "Melchior Dahrk");
     assert_eq!(header.description.to_string(), "dialogue test");
