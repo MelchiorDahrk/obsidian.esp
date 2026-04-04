@@ -5,3 +5,4 @@ Cargo.lock
 **/generated/
 
 pkg
+obsidian_plugin/release/
