@@ -2,16 +2,18 @@
 
 pub mod logging;
 pub use logging::*;
-use tes3::esp::Plugin;
+use tes3::esp::{Plugin, TES3Object};
 
 pub mod compile;
 pub mod export;
 pub mod parse;
 
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use openmw_config::OpenMWConfiguration;
+use serde::{Deserialize, Serialize};
 use vfstool_lib::VFS;
 
 use merge_to_master::merge_load_order;
@@ -79,6 +81,79 @@ use js_sys::{Array, Uint8Array};
 use js_sys::{Object, Reflect};
 use serde_wasm_bindgen::{from_value, to_value};
 use wasm_bindgen::prelude::*;
+
+#[derive(Default, Deserialize)]
+#[serde(default)]
+struct PropertyExtractionOptions {
+    include_factions: bool,
+    include_races: bool,
+    include_classes: bool,
+    include_ids: bool,
+    include_cells: bool,
+}
+
+#[derive(Default, Serialize)]
+struct PropertyValueSet {
+    factions: Vec<String>,
+    races: Vec<String>,
+    classes: Vec<String>,
+    ids: Vec<String>,
+    cells: Vec<String>,
+}
+
+fn push_unique_value(values: &mut BTreeMap<String, String>, value: &str) {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        return;
+    }
+
+    values
+        .entry(trimmed.to_ascii_lowercase())
+        .or_insert_with(|| trimmed.to_string());
+}
+
+fn collect_property_values(
+    plugin: Plugin,
+    options: &PropertyExtractionOptions,
+) -> PropertyValueSet {
+    let mut factions = BTreeMap::new();
+    let mut races = BTreeMap::new();
+    let mut classes = BTreeMap::new();
+    let mut ids = BTreeMap::new();
+    let mut cells = BTreeMap::new();
+
+    for object in plugin.objects {
+        match object {
+            TES3Object::Faction(record) if options.include_factions => {
+                push_unique_value(&mut factions, &record.id);
+            }
+            TES3Object::Race(record) if options.include_races => {
+                push_unique_value(&mut races, &record.id);
+            }
+            TES3Object::Class(record) if options.include_classes => {
+                push_unique_value(&mut classes, &record.id);
+            }
+            TES3Object::Npc(record) if options.include_ids => {
+                push_unique_value(&mut ids, &record.id);
+            }
+            TES3Object::Creature(record) if options.include_ids => {
+                push_unique_value(&mut ids, &record.id);
+            }
+            TES3Object::Cell(record) if options.include_cells => {
+                push_unique_value(&mut cells, &record.name);
+            }
+            _ => {}
+        }
+    }
+
+    PropertyValueSet {
+        factions: factions.into_values().collect(),
+        races: races.into_values().collect(),
+        classes: classes.into_values().collect(),
+        ids: ids.into_values().collect(),
+        cells: cells.into_values().collect(),
+    }
+}
 
 fn default_header() -> parse::ParsedHeader {
     parse::ParsedHeader {
@@ -221,4 +296,20 @@ pub fn compile_project_with_log(
     Reflect::set(&result, &JsValue::from_str("log"), &JsValue::from_str(&log))?;
 
     Ok(result.into())
+}
+
+#[wasm_bindgen]
+pub fn extract_property_values(
+    array: Uint8Array,
+    options: JsValue,
+) -> Result<JsValue, JsValue> {
+    let mut plugin = Plugin::new();
+    plugin
+        .load_bytes(array.to_vec().as_ref())
+        .map_err(|error| JsValue::from(error.to_string()))?;
+
+    let options: PropertyExtractionOptions = from_value(options)?;
+    let values = collect_property_values(plugin, &options);
+
+    to_value(&values).map_err(Into::into)
 }

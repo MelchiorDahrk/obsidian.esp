@@ -123,12 +123,12 @@ fn format_filter_type(filter_type: FilterType) -> &'static str {
         FilterType::Journal => "Journal",
         FilterType::Item => "Item",
         FilterType::Dead => "Dead",
-        FilterType::NotId => "NotId",
-        FilterType::NotFaction => "NotFaction",
-        FilterType::NotClass => "NotClass",
-        FilterType::NotRace => "NotRace",
-        FilterType::NotCell => "NotCell",
-        FilterType::NotLocal => "NotLocal",
+        FilterType::NotId => "Not ID",
+        FilterType::NotFaction => "Not Faction",
+        FilterType::NotClass => "Not Class",
+        FilterType::NotRace => "Not Race",
+        FilterType::NotCell => "Not Cell",
+        FilterType::NotLocal => "Not Local",
     }
 }
 

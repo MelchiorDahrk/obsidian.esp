@@ -167,12 +167,36 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
                         Caseless("Item").value(FilterType::Item),
                         Caseless("Dead").value(FilterType::Dead),
                         alt::<_, _, ContextError, _>((
-                            Caseless("NotId").value(FilterType::NotId),
-                            Caseless("NotFaction").value(FilterType::NotFaction),
-                            Caseless("NotClass").value(FilterType::NotClass),
-                            Caseless("NotRace").value(FilterType::NotRace),
-                            Caseless("NotCell").value(FilterType::NotCell),
-                            Caseless("NotLocal").value(FilterType::NotLocal),
+                            alt::<_, _, ContextError, _>((
+                                Caseless("NotId"),
+                                Caseless("Not ID"),
+                            ))
+                            .value(FilterType::NotId),
+                            alt::<_, _, ContextError, _>((
+                                Caseless("NotFaction"),
+                                Caseless("Not Faction"),
+                            ))
+                            .value(FilterType::NotFaction),
+                            alt::<_, _, ContextError, _>((
+                                Caseless("NotClass"),
+                                Caseless("Not Class"),
+                            ))
+                            .value(FilterType::NotClass),
+                            alt::<_, _, ContextError, _>((
+                                Caseless("NotRace"),
+                                Caseless("Not Race"),
+                            ))
+                            .value(FilterType::NotRace),
+                            alt::<_, _, ContextError, _>((
+                                Caseless("NotCell"),
+                                Caseless("Not Cell"),
+                            ))
+                            .value(FilterType::NotCell),
+                            alt::<_, _, ContextError, _>((
+                                Caseless("NotLocal"),
+                                Caseless("Not Local"),
+                            ))
+                            .value(FilterType::NotLocal),
                         )),
                     ))
                     .parse_peek(val.as_str())

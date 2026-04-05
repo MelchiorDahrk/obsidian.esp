@@ -1,1 +1,48 @@
 /* ObsidianEsp plugin styles */
+
+.esp-property-generation-section {
+	margin-top: var(--size-4-4);
+}
+
+.esp-property-generation-actions {
+	display: flex;
+	gap: var(--size-2-2);
+	margin-bottom: var(--size-2-3);
+}
+
+.esp-property-generation-action {
+	min-height: 44px;
+}
+
+.esp-property-generation-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-2);
+	max-height: 220px;
+	overflow-y: auto;
+	padding-right: var(--size-2-2);
+}
+
+.esp-property-generation-row {
+	align-items: center;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	display: flex;
+	gap: var(--size-2-3);
+	min-height: 44px;
+	padding: var(--size-2-2) var(--size-4-2);
+}
+
+.esp-property-generation-row:focus-within {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 1px var(--interactive-accent);
+}
+
+.esp-property-generation-row input[type='checkbox'] {
+	margin: 0;
+}
+
+.esp-property-generation-label {
+	color: var(--text-normal);
+	font-size: var(--font-ui-medium);
+}

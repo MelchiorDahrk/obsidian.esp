@@ -4,6 +4,7 @@ import {
 	compileFolderSelection,
 	compileVaultFolder,
 } from './features/compile-folder';
+import { generatePropertyFilesForFolder } from './features/generate-properties';
 import {
 	DEFAULT_SETTINGS,
 	ObsidianEspSettings,
@@ -50,6 +51,15 @@ export default class ObsidianEsp extends Plugin {
 						.setIcon('folder')
 						.onClick(() => {
 							void this.compileSelectedFolder(file);
+						});
+				});
+
+				menu.addItem((item) => {
+					item
+						.setTitle('Generate property files')
+						.setIcon('list-filter')
+						.onClick(() => {
+							void this.generatePropertyFiles(file);
 						});
 				});
 			}),
@@ -147,6 +157,15 @@ export default class ObsidianEsp extends Plugin {
 		}
 
 		await compileFolderSelection(this.app, folder);
+	}
+
+	async generatePropertyFiles(folder: TFolder) {
+		if (!this.wasmReady) {
+			new Notice('Wasm module is not ready yet.');
+			return;
+		}
+
+		await generatePropertyFilesForFolder(this.app, folder);
 	}
 
 	async ensureFolder(path: string) {
