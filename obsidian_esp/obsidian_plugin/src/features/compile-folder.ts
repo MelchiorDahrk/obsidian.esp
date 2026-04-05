@@ -70,10 +70,14 @@ async function collectProjectFiles(
 
 	return await Promise.all(
 		files.map(
-			async (file): Promise<ProjectFile> => [
-				toRelativeProjectPath(rootFolder, file),
-				await app.vault.read(file),
-			],
+			async (file): Promise<ProjectFile> => {
+				const content = await app.vault.read(file);
+				const cleanContent = content.replace(
+					/\[\[(?:[^|\]]*?\|)?([^|\]]*?)\]\]/g,
+					'$1',
+				);
+				return [toRelativeProjectPath(rootFolder, file), cleanContent];
+			},
 		),
 	);
 }
