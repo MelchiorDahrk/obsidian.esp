@@ -210,3 +210,63 @@ export async function loadValidationMasters(
 
 	return { masters, messages };
 }
+
+export function addMasterToHeaderContent(
+	headerContent: string,
+	masterName: string,
+): string {
+	const existingMasters = extractMasterNamesFromHeaderContent(headerContent);
+	if (
+		existingMasters.some((m) => m.toLowerCase() === masterName.toLowerCase())
+	) {
+		return headerContent;
+	}
+
+	const lines = headerContent.split(/\r?\n/);
+	const mastersIndex = lines.findIndex((line) =>
+		/^Masters:\s*/i.test(line),
+	);
+
+	if (mastersIndex !== -1) {
+		// Found Masters: line. Check if it has an inline value.
+		const match = (lines[mastersIndex] ?? '').match(/^Masters:\s*(.*)$/i);
+		const inlineValue = (match?.[1] ?? '').trim();
+
+		if (inlineValue.length > 0) {
+			// Convert inline to list
+			lines[mastersIndex] = 'Masters:';
+			lines.splice(mastersIndex + 1, 0, `  - ${inlineValue}`);
+			lines.splice(mastersIndex + 2, 0, `  - ${masterName}`);
+		} else {
+			// Find end of the list
+			let insertIndex = mastersIndex + 1;
+			while (
+				insertIndex < lines.length &&
+				(lines[insertIndex] ?? '').trim() !== '---' &&
+				(/^\s*-/.test(lines[insertIndex] ?? '') ||
+					(lines[insertIndex] ?? '').trim() === '')
+			) {
+				insertIndex++;
+			}
+			// Backtrack empty lines
+			while (
+				insertIndex > mastersIndex + 1 &&
+				(lines[insertIndex - 1] ?? '').trim() === ''
+			) {
+				insertIndex--;
+			}
+			lines.splice(insertIndex, 0, `  - ${masterName}`);
+		}
+	} else {
+		// No Masters: section found. Insert before the closing ---
+		const closingIndex = lines.lastIndexOf('---');
+		if (closingIndex !== -1) {
+			lines.splice(closingIndex, 0, 'Masters:', `  - ${masterName}`);
+		} else {
+			// Fallback: just append
+			lines.push('Masters:', `  - ${masterName}`);
+		}
+	}
+
+	return lines.join('\n');
+}

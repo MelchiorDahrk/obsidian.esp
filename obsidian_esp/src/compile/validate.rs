@@ -1,6 +1,6 @@
 use crate::parse::{ParsedFilter, ParsedInfo, ParsedPlugin};
 use anyhow::Result;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use tes3::esp::{DialogueType2, FilterType, Plugin, TES3Object};
 
 #[derive(Default)]
@@ -13,6 +13,8 @@ struct ValidationDatabase {
     object_ids: HashSet<String>,
     race_ids: HashSet<String>,
     cell_names: HashSet<String>,
+    actor_scripts: HashMap<String, String>,
+    script_variables: HashMap<String, HashSet<String>>,
 }
 
 pub fn validate_project(
@@ -84,10 +86,20 @@ fn collect_master_ids(database: &mut ValidationDatabase, plugin: Plugin) {
             TES3Object::Npc(record) => {
                 database.actor_ids.insert(record.id.to_ascii_lowercase());
                 database.object_ids.insert(record.id.to_ascii_lowercase());
+                if !record.script.is_empty() {
+                    database
+                        .actor_scripts
+                        .insert(record.id.to_ascii_lowercase(), record.script.to_ascii_lowercase());
+                }
             }
             TES3Object::Creature(record) => {
                 database.actor_ids.insert(record.id.to_ascii_lowercase());
                 database.object_ids.insert(record.id.to_ascii_lowercase());
+                if !record.script.is_empty() {
+                    database
+                        .actor_scripts
+                        .insert(record.id.to_ascii_lowercase(), record.script.to_ascii_lowercase());
+                }
             }
             TES3Object::Cell(record) => {
                 if !record.name.is_empty() {
@@ -100,6 +112,18 @@ fn collect_master_ids(database: &mut ValidationDatabase, plugin: Plugin) {
                         .journal_topics
                         .insert(record.id.to_ascii_lowercase());
                 }
+            }
+            TES3Object::Script(record) => {
+                let vars = record
+                    .variables
+                    .split(|&b| b == 0)
+                    .filter(|s| !s.is_empty())
+                    .map(|s| String::from_utf8_lossy(s).to_ascii_lowercase())
+                    .collect();
+                database
+                    .script_variables
+                    .insert(record.id.to_ascii_lowercase(), vars);
+                database.object_ids.insert(record.id.to_ascii_lowercase());
             }
             other => {
                 if let Some(id) = object_id(&other) {
@@ -277,10 +301,39 @@ fn validate_filter(
             Some("The referenced cell name was not found in the loaded masters."),
             warnings,
         ),
-        FilterType::Local | FilterType::NotLocal => warnings.push(format!(
-            "{}: {} uses a local variable filter '{}', which cannot be validated against masters.",
-            info.source_path, filter_label, filter.id
-        )),
+        FilterType::Local | FilterType::NotLocal => {
+            if let Some(speaker_id) = info.frontmatter.speaker_id.as_deref() {
+                if let Some(script_id) = database.actor_scripts.get(&speaker_id.to_ascii_lowercase()) {
+                    if let Some(variables) = database.script_variables.get(script_id) {
+                        if !variables.contains(&filter.id.to_ascii_lowercase()) {
+                            warnings.push(format!(
+                                "{}: {} uses local variable '{}', but it was not found on script '{}' attached to speaker '{}'.",
+                                info.source_path, filter_label, filter.id, script_id, speaker_id
+                            ));
+                        }
+                    } else {
+                        warnings.push(format!(
+                            "{}: {} uses local variable '{}', but script '{}' (on speaker '{}') was not found in masters.",
+                            info.source_path, filter_label, filter.id, script_id, speaker_id
+                        ));
+                    }
+                } else {
+                    warnings.push(format!(
+                        "{}: {} uses local variable '{}', but speaker '{}' has no script attached.",
+                        info.source_path, filter_label, filter.id, speaker_id
+                    ));
+                }
+            } else {
+                // If there's no speaker ID, we can't reliably validate the local variable without more context.
+                // However, most dialogue with local filters has a speaker, and we should at least warn
+                // that validation was skipped for this reason if the user expects it.
+                // For now, let's keep the existing warning or a more specific one.
+                warnings.push(format!(
+                    "{}: {} uses local variable '{}', but no speaker ID is defined to validate against.",
+                    info.source_path, filter_label, filter.id
+                ));
+            }
+        }
         FilterType::Function | FilterType::None => {}
     }
 }

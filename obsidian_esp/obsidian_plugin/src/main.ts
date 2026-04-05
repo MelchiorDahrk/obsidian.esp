@@ -15,6 +15,7 @@ import {
 	registerMultilinkHandlers,
 	multilinkEditorExtension,
 } from './features/multilink-handler';
+import { addMasterToHeaderContent } from './features/master-files';
 
 export default class ObsidianEsp extends Plugin {
 	settings: ObsidianEspSettings;
@@ -134,6 +135,16 @@ export default class ObsidianEsp extends Plugin {
 		}
 
 		const files = unpackedFiles as [string, string][];
+
+		// Add the plugin itself as a master in header.md
+		const headerEntry = files.find(([path]) => path === 'header.md');
+		if (headerEntry) {
+			headerEntry[1] = addMasterToHeaderContent(
+				headerEntry[1],
+				file.name,
+			);
+		}
+
 		const baseName = file.name.replace(/\.[^.]+$/, '');
 		const outputDir = normalizePath(
 			`${this.settings.outputFolder}/${baseName}`,
