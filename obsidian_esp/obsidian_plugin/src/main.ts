@@ -1,5 +1,5 @@
-import { Notice, Plugin, TFolder, normalizePath } from 'obsidian';
-import { initSync, unpack_plugin } from '../pkg/obsidian_esp.js';
+import { Menu, Notice, Plugin, TFolder, normalizePath } from 'obsidian';
+import { initSync } from '../pkg/obsidian_esp.js';
 import {
 	compileFolderSelection,
 	compileVaultFolder,
@@ -16,24 +16,32 @@ import {
 	multilinkEditorExtension,
 } from './features/multilink-handler';
 import { addMasterToHeaderContent } from './features/master-files';
+import { GameDatabase } from './database/game-database';
+import { DATABASE_VIEW_TYPE, DatabaseView } from './ui/database-view';
 
 export default class ObsidianEsp extends Plugin {
 	settings: ObsidianEspSettings;
 	wasmReady = false;
+	private db: GameDatabase | null = null;
+	private statusBarItem: HTMLElement;
 
 	async onload() {
 		await this.loadSettings();
 		await this.initWasm();
 
-		this.addRibbonIcon('file-input', 'Unpack plugin file', () => {
-			this.promptForFile();
-		});
+		this.registerView(
+			DATABASE_VIEW_TYPE,
+			(leaf) => new DatabaseView(leaf),
+		);
+
+		this.statusBarItem = this.addStatusBarItem();
+		this.renderStatusBar();
 
 		this.addCommand({
 			id: 'unpack',
-			name: 'Unpack plugin file',
+			name: 'Unpack loaded database',
 			callback: () => {
-				this.promptForFile();
+				void this.unpackDatabase();
 			},
 		});
 
@@ -86,6 +94,133 @@ export default class ObsidianEsp extends Plugin {
 		this.addSettingTab(new ObsidianEspSettingTab(this.app, this));
 	}
 
+	onunload() {
+		this.db?.free();
+		this.db = null;
+	}
+
+	private renderStatusBar() {
+		this.statusBarItem.empty();
+
+		if (this.db === null) {
+			const btn = this.statusBarItem.createEl('button', {
+				text: 'Load database',
+				cls: 'esp-db-status-btn',
+				attr: {
+					'aria-label': 'Load a game database file (ESP/ESM)',
+					'data-tooltip-position': 'top',
+				},
+			});
+			btn.addEventListener('click', () => this.promptForDatabase());
+		} else {
+			const { fileName, objectCount } = this.db.info;
+			const btn = this.statusBarItem.createEl('button', {
+				text: `${fileName} (${objectCount.toLocaleString()} records)`,
+				cls: 'esp-db-status-btn',
+				attr: {
+					'aria-label': 'Database options',
+					'data-tooltip-position': 'top',
+				},
+			});
+			btn.addEventListener('click', (e) =>
+				this.showDatabaseMenu(e),
+			);
+		}
+	}
+
+	private showDatabaseMenu(e: MouseEvent) {
+		const menu = new Menu();
+
+		menu.addItem((item) => {
+			item.setTitle('View data')
+				.setIcon('table')
+				.onClick(() => {
+					void this.openDatabaseView();
+				});
+		});
+
+		menu.addItem((item) => {
+			item.setTitle('Unpack database')
+				.setIcon('file-input')
+				.onClick(() => {
+					void this.unpackDatabase();
+				});
+		});
+
+		menu.addSeparator();
+
+		menu.addItem((item) => {
+			item.setTitle('Load different database')
+				.setIcon('folder-open')
+				.onClick(() => this.promptForDatabase());
+		});
+
+		menu.addItem((item) => {
+			item.setTitle('Unload database')
+				.setIcon('x')
+				.onClick(() => {
+					this.db?.free();
+					this.db = null;
+					this.renderStatusBar();
+				});
+		});
+
+		menu.showAtMouseEvent(e);
+	}
+
+	private async openDatabaseView() {
+		if (!this.db) return;
+
+		// Reuse an existing database view leaf if one is already open.
+		const existing = this.app.workspace.getLeavesOfType(DATABASE_VIEW_TYPE);
+		const leaf = existing[0] ?? this.app.workspace.getLeaf('tab');
+
+		await leaf.setViewState({ type: DATABASE_VIEW_TYPE, active: true });
+
+		const view = leaf.view as DatabaseView;
+		view.setDatabase(this.db);
+		await view.onOpen();
+		this.app.workspace.revealLeaf(leaf);
+	}
+
+	private promptForDatabase() {
+		if (!this.wasmReady) {
+			new Notice('WASM module is not ready yet.');
+			return;
+		}
+
+		const input = document.createElement('input');
+		input.type = 'file';
+		input.accept = '.esp,.esm,.ESP,.ESM';
+		input.addEventListener('change', () => {
+			void this.loadDatabase(input);
+		});
+		input.click();
+	}
+
+	private async loadDatabase(input: HTMLInputElement) {
+		const file = input.files?.[0];
+		if (!file) {
+			return;
+		}
+
+		this.db?.free();
+		this.db = null;
+		this.statusBarItem.empty();
+		this.statusBarItem.createEl('span', { text: 'Loading database...' });
+
+		try {
+			const buffer = await file.arrayBuffer();
+			const bytes = new Uint8Array(buffer);
+			this.db = GameDatabase.load(bytes, file.name);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			new Notice(`Failed to load database: ${message}`);
+		}
+
+		this.renderStatusBar();
+	}
+
 	async initWasm() {
 		const wasmPath = normalizePath(
 			`${this.manifest.dir}/pkg/obsidian_esp_bg.wasm`,
@@ -95,29 +230,54 @@ export default class ObsidianEsp extends Plugin {
 		this.wasmReady = true;
 	}
 
-	promptForFile() {
-		if (!this.wasmReady) {
-			new Notice('Wasm module is not ready yet.');
-			return;
-		}
-
-		const input = document.createElement('input');
-		input.type = 'file';
-		input.accept = '.esp,.esm,.ESP,.ESM';
-		input.addEventListener('change', () => {
-			void this.handleSelectedFile(input);
-		});
-		input.click();
-	}
-
-	async handleSelectedFile(input: HTMLInputElement) {
-		const file = input.files?.[0];
-		if (!file) {
+	async unpackDatabase() {
+		if (!this.db) {
+			new Notice('No database loaded.');
 			return;
 		}
 
 		try {
-			await this.unpackFile(file);
+			const files = this.db.unpack();
+			const fileName = this.db.info.fileName;
+
+			// Add the plugin itself as a master in header.md
+			const headerEntry = files.find(([path]) => path === 'header.md');
+			if (headerEntry) {
+				headerEntry[1] = addMasterToHeaderContent(
+					headerEntry[1],
+					fileName,
+				);
+			}
+
+			const baseName = fileName.replace(/\.[^.]+$/, '');
+			const outputDir = normalizePath(
+				`${this.settings.outputFolder}/${baseName}`,
+			);
+
+			let created = 0;
+			for (const [relativePath, content] of files) {
+				const fullPath = normalizePath(`${outputDir}/${relativePath}`);
+				const parentDir = fullPath.substring(
+					0,
+					fullPath.lastIndexOf('/'),
+				);
+
+				if (parentDir) {
+					await this.ensureFolder(parentDir);
+				}
+
+				// Check if file exists to avoid overwrite error if needed,
+				// or just use create and catch error.
+				try {
+					await this.app.vault.create(fullPath, content);
+					created++;
+				} catch (e) {
+					// Likely file already exists
+					console.warn(`Could not create ${fullPath}: ${e}`);
+				}
+			}
+
+			new Notice(`Unpacked ${created} files to ${outputDir}`);
 		} catch (error) {
 			const message =
 				error instanceof Error ? error.message : String(error);
@@ -125,49 +285,6 @@ export default class ObsidianEsp extends Plugin {
 		}
 	}
 
-	async unpackFile(file: File) {
-		const buffer = await file.arrayBuffer();
-		const bytes = new Uint8Array(buffer);
-		const unpackedFiles = unpack_plugin(bytes) as unknown;
-
-		if (!Array.isArray(unpackedFiles)) {
-			throw new Error('Unexpected unpacked plugin output.');
-		}
-
-		const files = unpackedFiles as [string, string][];
-
-		// Add the plugin itself as a master in header.md
-		const headerEntry = files.find(([path]) => path === 'header.md');
-		if (headerEntry) {
-			headerEntry[1] = addMasterToHeaderContent(
-				headerEntry[1],
-				file.name,
-			);
-		}
-
-		const baseName = file.name.replace(/\.[^.]+$/, '');
-		const outputDir = normalizePath(
-			`${this.settings.outputFolder}/${baseName}`,
-		);
-
-		let created = 0;
-		for (const [relativePath, content] of files) {
-			const fullPath = normalizePath(`${outputDir}/${relativePath}`);
-			const parentDir = fullPath.substring(
-				0,
-				fullPath.lastIndexOf('/'),
-			);
-
-			if (parentDir) {
-				await this.ensureFolder(parentDir);
-			}
-
-			await this.app.vault.create(fullPath, content);
-			created++;
-		}
-
-		new Notice(`Unpacked ${created} files to ${outputDir}`);
-	}
 
 	async compileFolder() {
 		if (!this.wasmReady) {

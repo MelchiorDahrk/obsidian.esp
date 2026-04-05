@@ -235,28 +235,6 @@ pub fn save_objects(value: JsValue) -> Result<Uint8Array, JsValue> {
     Ok(array)
 }
 
-/// Takes raw ESP/ESM bytes and returns an array of [path, content] pairs
-/// representing the markdown project files.
-#[wasm_bindgen]
-pub fn unpack_plugin(array: Uint8Array) -> Result<JsValue, JsValue> {
-    let mut plugin = Plugin::new();
-    plugin
-        .load_bytes(array.to_vec().as_ref())
-        .map_err(|e| JsValue::from(e.to_string()))?;
-
-    let plugin_data = PluginData::from_plugin(plugin);
-    let files = export::collect_project_files(&plugin_data);
-
-    let result = Array::new();
-    for (path, content) in files {
-        let pair = Array::new();
-        pair.push(&JsValue::from_str(&path));
-        pair.push(&JsValue::from_str(&content));
-        result.push(&pair);
-    }
-
-    Ok(result.into())
-}
 
 #[wasm_bindgen]
 pub fn compile_project(files: JsValue, allow_default_header: bool) -> Result<Uint8Array, JsValue> {
@@ -312,4 +290,62 @@ pub fn extract_property_values(
     let values = collect_property_values(plugin, &options);
 
     to_value(&values).map_err(Into::into)
+}
+
+/// A full game database loaded into WASM memory.
+/// Constructed from raw ESP/ESM bytes; kept alive as long as the JS handle exists.
+#[wasm_bindgen]
+pub struct GameDatabase {
+    data: PluginData,
+}
+
+#[wasm_bindgen]
+impl GameDatabase {
+    /// Parse raw ESP/ESM bytes into a structured PluginData held in WASM memory.
+    #[wasm_bindgen(constructor)]
+    pub fn load(bytes: Uint8Array) -> Result<GameDatabase, JsValue> {
+        let mut plugin = Plugin::new();
+        plugin
+            .load_bytes(&bytes.to_vec())
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let data = PluginData::from_plugin(plugin);
+        Ok(GameDatabase { data })
+    }
+
+    /// Total number of records in the database.
+    #[wasm_bindgen(js_name = "objectCount")]
+    pub fn object_count(&self) -> usize {
+        self.data.count_objects()
+    }
+
+    /// Returns all Activator records as a serialized JS array.
+    #[wasm_bindgen(js_name = "getActivators")]
+    pub fn get_activators(&self) -> Result<JsValue, JsValue> {
+        let activators: Vec<&tes3::esp::Activator> = self
+            .data
+            .objects
+            .values()
+            .filter_map(|obj| match obj {
+                TES3Object::Activator(a) => Some(a),
+                _ => None,
+            })
+            .collect();
+        to_value(&activators).map_err(Into::into)
+    }
+
+    /// Unpacks the database into markdown project files.
+    #[wasm_bindgen]
+    pub fn unpack(&self) -> Result<JsValue, JsValue> {
+        let files = export::collect_project_files(&self.data);
+
+        let result = Array::new();
+        for (path, content) in files {
+            let pair = Array::new();
+            pair.push(&JsValue::from_str(&path));
+            pair.push(&JsValue::from_str(&content));
+            result.push(&pair);
+        }
+
+        Ok(result.into())
+    }
 }
