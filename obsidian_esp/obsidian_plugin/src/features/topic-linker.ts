@@ -5,10 +5,10 @@ interface TopicInfo {
 	files: TFile[];
 }
 
-export async function createTopicLinksForFolder(app: App, folder: TFolder) {
+export async function updateTopicLinksForFolder(app: App, folder: TFolder) {
 	const topics = await indexTopicsInFolder(app, folder);
 	if (topics.size === 0) {
-		new Notice('No topics found in this folder.');
+		new Notice('No topics found in this project folder.');
 		return;
 	}
 
@@ -16,23 +16,28 @@ export async function createTopicLinksForFolder(app: App, folder: TFolder) {
 		(a, b) => b.length - a.length,
 	);
 
-	const filesToProcess = getFilesToProcess(folder);
+	const filesToProcess = getFilesToProcess(app, folder);
 	let modifiedCount = 0;
 
 	for (const file of filesToProcess) {
 		const content = await app.vault.read(file);
 		const { frontmatter, body } = splitFrontmatter(content);
 
-		let newBody = body;
+		// Pass 1: Cleanup (Un-link dead links)
+		let cleanedBody = body.replace(/\[\[(.*?)\]\]/g, (match, topicName) => {
+			if (topics.has(topicName)) {
+				return match; // Keep valid link
+			}
+			return topicName; // Un-link dead link
+		});
+
+		// Pass 2: Linking new occurrences
+		let newBody = cleanedBody;
 		let bodyModified = false;
 
 		for (const topicName of sortedTopicNames) {
-			const topicInfo = topics.get(topicName)!;
 			const linkSyntax = `[[${topicName}]]`;
-
 			const escapedTopic = topicName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-			// Pattern: find topic name not preceded by [[ or @ and not followed by #]] or ]]
-			// Also avoid matching inside [ ] (markdown links)
 			const regex = new RegExp(`(?<!\\[\\[|@)\\b${escapedTopic}\\b(?!#\\]\\]|\\]\\])`, 'g');
 
 			if (regex.test(newBody)) {
@@ -41,14 +46,15 @@ export async function createTopicLinksForFolder(app: App, folder: TFolder) {
 			}
 		}
 
-		if (bodyModified) {
+		// Update if different from original body
+		if (bodyModified || cleanedBody !== body) {
 			const newContent = mergeFrontmatter(frontmatter, newBody);
 			await app.vault.modify(file, newContent);
 			modifiedCount++;
 		}
 	}
 
-	new Notice(`Linked ${modifiedCount} files.`);
+	new Notice(`Updated ${modifiedCount} files.`);
 }
 
 async function indexTopicsInFolder(
@@ -68,13 +74,10 @@ async function indexTopicsInFolder(
 				let type = frontmatter?.Type;
 				let topicName = frontmatter?.Topic;
 
-				// If Type is an array (common in this project), take first
 				if (Array.isArray(type)) type = type[0];
 				
-				// Infer from path if missing
 				if (!type || !topicName) {
 					const parts = child.path.split('/');
-					// Format: .../Type/Name/Filename.md
 					const typeIndex = parts.indexOf('Topic');
 					if (typeIndex !== -1 && typeIndex < parts.length - 1) {
 						type = 'Topic';
@@ -98,7 +101,7 @@ async function indexTopicsInFolder(
 	return topics;
 }
 
-function getFilesToProcess(folder: TFolder): TFile[] {
+function getFilesToProcess(app: App, folder: TFolder): TFile[] {
 	const files: TFile[] = [];
 
 	const collect = (currentFolder: TFolder) => {
@@ -106,15 +109,19 @@ function getFilesToProcess(folder: TFolder): TFile[] {
 			if (child instanceof TFolder) {
 				collect(child);
 			} else if (child instanceof TFile && child.extension === 'md') {
-				const parts = child.path.split('/');
-				// Skip Voice
-				if (parts.some((p) => p === 'Voice')) continue;
+				const cache = app.metadataCache.getFileCache(child);
+				const frontmatter = cache?.frontmatter;
 
-				// Check if it's one of the valid types
-				const isValidType = parts.some((p) =>
-					['Topic', 'Greeting', 'Persuasion', 'Journal'].includes(p),
-				);
-				if (isValidType) {
+				// Mandatory Frontmatter Check as per user request
+				// Must contain Type property (Topic, Greeting, Persuasion, Journal)
+				// AND Topic property
+				let type = frontmatter?.Type;
+				if (Array.isArray(type)) type = type[0];
+
+				const hasValidType = ['Topic', 'Greeting', 'Persuasion', 'Journal'].includes(type || '');
+				const hasTopic = !!frontmatter?.Topic;
+
+				if (hasValidType && hasTopic) {
 					files.push(child);
 				}
 			}

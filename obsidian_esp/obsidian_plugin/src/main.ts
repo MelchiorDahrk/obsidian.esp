@@ -10,7 +10,7 @@ import {
 	ObsidianEspSettings,
 	ObsidianEspSettingTab,
 } from './settings';
-import { createTopicLinksForFolder } from './features/topic-linker';
+import { updateTopicLinksForFolder } from './features/topic-linker';
 import {
 	registerMultilinkHandlers,
 	multilinkEditorExtension,
@@ -70,10 +70,10 @@ export default class ObsidianEsp extends Plugin {
 
 				menu.addItem((item) => {
 					item
-						.setTitle('Create topic links')
+						.setTitle('Update topic links')
 						.setIcon('link')
 						.onClick(() => {
-							void this.createTopicLinks(file);
+							void this.updateTopicLinks(file);
 						});
 				});
 			}),
@@ -185,8 +185,8 @@ export default class ObsidianEsp extends Plugin {
 		await generatePropertyFilesForFolder(this.app, folder);
 	}
 
-	async createTopicLinks(folder: TFolder) {
-		await createTopicLinksForFolder(this.app, folder);
+	async updateTopicLinks(folder: TFolder) {
+		await updateTopicLinksForFolder(this.app, folder);
 	}
 
 	async ensureFolder(path: string) {
