@@ -137,6 +137,7 @@ export class VirtualTable<T> {
 		const el = this.content.createDiv({ cls: 'esp-vt-row' });
 		el.style.height = `${this.rowHeight}px`;
 		el.style.position = 'absolute';
+		el.style.top = '0';
 		el.style.left = '0';
 		el.style.right = '0';
 
