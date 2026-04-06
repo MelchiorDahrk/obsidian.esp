@@ -280,8 +280,22 @@ export default class ObsidianEsp extends Plugin {
 			// Write files via the adapter to bypass per-file vault events.
 			const adapter = this.app.vault.adapter;
 			let created = 0;
+			const total = resolved.length;
 			const BATCH_SIZE = 50;
-			for (let i = 0; i < resolved.length; i += BATCH_SIZE) {
+
+			const progress = new Notice('', 0);
+			const progressEl = progress.noticeEl.createDiv();
+			const barOuter = progressEl.createDiv();
+			barOuter.style.cssText =
+				'width:100%;height:6px;background:var(--background-modifier-border);border-radius:3px;margin-top:4px;';
+			const barInner = barOuter.createDiv();
+			barInner.style.cssText =
+				'width:0%;height:100%;background:var(--interactive-accent);border-radius:3px;transition:width 0.15s;';
+			const label = progressEl.createDiv();
+			label.style.marginTop = '4px';
+			label.setText(`Unpacking: 0 / ${total}`);
+
+			for (let i = 0; i < total; i += BATCH_SIZE) {
 				const batch = resolved.slice(i, i + BATCH_SIZE);
 				const results = await Promise.allSettled(
 					batch.map(([fullPath, content]) =>
@@ -291,7 +305,13 @@ export default class ObsidianEsp extends Plugin {
 				for (const r of results) {
 					if (r.status === 'fulfilled') created++;
 				}
+				const done = Math.min(i + BATCH_SIZE, total);
+				const pct = Math.round((done / total) * 100);
+				barInner.style.width = `${pct}%`;
+				label.setText(`Unpacking: ${done} / ${total}`);
 			}
+
+			progress.hide();
 
 			// Trigger a single vault rescan so Obsidian picks up all new files.
 			// @ts-expect-error – internal Obsidian API
