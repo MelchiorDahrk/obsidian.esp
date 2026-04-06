@@ -91,9 +91,9 @@
 .esp-vt-row {
 	display: flex;
 	align-items: stretch;
-	line-height: 32px;
-	/* Fixed row height */
-	border-bottom: var(--border-width) solid var(--background-modifier-border-focus, rgba(0, 0, 0, 0.05));
+	line-height: 32px; /* Fixed row height */
+	border-bottom: var(--border-width) solid
+		var(--background-modifier-border-focus, rgba(0, 0, 0, 0.05));
 	cursor: default;
 	will-change: transform;
 }
@@ -112,8 +112,7 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	border-right: var(--border-width) solid var(--background-modifier-border);
-	line-height: inherit;
-	/* Inherits from row height */
+	line-height: inherit; /* Inherits from row height */
 	display: block;
 }
 
@@ -200,4 +199,28 @@
 .esp-property-generation-label {
 	color: var(--text-normal);
 	font-size: var(--font-ui-medium);
+}
+
+.esp-multilink, 
+.markdown-rendered a.internal-link.esp-multilink,
+.cm-s-obsidian .cm-link.esp-multilink,
+.cm-s-obsidian .cm-hmd-internal-link.esp-multilink,
+.esp-multilink-potential {
+	color: var(--text-accent) !important;
+	text-decoration: underline !important;
+	text-decoration-style: dotted !important;
+	text-underline-offset: 3px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.esp-multilink:hover, 
+.markdown-rendered a.internal-link.esp-multilink:hover,
+.cm-s-obsidian .cm-link.esp-multilink:hover,
+.cm-s-obsidian .cm-hmd-internal-link.esp-multilink:hover,
+.esp-multilink-potential:hover {
+	color: var(--text-accent-hover) !important;
+	text-decoration-style: solid !important;
+	background-color: var(--background-modifier-hover);
+	border-radius: 4px;
 }
