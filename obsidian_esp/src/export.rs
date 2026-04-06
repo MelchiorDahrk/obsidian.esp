@@ -392,9 +392,8 @@ pub fn collect_modified_project_files(plugin: &PluginData) -> Vec<(String, Strin
     files.push(("header.md".to_string(), render_header(plugin)));
 
     for group in sorted_dialogue_groups(plugin) {
-        let has_modified = group.dialogue.modified()
-            || group.infos.iter().any(|info| info.modified());
-        if !has_modified {
+        let has_modified_infos = group.infos.iter().any(|info| info.modified());
+        if !group.dialogue.modified() && !has_modified_infos {
             continue;
         }
 
@@ -402,6 +401,9 @@ pub fn collect_modified_project_files(plugin: &PluginData) -> Vec<(String, Strin
         let stem = sanitize_file_stem(&group.dialogue.id);
 
         for (index, info) in group.infos.iter().enumerate() {
+            if !info.modified() {
+                continue;
+            }
             let path = format!("{type_dir}/{stem}/{stem} ~{index}.md");
             let content = render_info(&group.dialogue.id, info);
             files.push((path, content));
