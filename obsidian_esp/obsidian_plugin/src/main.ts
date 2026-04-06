@@ -11,10 +11,6 @@ import {
 	ObsidianEspSettingTab,
 } from './settings';
 import { updateTopicLinksForFolder } from './features/topic-linker';
-import {
-	registerMultilinkHandlers,
-	multilinkEditorExtension,
-} from './features/multilink-handler';
 import { addMasterToHeaderContent } from './features/master-files';
 import { GameDatabase } from './database/game-database';
 import { DATABASE_VIEW_TYPE, DatabaseView } from './ui/database-view';
@@ -88,8 +84,6 @@ export default class ObsidianEsp extends Plugin {
 			}),
 		);
 
-		registerMultilinkHandlers(this);
-		this.registerEditorExtension([multilinkEditorExtension]);
 
 		this.addSettingTab(new ObsidianEspSettingTab(this.app, this));
 	}

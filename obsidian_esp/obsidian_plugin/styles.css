@@ -201,26 +201,3 @@
 	font-size: var(--font-ui-medium);
 }
 
-.esp-multilink, 
-.markdown-rendered a.internal-link.esp-multilink,
-.cm-s-obsidian .cm-link.esp-multilink,
-.cm-s-obsidian .cm-hmd-internal-link.esp-multilink,
-.esp-multilink-potential {
-	color: var(--text-accent) !important;
-	text-decoration: underline !important;
-	text-decoration-style: dotted !important;
-	text-underline-offset: 3px;
-	cursor: pointer;
-	transition: all 0.2s ease;
-}
-
-.esp-multilink:hover, 
-.markdown-rendered a.internal-link.esp-multilink:hover,
-.cm-s-obsidian .cm-link.esp-multilink:hover,
-.cm-s-obsidian .cm-hmd-internal-link.esp-multilink:hover,
-.esp-multilink-potential:hover {
-	color: var(--text-accent-hover) !important;
-	text-decoration-style: solid !important;
-	background-color: var(--background-modifier-hover);
-	border-radius: 4px;
-}
