@@ -1,0 +1,26 @@
+{
+  "skill_name": "obsidian-bases",
+  "evals": [
+    {
+      "id": 1,
+      "name": "quest-table-creation",
+      "prompt": "I want a table view of all my quests. They are all tagged #quest. I want to see a column called 'Difficulty Level' which is just the 'level' property multiplied by 10. The table should also show the quest name and the 'status' property.",
+      "expected_output": "A .base YAML file with a filter for #quest, a formula for Difficulty Level (level * 10), and a table view with name, Difficulty Level, and status columns.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "sidebar-backlinks-list",
+      "prompt": "I'm building a sidebar view for my vault. I want it to show all notes that have a link to the current active note. Display them as a list with bullet points.",
+      "expected_output": "A .base YAML file using file.hasLink(this.file) and a list view with markers: bullets.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "inspiration-gallery-cards",
+      "prompt": "I want a card gallery of my inspiration notes. They are in the folder 'Inspiration'. Each card should show the 'cover' property as an image. The cards should be square (1:1 aspect ratio) and use the 'cover' fit.",
+      "expected_output": "A .base YAML file with file.inFolder('Inspiration'), and a cards view with imageProperty: cover, imageFit: cover, and imageAspectRatio: 1.",
+      "files": []
+    }
+  ]
+}
