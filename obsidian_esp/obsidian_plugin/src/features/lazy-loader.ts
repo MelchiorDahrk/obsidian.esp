@@ -118,6 +118,12 @@ export class LazyLoader {
 			// Replace the empty file with the topic index content
 			const indexContent = `![[${BASE_FILE_NAME}#Topic View]]\n`;
 			await plugin.app.vault.modify(topicIndexFile, indexContent);
+
+			// Automate topic link update after lazy-load
+			const rootFolder = plugin.app.vault.getAbstractFileByPath(outputDir);
+			if (rootFolder instanceof TFolder) {
+				await plugin.updateTopicLinks(rootFolder, true);
+			}
 		} finally {
 			this.inflightTopics.delete(topicKey);
 		}

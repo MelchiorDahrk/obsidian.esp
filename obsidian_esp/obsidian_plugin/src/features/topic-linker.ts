@@ -11,6 +11,7 @@ export async function updateTopicLinksForFolder(
 	app: App,
 	folder: TFolder,
 	allTopicNames?: string[],
+	silent?: boolean,
 ) {
 	const topics = await indexTopicsInFolder(app, folder);
 
@@ -21,7 +22,9 @@ export async function updateTopicLinksForFolder(
 		: new Set(topics.keys());
 
 	if (validTopicSet.size === 0) {
-		new Notice('No topics found in this project folder.');
+		if (!silent) {
+			new Notice('No topics found in this project folder.');
+		}
 		return;
 	}
 
@@ -67,7 +70,9 @@ export async function updateTopicLinksForFolder(
 		}
 	}
 
-	new Notice(`Updated ${modifiedCount} files.`);
+	if (!silent) {
+		new Notice(`Updated ${modifiedCount} files.`);
+	}
 
 	// Generate/Update Topic Index files (only for disk-present topics)
 	let indexCount = 0;
@@ -77,7 +82,7 @@ export async function updateTopicLinksForFolder(
 		}
 	}
 
-	if (indexCount > 0) {
+	if (indexCount > 0 && !silent) {
 		new Notice(`Generated/Updated ${indexCount} topic index files.`);
 	}
 

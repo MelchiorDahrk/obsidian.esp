@@ -368,6 +368,12 @@ export default class ObsidianEsp extends Plugin {
 			progress.hide();
 
 			new Notice(`Unpacked ${created} files to ${outputDir}`);
+
+			// Automate topic link update after unpack
+			const unpackFolder = this.app.vault.getAbstractFileByPath(outputDir);
+			if (unpackFolder instanceof TFolder) {
+				await this.updateTopicLinks(unpackFolder, true);
+			}
 		} catch (error) {
 			const message =
 				error instanceof Error ? error.message : String(error);
@@ -403,11 +409,16 @@ export default class ObsidianEsp extends Plugin {
 		await generatePropertyFilesForFolder(this.app, folder);
 	}
 
-	async updateTopicLinks(folder: TFolder) {
+	async updateTopicLinks(folder: TFolder, silent?: boolean) {
 		const allTopicNames = this.db?.info.isMerged
 			? this.db.getAllTopicNames()
 			: undefined;
-		await updateTopicLinksForFolder(this.app, folder, allTopicNames);
+		await updateTopicLinksForFolder(
+			this.app,
+			folder,
+			allTopicNames,
+			silent,
+		);
 	}
 
 	async ensureFolder(path: string) {
