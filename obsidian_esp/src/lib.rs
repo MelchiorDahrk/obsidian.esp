@@ -205,10 +205,10 @@ pub fn compile_project_files_with_log(
 }
 
 #[wasm_bindgen]
-pub fn load_objects(array: Uint8Array) -> Result<JsValue, JsValue> {
+pub fn load_objects(array: &[u8]) -> Result<JsValue, JsValue> {
     let mut plugin = Plugin::new();
     plugin
-        .load_bytes(array.to_vec().as_ref())
+        .load_bytes(array)
         .map_err(|e| JsValue::from(e.to_string()))?;
 
     let value = to_value(&plugin.objects)?;
@@ -278,12 +278,12 @@ pub fn compile_project_with_log(
 
 #[wasm_bindgen]
 pub fn extract_property_values(
-    array: Uint8Array,
+    array: &[u8],
     options: JsValue,
 ) -> Result<JsValue, JsValue> {
     let mut plugin = Plugin::new();
     plugin
-        .load_bytes(array.to_vec().as_ref())
+        .load_bytes(array)
         .map_err(|error| JsValue::from(error.to_string()))?;
 
     let options: PropertyExtractionOptions = from_value(options)?;
@@ -303,10 +303,10 @@ pub struct GameDatabase {
 impl GameDatabase {
     /// Parse raw ESP/ESM bytes into a structured PluginData held in WASM memory.
     #[wasm_bindgen(constructor)]
-    pub fn load(bytes: Uint8Array) -> Result<GameDatabase, JsValue> {
+    pub fn load(bytes: &[u8]) -> Result<GameDatabase, JsValue> {
         let mut plugin = Plugin::new();
         plugin
-            .load_bytes(&bytes.to_vec())
+            .load_bytes(bytes)
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
         let data = PluginData::from_plugin(plugin);
         Ok(GameDatabase { data })
