@@ -13,7 +13,14 @@ import {
 import { updateTopicLinksForFolder } from './features/topic-linker';
 import { addMasterToHeaderContent } from './features/master-files';
 import { GameDatabase } from './database/game-database';
-import { DATABASE_VIEW_TYPE, DatabaseView } from './ui/database-view';
+import { DatabaseView, DATABASE_VIEW_TYPE } from './ui/database-view';
+
+declare module 'obsidian' {
+	interface MenuItem {
+		setSubmenu(): Menu;
+	}
+}
+
 
 export default class ObsidianEsp extends Plugin {
 	settings: ObsidianEspSettings;
@@ -56,30 +63,35 @@ export default class ObsidianEsp extends Plugin {
 				}
 
 				menu.addItem((item) => {
-					item
-						.setTitle('Compile dialogue folder')
-						.setIcon('folder')
-						.onClick(() => {
-							void this.compileSelectedFolder(file);
-						});
-				});
+					item.setTitle('Obsidian.esp Commands').setIcon('folder');
+					const submenu = item.setSubmenu();
 
-				menu.addItem((item) => {
-					item
-						.setTitle('Generate property files')
-						.setIcon('list-filter')
-						.onClick(() => {
-							void this.generatePropertyFiles(file);
-						});
-				});
+					submenu.addItem((subItem) => {
+						subItem
+							.setTitle('Compile dialogue folder')
+							.setIcon('folder')
+							.onClick(() => {
+								void this.compileSelectedFolder(file);
+							});
+					});
 
-				menu.addItem((item) => {
-					item
-						.setTitle('Update topic links')
-						.setIcon('link')
-						.onClick(() => {
-							void this.updateTopicLinks(file);
-						});
+					submenu.addItem((subItem) => {
+						subItem
+							.setTitle('Generate property files')
+							.setIcon('list-filter')
+							.onClick(() => {
+								void this.generatePropertyFiles(file);
+							});
+					});
+
+					submenu.addItem((subItem) => {
+						subItem
+							.setTitle('Update topic links')
+							.setIcon('link')
+							.onClick(() => {
+								void this.updateTopicLinks(file);
+							});
+					});
 				});
 			}),
 		);
