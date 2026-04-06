@@ -133,7 +133,7 @@ async function indexTopicsInFolder(
 				let topicName = frontmatter?.Topic;
 
 				if (Array.isArray(type)) type = type[0];
-				
+
 				if (!type || !topicName) {
 					const parts = child.path.split('/');
 					const typeIndex = parts.indexOf('Topic');
@@ -186,7 +186,26 @@ function getFilesToProcess(app: App, folder: TFolder): TFile[] {
 		}
 	};
 
-	collect(folder);
+	// If the user ran the command on a plugin export root (contains header.md),
+	// restrict processing to the canonical subfolders where content lives:
+	// Topic, Greeting, Persuasion, Journal (case-insensitive). Otherwise,
+	// recurse the entire selected folder as before.
+	const headerPath = normalizePath(`${folder.path}/header.md`);
+	const headerFile = app.vault.getAbstractFileByPath(headerPath);
+	if (headerFile instanceof TFile) {
+		const targetNames = ['Topic', 'Greeting', 'Persuasion', 'Journal'];
+		for (const child of folder.children) {
+			if (child instanceof TFolder) {
+				const childName = child.name.toLowerCase();
+				if (targetNames.some((n) => n.toLowerCase() === childName)) {
+					collect(child);
+				}
+			}
+		}
+	} else {
+		collect(folder);
+	}
+
 	return files;
 }
 
