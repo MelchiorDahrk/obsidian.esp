@@ -254,27 +254,50 @@ export default class ObsidianEsp extends Plugin {
 				`${this.settings.outputFolder}/${baseName}`,
 			);
 
-			let created = 0;
+			// Collect all unique parent directories up-front.
+			const folders = new Set<string>();
+			const resolved: [string, string][] = [];
 			for (const [relativePath, content] of files) {
 				const fullPath = normalizePath(`${outputDir}/${relativePath}`);
-				const parentDir = fullPath.substring(
-					0,
-					fullPath.lastIndexOf('/'),
-				);
-
+				const parentDir = fullPath.substring(0, fullPath.lastIndexOf('/'));
 				if (parentDir) {
-					await this.ensureFolder(parentDir);
+					// Add every ancestor so "a/b/c" also creates "a/b" and "a".
+					let dir = parentDir;
+					while (dir && !folders.has(dir)) {
+						folders.add(dir);
+						dir = dir.substring(0, dir.lastIndexOf('/'));
+					}
 				}
+				resolved.push([fullPath, content]);
+			}
 
-				// Check if file exists to avoid overwrite error if needed,
-				// or just use create and catch error.
-				try {
-					await this.app.vault.create(fullPath, content);
-					created++;
-				} catch (e) {
-					// Likely file already exists
-					console.warn(`Could not create ${fullPath}: ${e}`);
+			// Create all folders first (sorted so parents come before children).
+			const sortedFolders = [...folders].sort();
+			for (const dir of sortedFolders) {
+				await this.ensureFolder(dir);
+			}
+
+			// Write files via the adapter to bypass per-file vault events.
+			const adapter = this.app.vault.adapter;
+			let created = 0;
+			const BATCH_SIZE = 50;
+			for (let i = 0; i < resolved.length; i += BATCH_SIZE) {
+				const batch = resolved.slice(i, i + BATCH_SIZE);
+				const results = await Promise.allSettled(
+					batch.map(([fullPath, content]) =>
+						adapter.write(fullPath, content),
+					),
+				);
+				for (const r of results) {
+					if (r.status === 'fulfilled') created++;
 				}
+			}
+
+			// Trigger a single vault rescan so Obsidian picks up all new files.
+			// @ts-expect-error – internal Obsidian API
+			if (typeof this.app.vault.onChange === 'function') {
+				// @ts-expect-error – internal Obsidian API
+				this.app.vault.onChange('raw');
 			}
 
 			new Notice(`Unpacked ${created} files to ${outputDir}`);
