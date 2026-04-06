@@ -166,6 +166,9 @@ pub fn parse_project_files(
     let mut infos = Vec::new();
     for (directory_type, directory_topic, _order, relative_path, content) in info_entries {
         let mut input = content.as_str();
+        if !input.trim_start().starts_with("---") {
+            continue;
+        }
 
         let (mut frontmatter, text) = info::parse_info_file(&mut input)
             .map_err(|e| anyhow::anyhow!("{}", e))

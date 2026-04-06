@@ -561,3 +561,30 @@ fn test_invalid_voice_topic_is_rejected() {
         "{error}"
     );
 }
+
+#[test]
+fn test_topic_index_is_ignored() -> Result<()> {
+    let files = vec![
+        (
+            "header.md".to_string(),
+            "---\nAuthor: Example\nDescription: ignore test\nFile Type: ESP\nMasters:\n  - Morrowind.esm\n---\n"
+                .to_string(),
+        ),
+        (
+            "Topic/sample/sample ~0.md".to_string(),
+            "---\nType: Topic\nTopic: sample\n---\nValid dialogue.\n".to_string(),
+        ),
+        (
+            "Topic/sample/sample.md".to_string(),
+            "![[topic_views.base#Topic View]]\n".to_string(),
+        ),
+    ];
+
+    let parsed = obsidian_esp::parse::parse_project_files(files, None)?;
+    
+    // Should only contain the 1 valid dialogue info, not the index file
+    assert_eq!(parsed.infos.len(), 1);
+    assert_eq!(parsed.infos[0].source_path, "Topic/sample/sample ~0.md");
+    
+    Ok(())
+}

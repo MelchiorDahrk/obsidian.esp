@@ -222,12 +222,18 @@ export default class ObsidianEsp extends Plugin {
 	}
 
 	async initWasm() {
-		const wasmPath = normalizePath(
-			`${this.manifest.dir}/pkg/obsidian_esp_bg.wasm`,
-		);
-		const wasmBuffer = await this.app.vault.adapter.readBinary(wasmPath);
-		initSync({ module: new Uint8Array(wasmBuffer) });
-		this.wasmReady = true;
+		try {
+			const wasmPath = normalizePath(
+				`${this.manifest.dir}/pkg/obsidian_esp_bg.wasm`,
+			);
+			const wasmBuffer = await this.app.vault.adapter.readBinary(wasmPath);
+			initSync({ module: new Uint8Array(wasmBuffer) });
+			this.wasmReady = true;
+		} catch (e) {
+			const error = e instanceof Error ? e.message : String(e);
+			console.error(`[Obsidian ESP] Failed to initialize WASM: ${error}`, e);
+			new Notice(`Obsidian ESP: Failed to initialize WASM. Check console for details. Error: ${error}`, 0);
+		}
 	}
 
 	async unpackDatabase() {
