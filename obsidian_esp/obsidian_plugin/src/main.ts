@@ -11,9 +11,13 @@ import {
 	ObsidianEspSettingTab,
 } from './settings';
 import { updateTopicLinksForFolder } from './features/topic-linker';
-import { addMasterToHeaderContent } from './features/master-files';
-import { GameDatabase } from './database/game-database';
-import { DatabaseView, DATABASE_VIEW_TYPE } from './ui/database-view';
+import {
+	addMasterToHeaderContent,
+	loadValidationMasters,
+} from './features/master-files';
+import { GameDatabase, extractMasterNames } from './database/game-database';
+import { LazyLoader } from './features/lazy-loader';
+import { DATABASE_VIEW_TYPE, DatabaseView } from './ui/database-view';
 
 declare module 'obsidian' {
 	interface MenuItem {
@@ -21,12 +25,12 @@ declare module 'obsidian' {
 	}
 }
 
-
 export default class ObsidianEsp extends Plugin {
 	settings: ObsidianEspSettings;
 	wasmReady = false;
 	private db: GameDatabase | null = null;
 	private statusBarItem: HTMLElement;
+	private lazyLoader: LazyLoader | null = null;
 
 	async onload() {
 		await this.loadSettings();
@@ -96,11 +100,11 @@ export default class ObsidianEsp extends Plugin {
 			}),
 		);
 
-
 		this.addSettingTab(new ObsidianEspSettingTab(this.app, this));
 	}
 
 	onunload() {
+		this.lazyLoader = null;
 		this.db?.free();
 		this.db = null;
 	}
@@ -119,9 +123,10 @@ export default class ObsidianEsp extends Plugin {
 			});
 			btn.addEventListener('click', () => this.promptForDatabase());
 		} else {
-			const { fileName, objectCount } = this.db.info;
+			const { fileName, objectCount, isMerged } = this.db.info;
+			const mergedTag = isMerged ? ', merged' : '';
 			const btn = this.statusBarItem.createEl('button', {
-				text: `${fileName} (${objectCount.toLocaleString()} records)`,
+				text: `${fileName} (${objectCount.toLocaleString()} records${mergedTag})`,
 				cls: 'esp-db-status-btn',
 				attr: {
 					'aria-label': 'Database options',
@@ -165,6 +170,7 @@ export default class ObsidianEsp extends Plugin {
 			item.setTitle('Unload database')
 				.setIcon('x')
 				.onClick(() => {
+					this.lazyLoader = null;
 					this.db?.free();
 					this.db = null;
 					this.renderStatusBar();
@@ -212,16 +218,50 @@ export default class ObsidianEsp extends Plugin {
 
 		this.db?.free();
 		this.db = null;
+		this.lazyLoader = null;
 		this.statusBarItem.empty();
 		this.statusBarItem.createEl('span', { text: 'Loading database...' });
 
 		try {
 			const buffer = await file.arrayBuffer();
 			const bytes = new Uint8Array(buffer);
-			this.db = GameDatabase.load(bytes, file.name);
+
+			// Try to merge with masters
+			let masterNames: string[];
+			try {
+				masterNames = extractMasterNames(bytes);
+			} catch {
+				masterNames = [];
+			}
+
+			if (masterNames.length > 0) {
+				const { masters, messages } =
+					await loadValidationMasters(masterNames);
+				for (const msg of messages) {
+					new Notice(msg);
+				}
+				if (masters.length > 0) {
+					this.db = GameDatabase.loadWithMasters(
+						bytes,
+						file.name,
+						masters,
+					);
+				}
+			}
+
+			// Fall back to plugin-only load
+			if (!this.db) {
+				this.db = GameDatabase.load(bytes, file.name);
+			}
 		} catch (error) {
-			const message = error instanceof Error ? error.message : String(error);
+			const message =
+				error instanceof Error ? error.message : String(error);
 			new Notice(`Failed to load database: ${message}`);
+		}
+
+		if (this.db?.info.isMerged) {
+			this.lazyLoader = new LazyLoader(this.db, this.settings.outputFolder);
+			this.lazyLoader.register(this);
 		}
 
 		this.renderStatusBar();
@@ -249,7 +289,9 @@ export default class ObsidianEsp extends Plugin {
 		}
 
 		try {
-			const files = this.db.unpack();
+			const files = this.db.info.isMerged
+				? this.db.unpackModified()
+				: this.db.unpack();
 			const fileName = this.db.info.fileName;
 
 			// Add the plugin itself as a master in header.md
@@ -362,7 +404,10 @@ export default class ObsidianEsp extends Plugin {
 	}
 
 	async updateTopicLinks(folder: TFolder) {
-		await updateTopicLinksForFolder(this.app, folder);
+		const allTopicNames = this.db?.info.isMerged
+			? this.db.getAllTopicNames()
+			: undefined;
+		await updateTopicLinksForFolder(this.app, folder, allTopicNames);
 	}
 
 	async ensureFolder(path: string) {

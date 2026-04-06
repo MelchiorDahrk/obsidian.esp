@@ -1,53 +1,5 @@
 import { App, TFile, TFolder, Notice, normalizePath } from 'obsidian';
-
-const BASE_FILE_NAME = 'topic_views.base';
-const BASE_FILE_CONTENT = `filters:
-  and:
-    - file.inFolder(this.file.folder)
-    - not:
-        - file.path == this.file.path
-properties:
-  file.name:
-    displayName: "File"
-  DiagID:
-    displayName: "Info ID"
-  Disposition:
-    displayName: "Disp"
-  ID:
-    displayName: "ID"
-  Faction:
-    displayName: "Faction"
-  Cell:
-    displayName: "Cell"
-  Variable0:
-    displayName: "Var 0"
-  Variable1:
-    displayName: "Var 1"
-  Variable2:
-    displayName: "Var 2"
-  Variable3:
-    displayName: "Var 3"
-  Variable4:
-    displayName: "Var 4"
-  Variable5:
-    displayName: "Var 5"
-views:
-  - type: table
-    name: "Topic View"
-    order:
-      - file.name
-      - DiagID
-      - Disposition
-      - ID
-      - Faction
-      - Cell
-      - Variable0
-      - Variable1
-      - Variable2
-      - Variable3
-      - Variable4
-      - Variable5
-`;
+import { BASE_FILE_NAME, ensureBaseFileInFolder } from './topic-base';
 
 
 interface TopicInfo {
@@ -55,14 +7,25 @@ interface TopicInfo {
 	files: TFile[];
 }
 
-export async function updateTopicLinksForFolder(app: App, folder: TFolder) {
+export async function updateTopicLinksForFolder(
+	app: App,
+	folder: TFolder,
+	allTopicNames?: string[],
+) {
 	const topics = await indexTopicsInFolder(app, folder);
-	if (topics.size === 0) {
+
+	// When allTopicNames is provided, use the full database topic set for linking.
+	// Otherwise, only link topics that have files on disk.
+	const validTopicSet = allTopicNames
+		? new Set(allTopicNames)
+		: new Set(topics.keys());
+
+	if (validTopicSet.size === 0) {
 		new Notice('No topics found in this project folder.');
 		return;
 	}
 
-	const sortedTopicNames = Array.from(topics.keys()).sort(
+	const sortedTopicNames = Array.from(validTopicSet).sort(
 		(a, b) => b.length - a.length,
 	);
 
@@ -75,7 +38,7 @@ export async function updateTopicLinksForFolder(app: App, folder: TFolder) {
 
 		// Pass 1: Cleanup (Un-link dead links)
 		let cleanedBody = body.replace(/\[\[(.*?)\]\]/g, (match, topicName) => {
-			if (topics.has(topicName)) {
+			if (validTopicSet.has(topicName)) {
 				return match; // Keep valid link
 			}
 			return topicName; // Un-link dead link
@@ -106,8 +69,7 @@ export async function updateTopicLinksForFolder(app: App, folder: TFolder) {
 
 	new Notice(`Updated ${modifiedCount} files.`);
 
-	// Generate/Update Topic Index files
-	await ensureBaseFile(app);
+	// Generate/Update Topic Index files (only for disk-present topics)
 	let indexCount = 0;
 	for (const topic of topics.values()) {
 		if (await createOrUpdateTopicIndex(app, topic)) {
@@ -118,19 +80,7 @@ export async function updateTopicLinksForFolder(app: App, folder: TFolder) {
 	if (indexCount > 0) {
 		new Notice(`Generated/Updated ${indexCount} topic index files.`);
 	}
-}
 
-async function ensureBaseFile(app: App) {
-	const path = normalizePath(BASE_FILE_NAME);
-	const existing = app.vault.getAbstractFileByPath(path);
-	if (!existing) {
-		await app.vault.create(path, BASE_FILE_CONTENT);
-	} else if (existing instanceof TFile) {
-		const currentContent = await app.vault.read(existing);
-		if (currentContent !== BASE_FILE_CONTENT) {
-			await app.vault.modify(existing, BASE_FILE_CONTENT);
-		}
-	}
 }
 
 async function createOrUpdateTopicIndex(app: App, topic: TopicInfo): Promise<boolean> {
@@ -139,12 +89,18 @@ async function createOrUpdateTopicIndex(app: App, topic: TopicInfo): Promise<boo
 	const firstFile = topic.files[0];
 	if (!firstFile) return false;
 
-	const parentFolder = firstFile.parent;
+	const topicFolder = firstFile.parent;
+	if (!topicFolder) return false;
+
+	const parentFolder = topicFolder.parent;
 	if (!parentFolder) return false;
 
+	await ensureBaseFileInFolder(app, topicFolder);
+
+	const baseFilePath = normalizePath(`${topicFolder.path}/${BASE_FILE_NAME}`);
 	const indexPath = normalizePath(`${parentFolder.path}/${topic.name}.md`);
-	const indexContent = `![[${BASE_FILE_NAME}#Topic View]]\n`;
-	
+	const indexContent = `![[${baseFilePath}#Topic View]]\n`;
+
 	const existing = app.vault.getAbstractFileByPath(indexPath);
 	if (existing instanceof TFile) {
 		const currentContent = await app.vault.read(existing);

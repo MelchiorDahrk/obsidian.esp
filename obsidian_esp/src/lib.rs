@@ -292,11 +292,27 @@ pub fn extract_property_values(
     to_value(&values).map_err(Into::into)
 }
 
+/// Parse raw plugin bytes and return the master names from the header as a JS string array.
+/// Lightweight — avoids creating a full GameDatabase just to read the header.
+#[wasm_bindgen(js_name = "extractMasterNames")]
+pub fn extract_master_names(bytes: &[u8]) -> Result<JsValue, JsValue> {
+    let mut plugin = Plugin::new();
+    plugin
+        .load_bytes(bytes)
+        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+    let names: Vec<String> = plugin
+        .header()
+        .map(|h| h.masters.iter().map(|(name, _)| name.clone()).collect())
+        .unwrap_or_default();
+    to_value(&names).map_err(Into::into)
+}
+
 /// A full game database loaded into WASM memory.
 /// Constructed from raw ESP/ESM bytes; kept alive as long as the JS handle exists.
 #[wasm_bindgen]
 pub struct GameDatabase {
     data: PluginData,
+    merged: bool,
 }
 
 #[wasm_bindgen]
@@ -309,7 +325,57 @@ impl GameDatabase {
             .load_bytes(bytes)
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
         let data = PluginData::from_plugin(plugin);
-        Ok(GameDatabase { data })
+        Ok(GameDatabase { data, merged: false })
+    }
+
+    /// Load a plugin merged with its masters into a single resolved database.
+    /// `masters_js` is a JS array of `[name: string, bytes: Uint8Array]` pairs.
+    #[wasm_bindgen(js_name = "loadWithMasters")]
+    pub fn load_with_masters(
+        plugin_bytes: &[u8],
+        masters_js: JsValue,
+    ) -> Result<GameDatabase, JsValue> {
+        let master_entries: Vec<(String, Vec<u8>)> =
+            from_value(masters_js).map_err(|e| JsValue::from_str(&e.to_string()))?;
+
+        // Parse plugin
+        let mut plugin_raw = Plugin::new();
+        plugin_raw
+            .load_bytes(plugin_bytes)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+
+        // Save original masters list before conversion
+        let original_masters: Vec<(String, u64)> = plugin_raw
+            .header()
+            .map(|h| h.masters.clone())
+            .unwrap_or_default();
+
+        let plugin_data = PluginData::from_plugin(plugin_raw);
+
+        // Parse each master into PluginData
+        let mut master_datas = Vec::with_capacity(master_entries.len());
+        for (name, bytes) in master_entries {
+            let mut master_raw = Plugin::new();
+            master_raw
+                .load_bytes(&bytes)
+                .map_err(|e| JsValue::from_str(&format!("Failed to load master '{name}': {e}")))?;
+            master_datas.push(PluginData::from_plugin(master_raw));
+        }
+
+        let data = compile::resolve::resolve_full_database(
+            plugin_data,
+            master_datas,
+            original_masters,
+        )
+        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+
+        Ok(GameDatabase { data, merged: true })
+    }
+
+    /// Whether this database was loaded with masters (merged mode).
+    #[wasm_bindgen(js_name = "isMerged")]
+    pub fn is_merged(&self) -> bool {
+        self.merged
     }
 
     /// Total number of records in the database.
@@ -337,6 +403,46 @@ impl GameDatabase {
     #[wasm_bindgen]
     pub fn unpack(&self) -> Result<JsValue, JsValue> {
         let files = export::collect_project_files(&self.data);
+
+        let result = Array::new();
+        for (path, content) in files {
+            let pair = Array::new();
+            pair.push(&JsValue::from_str(&path));
+            pair.push(&JsValue::from_str(&content));
+            result.push(&pair);
+        }
+
+        Ok(result.into())
+    }
+
+    /// Unpacks only the modified (plugin-owned) dialogues into markdown project files.
+    #[wasm_bindgen(js_name = "unpackModified")]
+    pub fn unpack_modified(&self) -> Result<JsValue, JsValue> {
+        let files = export::collect_modified_project_files(&self.data);
+
+        let result = Array::new();
+        for (path, content) in files {
+            let pair = Array::new();
+            pair.push(&JsValue::from_str(&path));
+            pair.push(&JsValue::from_str(&content));
+            result.push(&pair);
+        }
+
+        Ok(result.into())
+    }
+
+    /// Returns a sorted list of all topic names in the database.
+    #[wasm_bindgen(js_name = "getAllTopicNames")]
+    pub fn get_all_topic_names(&self) -> Result<JsValue, JsValue> {
+        let names = export::collect_all_topic_names(&self.data);
+        to_value(&names).map_err(Into::into)
+    }
+
+    /// Unpacks a single topic's info files (for lazy loading).
+    /// The topic is looked up case-insensitively.
+    #[wasm_bindgen(js_name = "unpackTopic")]
+    pub fn unpack_topic(&self, topic_name: &str) -> Result<JsValue, JsValue> {
+        let files = export::collect_single_topic_files(&self.data, topic_name);
 
         let result = Array::new();
         for (path, content) in files {

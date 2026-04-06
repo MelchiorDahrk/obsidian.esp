@@ -5,7 +5,8 @@ use anyhow::{Context, Result};
 use itertools::Itertools;
 use merge_to_master::PluginData;
 use tes3::esp::{
-    DialogueInfo, FileType, Filter, FilterComparison, FilterType, FilterValue, QuestState, Sex,
+    DialogueInfo, FileType, Filter, FilterComparison, FilterType, FilterValue, ObjectInfo,
+    QuestState, Sex,
 };
 use uncased::AsUncased;
 
@@ -183,10 +184,15 @@ fn render_header(plugin: &PluginData) -> String {
 }
 
 fn render_info(topic: &str, info: &DialogueInfo) -> String {
+    render_info_with_source(topic, info, None)
+}
+
+fn render_info_with_source(topic: &str, info: &DialogueInfo, source: Option<&str>) -> String {
     let mut output = String::from("---\n");
     let is_journal = info.data.dialogue_type == tes3::esp::DialogueType::Journal;
     let is_voice = info.data.dialogue_type == tes3::esp::DialogueType::Voice;
 
+    push_field(&mut output, "Source", source);
     push_field(
         &mut output,
         "Type",
@@ -375,4 +381,70 @@ pub fn plugin_to_markdown(plugin_path: &Path, output_dir: &Path) -> Result<()> {
     let plugin = PluginData::from_path(plugin_path)
         .with_context(|| format!("Failed to load plugin: {}", plugin_path.display()))?;
     write_project_directory(&plugin, output_dir)
+}
+
+/// Like `collect_project_files` but only includes dialogue groups where
+/// the dialogue or at least one info is modified (i.e. belongs to the plugin).
+/// Within included groups, ALL infos are exported (full chain for context).
+pub fn collect_modified_project_files(plugin: &PluginData) -> Vec<(String, String)> {
+    let mut files = Vec::new();
+
+    files.push(("header.md".to_string(), render_header(plugin)));
+
+    for group in sorted_dialogue_groups(plugin) {
+        let has_modified = group.dialogue.modified()
+            || group.infos.iter().any(|info| info.modified());
+        if !has_modified {
+            continue;
+        }
+
+        let type_dir = format_type_directory(group.dialogue.dialogue_type);
+        let stem = sanitize_file_stem(&group.dialogue.id);
+
+        for (index, info) in group.infos.iter().enumerate() {
+            let path = format!("{type_dir}/{stem}/{stem} ~{index}.md");
+            let content = render_info(&group.dialogue.id, info);
+            files.push((path, content));
+        }
+    }
+
+    files
+}
+
+/// Returns a sorted list of all topic names (DialogueType2::Topic) in the database.
+pub fn collect_all_topic_names(plugin: &PluginData) -> Vec<String> {
+    let mut names: Vec<String> = plugin
+        .dialogues
+        .values()
+        .filter(|group| group.dialogue.dialogue_type == tes3::esp::DialogueType2::Topic)
+        .map(|group| group.dialogue.id.clone())
+        .collect();
+    names.sort_by(|a, b| a.as_uncased().cmp(b.as_uncased()));
+    names
+}
+
+/// Returns (path, content) pairs for a single topic, looked up case-insensitively.
+/// Each info is rendered with `Source: master` in its frontmatter.
+pub fn collect_single_topic_files(
+    plugin: &PluginData,
+    topic_name: &str,
+) -> Vec<(String, String)> {
+    let key = topic_name.to_ascii_lowercase();
+    let Some(group) = plugin.dialogues.get(&key) else {
+        return Vec::new();
+    };
+
+    let type_dir = format_type_directory(group.dialogue.dialogue_type);
+    let stem = sanitize_file_stem(&group.dialogue.id);
+
+    group
+        .infos
+        .iter()
+        .enumerate()
+        .map(|(index, info)| {
+            let path = format!("{type_dir}/{stem}/{stem} ~{index}.md");
+            let content = render_info_with_source(&group.dialogue.id, info, Some("master"));
+            (path, content)
+        })
+        .collect()
 }

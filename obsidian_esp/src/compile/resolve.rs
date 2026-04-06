@@ -151,3 +151,92 @@ pub fn resolve(
 
     Ok(master_data)
 }
+
+/// Like `resolve`, but keeps the full merged database in memory (no pruning).
+/// Master data is passed as in-memory `PluginData` (for WASM where we have bytes, not paths).
+/// The `modified` flag is preserved so callers can distinguish plugin content from master content.
+pub fn resolve_full_database(
+    mut plugin: PluginData,
+    masters: Vec<PluginData>,
+    original_masters: Vec<(String, u64)>,
+) -> Result<PluginData> {
+    let touched_journal_topics: HashSet<_> = plugin
+        .dialogues
+        .iter()
+        .filter(|(_, group)| group.dialogue.dialogue_type == DialogueType2::Journal)
+        .map(|(topic_id, _)| topic_id.clone())
+        .collect();
+
+    // 1. Fold masters into a single merged dataset
+    let mut master_data = PluginData::new();
+    for m in masters {
+        m.merge_into(&mut master_data);
+    }
+
+    // 2. Set modified=false on masters
+    master_data.set_all_modified(false);
+
+    // 3. Set modified=true on plugin content
+    plugin.set_all_modified(true);
+
+    // 4. Snapshot the prev_id/next_id of all master dialogue infos *before* merging.
+    use std::collections::HashMap;
+    let link_snapshots: HashMap<_, _> = master_data
+        .dialogues
+        .values()
+        .map(|dialogue| {
+            let key = dialogue.dialogue.id.clone();
+            let snapshot: HashMap<_, _> = dialogue
+                .infos
+                .iter()
+                .map(|info| {
+                    let info_id = info.id.clone();
+                    let prev_id = info.prev_id.clone();
+                    let next_id = info.next_id.clone();
+                    (info_id, (prev_id, next_id))
+                })
+                .collect();
+            (key, snapshot)
+        })
+        .collect();
+
+    // 5. Merge our plugin into masters
+    plugin.merge_into(&mut master_data);
+
+    // 6. Sort journal groups by index
+    for (topic_id, group) in master_data.dialogues.iter_mut() {
+        if touched_journal_topics.contains(topic_id)
+            && group.dialogue.dialogue_type == DialogueType2::Journal
+        {
+            group
+                .infos
+                .make_contiguous()
+                .sort_by_key(|info| info.data.disposition);
+            group.repair_links();
+        }
+    }
+
+    // 7. Mark any master info whose links changed as modified
+    for group in master_data.dialogues.values_mut() {
+        let Some(snapshots) = link_snapshots.get(&group.dialogue.id) else {
+            continue;
+        };
+        for info in group.infos.iter_mut().skip_while(|info| info.modified()) {
+            if let Some((old_prev, old_next)) = snapshots.get(&info.id) {
+                if info.prev_id != *old_prev || info.next_id != *old_next {
+                    info.set_modified(true);
+                }
+            }
+        }
+    }
+
+    // NOTE: We intentionally skip remove_unmodified() and set_all_modified(false)
+    // so the full merged database stays in memory with modified flags intact.
+
+    // Restore original masters list
+    master_data.header.masters = original_masters;
+    master_data.header.file_type = tes3::esp::FileType::Esp;
+    master_data.header.num_objects = 0;
+
+    Ok(master_data)
+}

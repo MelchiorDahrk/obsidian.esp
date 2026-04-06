@@ -22,15 +22,19 @@ const compileProjectWithLog = obsidianEsp.compile_project_with_log as (
 	masters: import('./master-files').MasterFile[],
 ) => CompileProjectWithLogResult;
 
-function collectMarkdownFiles(currentFolder: TFolder, files: TFile[]): void {
+function collectMarkdownFiles(app: App, currentFolder: TFolder, files: TFile[]): void {
 	for (const child of currentFolder.children) {
 		if (child instanceof TFile && child.extension === 'md') {
+			const cache = app.metadataCache.getFileCache(child);
+			if (cache?.frontmatter?.Source === 'master') {
+				continue; // Skip lazy-loaded master reference files
+			}
 			files.push(child);
 			continue;
 		}
 
 		if (child instanceof TFolder) {
-			collectMarkdownFiles(child, files);
+			collectMarkdownFiles(app, child, files);
 		}
 	}
 }
@@ -63,7 +67,7 @@ async function collectProjectFiles(
 			continue;
 		}
 
-		collectMarkdownFiles(dialogueFolder, files);
+		collectMarkdownFiles(app, dialogueFolder, files);
 	}
 
 	files.sort((left, right) => left.path.localeCompare(right.path));
