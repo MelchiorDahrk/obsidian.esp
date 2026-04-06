@@ -313,13 +313,6 @@ export default class ObsidianEsp extends Plugin {
 
 			progress.hide();
 
-			// Trigger a single vault rescan so Obsidian picks up all new files.
-			// @ts-expect-error – internal Obsidian API
-			if (typeof this.app.vault.onChange === 'function') {
-				// @ts-expect-error – internal Obsidian API
-				this.app.vault.onChange('raw');
-			}
-
 			new Notice(`Unpacked ${created} files to ${outputDir}`);
 		} catch (error) {
 			const message =
