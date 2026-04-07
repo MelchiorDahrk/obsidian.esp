@@ -76,8 +76,11 @@ export async function updateTopicLinksForFolder(
 
 	// Generate/Update Topic Index files (only for disk-present topics)
 	let indexCount = 0;
+	const rootFolder = getPluginRoot(app, folder) || folder;
+	await ensureBaseFileInFolder(app, rootFolder);
+
 	for (const topic of topics.values()) {
-		if (await createOrUpdateTopicIndex(app, topic)) {
+		if (await createOrUpdateTopicIndex(app, topic, rootFolder)) {
 			indexCount++;
 		}
 	}
@@ -88,7 +91,18 @@ export async function updateTopicLinksForFolder(
 
 }
 
-async function createOrUpdateTopicIndex(app: App, topic: TopicInfo): Promise<boolean> {
+function getPluginRoot(app: App, folder: TFolder): TFolder | null {
+	let current: TFolder | null = folder;
+	while (current) {
+		const headerPath = normalizePath(`${current.path}/header.md`);
+		const headerFile = app.vault.getAbstractFileByPath(headerPath);
+		if (headerFile instanceof TFile) return current;
+		current = current.parent;
+	}
+	return null;
+}
+
+async function createOrUpdateTopicIndex(app: App, topic: TopicInfo, rootFolder: TFolder): Promise<boolean> {
 	if (topic.files.length === 0) return false;
 
 	const firstFile = topic.files[0];
@@ -97,9 +111,7 @@ async function createOrUpdateTopicIndex(app: App, topic: TopicInfo): Promise<boo
 	const topicFolder = firstFile.parent;
 	if (!topicFolder) return false;
 
-	await ensureBaseFileInFolder(app, topicFolder);
-
-	const baseFilePath = normalizePath(`${topicFolder.path}/${BASE_FILE_NAME}`);
+	const baseFilePath = normalizePath(`${rootFolder.path}/${BASE_FILE_NAME}`);
 	const indexPath = normalizePath(`${topicFolder.path}/${topic.name}.md`);
 	const indexContent = `![[${baseFilePath}#Topic View]]\n`;
 

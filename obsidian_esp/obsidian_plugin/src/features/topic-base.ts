@@ -1,6 +1,6 @@
 import { App, TFile, TFolder, normalizePath } from 'obsidian';
 
-export const BASE_FILE_NAME = 'topic_views.base';
+export const BASE_FILE_NAME = 'base.base';
 
 export const BASE_FILE_CONTENT = `filters:
   and:
