@@ -39,14 +39,7 @@ const VALID_PERSUASION_TOPICS: &[&str] = &[
 ];
 
 const VALID_VOICE_TOPICS: &[&str] = &[
-    "Alarm",
-    "Attack",
-    "Flee",
-    "Hello",
-    "Hit",
-    "Idle",
-    "Intruder",
-    "Thief",
+    "Alarm", "Attack", "Flee", "Hello", "Hit", "Idle", "Intruder", "Thief",
 ];
 
 fn generate_info_id(existing_ids: &HashSet<String>) -> String {
@@ -232,7 +225,8 @@ fn validate_dialogue_topic(dialogue_type: tes3::esp::DialogueType2, topic: &str)
                 tes3::esp::DialogueType2::Greeting => "Greeting",
                 tes3::esp::DialogueType2::Persuasion => "Persuasion",
                 tes3::esp::DialogueType2::Voice => "Voice",
-                tes3::esp::DialogueType2::Topic | tes3::esp::DialogueType2::Journal => unreachable!(),
+                tes3::esp::DialogueType2::Topic | tes3::esp::DialogueType2::Journal =>
+                    unreachable!(),
             },
             topic,
             valid_topics.join(", ")

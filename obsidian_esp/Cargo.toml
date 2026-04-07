@@ -39,5 +39,6 @@ default-features = false
 features = ["esp", "serde"]
 
 [dependencies.merge_to_master]
+# path = "../../merge_to_master/"
 git = "https://github.com/Greatness7/merge_to_master.git"
-rev = "b00368a4bf24f3c427409e47a0ca3240ac93c75d"
+rev = "c69d1d81a8e166c0eb92781967c2916a8aeb4c06"
