@@ -97,13 +97,10 @@ async function createOrUpdateTopicIndex(app: App, topic: TopicInfo): Promise<boo
 	const topicFolder = firstFile.parent;
 	if (!topicFolder) return false;
 
-	const parentFolder = topicFolder.parent;
-	if (!parentFolder) return false;
-
 	await ensureBaseFileInFolder(app, topicFolder);
 
 	const baseFilePath = normalizePath(`${topicFolder.path}/${BASE_FILE_NAME}`);
-	const indexPath = normalizePath(`${parentFolder.path}/${topic.name}.md`);
+	const indexPath = normalizePath(`${topicFolder.path}/${topic.name}.md`);
 	const indexContent = `![[${baseFilePath}#Topic View]]\n`;
 
 	const existing = app.vault.getAbstractFileByPath(indexPath);
