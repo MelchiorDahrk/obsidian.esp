@@ -7,6 +7,19 @@ interface TopicInfo {
 	files: TFile[];
 }
 
+/**
+ * The main entry point for updating topic links in a folder.
+ * This function performs two passes over the files:
+ * 1. Cleanup: Removes links that are no longer valid (dead links).
+ * 2. Linking: Finds occurrences of topic names and wraps them in [[Links]].
+ * It also handles topic index file generation (topic.md files with Base View embeds).
+ * 
+ * @param app The Obsidian app instance.
+ * @param folder The folder to process.
+ * @param allTopicNames Optional list of all valid topic names (e.g. from the game database).
+ * @param silent If true, suppresses notifications.
+ * @param onProgress Callback for progress updates.
+ */
 export async function updateTopicLinksForFolder(
 	app: App,
 	folder: TFolder,
@@ -98,6 +111,10 @@ export async function updateTopicLinksForFolder(
 
 }
 
+/**
+ * Navigates up the folder hierarchy to find the root of the plugin export.
+ * Identified by the presence of a 'header.md' file.
+ */
 function getPluginRoot(app: App, folder: TFolder): TFolder | null {
 	let current: TFolder | null = folder;
 	while (current) {
@@ -109,6 +126,10 @@ function getPluginRoot(app: App, folder: TFolder): TFolder | null {
 	return null;
 }
 
+/**
+ * Creates or updates a "Topic Index" file (e.g. 'TopicName.md') that embeds the Base View.
+ * This allows users to see a consolidated view of all dialogue for a specific topic.
+ */
 async function createOrUpdateTopicIndex(app: App, topic: TopicInfo, rootFolder: TFolder): Promise<boolean> {
 	if (topic.files.length === 0) return false;
 
@@ -136,6 +157,10 @@ async function createOrUpdateTopicIndex(app: App, topic: TopicInfo, rootFolder: 
 	}
 }
 
+/**
+ * Scans a folder to find all markdown files that represent dialogue topics.
+ * Returns a map of topic names to their associated files.
+ */
 async function indexTopicsInFolder(
 	app: App,
 	folder: TFolder,
@@ -164,6 +189,7 @@ async function indexTopicsInFolder(
 
 				if (Array.isArray(type)) type = type[0];
 
+				// If frontmatter is missing (e.g. newly created file), try to infer from path
 				if (!type || !topicName) {
 					const parts = child.path.split('/');
 					const typeIndex = parts.indexOf('Topic');
@@ -189,6 +215,10 @@ async function indexTopicsInFolder(
 	return topics;
 }
 
+/**
+ * Retrieves a list of files that should be processed for link updates.
+ * If the folder is a plugin root, it restricts scanning to known dialogue subdirectories.
+ */
 async function getFilesToProcess(app: App, folder: TFolder): Promise<TFile[]> {
 	const files: TFile[] = [];
 
@@ -209,8 +239,7 @@ async function getFilesToProcess(app: App, folder: TFolder): Promise<TFile[]> {
 					}
 				}
 
-				// Mandatory Frontmatter Check as per user request
-				// Must contain Type property (Topic, Greeting, Persuasion, Journal)
+				// Mandatory Frontmatter Check: Must contain Type property (Topic, Greeting, etc.)
 				// AND Topic property
 				let type = frontmatter?.Type;
 				if (Array.isArray(type)) type = type[0];
@@ -225,10 +254,7 @@ async function getFilesToProcess(app: App, folder: TFolder): Promise<TFile[]> {
 		}
 	};
 
-	// If the user ran the command on a plugin export root (contains header.md),
-	// restrict processing to the canonical subfolders where content lives:
-	// Topic, Greeting, Persuasion, Journal (case-insensitive). Otherwise,
-	// recurse the entire selected folder as before.
+	// Optimized scanning: If we are at the root, only look into dialogue category folders
 	const headerPath = normalizePath(`${folder.path}/header.md`);
 	const headerFile = app.vault.getAbstractFileByPath(headerPath);
 	if (headerFile instanceof TFile) {
@@ -248,6 +274,10 @@ async function getFilesToProcess(app: App, folder: TFolder): Promise<TFile[]> {
 	return files;
 }
 
+/**
+ * Manually parses frontmatter key-value pairs from a string.
+ * Used as a fallback when Obsidian's metadata cache is not yet available.
+ */
 function parseBasicFrontmatter(fmText: string): Record<string, any> {
 	const result: Record<string, any> = {};
 	const lines = fmText.replace(/^---\n/, '').replace(/\n---\n$/, '').split('\n');
@@ -262,6 +292,9 @@ function parseBasicFrontmatter(fmText: string): Record<string, any> {
 	return result;
 }
 
+/**
+ * Splits a markdown string into its frontmatter block and body.
+ */
 function splitFrontmatter(content: string): {
 	frontmatter: string;
 	body: string;
@@ -276,6 +309,9 @@ function splitFrontmatter(content: string): {
 	return { frontmatter: '', body: content };
 }
 
+/**
+ * Merges frontmatter and body back into a single string.
+ */
 function mergeFrontmatter(frontmatter: string, body: string): string {
 	return frontmatter + body;
 }

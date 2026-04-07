@@ -34,6 +34,9 @@ export default class ObsidianEsp extends Plugin {
 	private statusBarItem: HTMLElement;
 	private lazyLoader: LazyLoader | null = null;
 
+	/**
+	 * Initializes the plugin, registers views, adds commands, and sets up settings.
+	 */
 	async onload() {
 		await this.loadSettings();
 		await this.initWasm();
@@ -105,12 +108,18 @@ export default class ObsidianEsp extends Plugin {
 		this.addSettingTab(new ObsidianEspSettingTab(this.app, this));
 	}
 
+	/**
+	 * Cleans up resources when the plugin is disabled.
+	 */
 	onunload() {
 		this.lazyLoader = null;
 		this.db?.free();
 		this.db = null;
 	}
 
+	/**
+	 * Updates the status bar button based on whether a database is currently loaded.
+	 */
 	private renderStatusBar() {
 		this.statusBarItem.empty();
 
@@ -141,6 +150,9 @@ export default class ObsidianEsp extends Plugin {
 		}
 	}
 
+	/**
+	 * Shows a context menu with database-related actions when the status bar button is clicked.
+	 */
 	private showDatabaseMenu(e: MouseEvent) {
 		const menu = new Menu();
 
@@ -182,6 +194,9 @@ export default class ObsidianEsp extends Plugin {
 		menu.showAtMouseEvent(e);
 	}
 
+	/**
+	 * Opens or reveals the Database Explorer view.
+	 */
 	private async openDatabaseView() {
 		if (!this.db) return;
 
@@ -197,6 +212,9 @@ export default class ObsidianEsp extends Plugin {
 		this.app.workspace.revealLeaf(leaf);
 	}
 
+	/**
+	 * Opens a native file picker to select an ESP/ESM file.
+	 */
 	private promptForDatabase() {
 		if (!this.wasmReady) {
 			new Notice('WASM module is not ready yet.');
@@ -212,6 +230,9 @@ export default class ObsidianEsp extends Plugin {
 		input.click();
 	}
 
+	/**
+	 * Reads the selected database file, resolves its masters, and initializes the in-memory database.
+	 */
 	private async loadDatabase(input: HTMLInputElement) {
 		const file = input.files?.[0];
 		if (!file) {
@@ -231,7 +252,7 @@ export default class ObsidianEsp extends Plugin {
 			const bytes = new Uint8Array(buffer);
 			progress.update(20, 'Scanning for masters...');
 
-			// Try to merge with masters
+			// Step 1: Extract master dependencies from the file header
 			let masterNames: string[];
 			try {
 				masterNames = extractMasterNames(bytes);
@@ -239,6 +260,7 @@ export default class ObsidianEsp extends Plugin {
 				masterNames = [];
 			}
 
+			// Step 2: Load and parse master files in parallel if they exist
 			if (masterNames.length > 0) {
 				progress.update(30, 'Loading masters...');
 				const { masters, messages } = await loadValidationMasters(
@@ -259,6 +281,8 @@ export default class ObsidianEsp extends Plugin {
 					const workerPath = normalizePath(
 						`${this.manifest.dir}/worker.js`,
 					);
+					
+					// Parallel parsing happens in Web Workers to avoid blocking the UI thread
 					const preparsed = await parseMastersInParallel(
 						this.app,
 						wasmPath,
@@ -286,18 +310,20 @@ export default class ObsidianEsp extends Plugin {
 				}
 			}
 
-			// Fall back to plugin-only load
+			// Step 3: Fall back to plugin-only load if no masters were resolved
 			if (!this.db) {
 				progress.update(90, 'Parsing database...');
 				this.db = GameDatabase.load(bytes, file.name);
 			}
 			progress.update(100, 'Done!');
 
+			// Step 4: Initialize lazy loader for merged databases (allows loading data on demand)
 			if (this.db?.info.isMerged) {
 				this.lazyLoader = new LazyLoader(this.db, this.settings.outputFolder);
 				this.lazyLoader.register(this);
 			}
 
+			// Step 5: Automatically update topic links in the project folder if it exists
 			if (this.db) {
 				const baseName = file.name.replace(/\.[^.]+$/, '');
 				const folderPath = normalizePath(
@@ -317,6 +343,9 @@ export default class ObsidianEsp extends Plugin {
 		}
 	}
 
+	/**
+	 * Synchronously initializes the WASM module using the binary stored in the plugin folder.
+	 */
 	async initWasm() {
 		try {
 			const wasmPath = normalizePath(
@@ -332,6 +361,10 @@ export default class ObsidianEsp extends Plugin {
 		}
 	}
 
+	/**
+	 * Unpacks the loaded database into Markdown files in the vault.
+	 * If the database is merged, it only unpacks records modified by the plugin.
+	 */
 	async unpackDatabase() {
 		if (!this.db) {
 			new Notice('No database loaded.');
@@ -340,12 +373,13 @@ export default class ObsidianEsp extends Plugin {
 
 		let progress: ProgressBar | undefined;
 		try {
+			// Step 1: Request unpacked file contents from WASM
 			const files = this.db.info.isMerged
 				? this.db.unpackModified()
 				: this.db.unpack();
 			const fileName = this.db.info.fileName;
 
-			// Add the plugin itself as a master in header.md
+			// Step 2: Inject the plugin itself into the virtual header metadata
 			const headerEntry = files.find(([path]) => path === 'header.md');
 			if (headerEntry) {
 				headerEntry[1] = addMasterToHeaderContent(
@@ -359,7 +393,7 @@ export default class ObsidianEsp extends Plugin {
 				`${this.settings.outputFolder}/${baseName}`,
 			);
 
-			// Collect all unique parent directories up-front.
+			// Step 3: Resolve all target paths and group folders to create them in batch
 			const folders = new Set<string>();
 			const resolved: [string, string][] = [];
 			for (const [relativePath, content] of files) {
@@ -376,13 +410,13 @@ export default class ObsidianEsp extends Plugin {
 				resolved.push([fullPath, content]);
 			}
 
-			// Create all folders first (sorted so parents come before children).
+			// Step 4: Ensure all necessary folders exist before writing files
 			const sortedFolders = [...folders].sort();
 			for (const dir of sortedFolders) {
 				await this.ensureFolder(dir);
 			}
 
-			// Write files via the adapter to bypass per-file vault events.
+			// Step 5: Write files in batches using the low-level adapter for performance
 			const adapter = this.app.vault.adapter;
 			let created = 0;
 			const total = resolved.length;
@@ -410,7 +444,7 @@ export default class ObsidianEsp extends Plugin {
 
 			new Notice(`Unpacked ${created} files to ${outputDir}`);
 
-			// Automate topic link update after unpack
+			// Step 6: Automatically trigger topic link updates for the newly unpacked files
 			const unpackFolder = this.app.vault.getAbstractFileByPath(outputDir);
 			if (unpackFolder instanceof TFolder) {
 				await this.updateTopicLinks(unpackFolder, false, progress);
@@ -423,6 +457,9 @@ export default class ObsidianEsp extends Plugin {
 	}
 
 
+	/**
+	 * Prompts the user to select a folder from the vault and compiles it into an ESP file.
+	 */
 	async compileFolder() {
 		if (!this.wasmReady) {
 			new Notice('Wasm module is not ready yet.');
@@ -432,6 +469,9 @@ export default class ObsidianEsp extends Plugin {
 		await compileVaultFolder(this.app);
 	}
 
+	/**
+	 * Compiles the specified folder into an ESP file.
+	 */
 	async compileSelectedFolder(folder: TFolder) {
 		if (!this.wasmReady) {
 			new Notice('Wasm module is not ready yet.');
@@ -441,6 +481,9 @@ export default class ObsidianEsp extends Plugin {
 		await compileFolderSelection(this.app, folder);
 	}
 
+	/**
+	 * Generates property definition files for the specified folder based on the loaded database.
+	 */
 	async generatePropertyFiles(folder: TFolder) {
 		if (!this.wasmReady) {
 			new Notice('Wasm module is not ready yet.');
@@ -450,6 +493,12 @@ export default class ObsidianEsp extends Plugin {
 		await generatePropertyFilesForFolder(this.app, folder);
 	}
 
+	/**
+	 * Scans the specified folder for topic names and updates references to them with [[Links]].
+	 * @param folder The folder to scan.
+	 * @param silent If true, suppresses notifications.
+	 * @param existingProgress An optional existing progress bar to reuse.
+	 */
 	async updateTopicLinks(folder: TFolder, silent?: boolean, existingProgress?: ProgressBar) {
 		const allTopicNames = this.db?.getAllTopicNames();
 
@@ -478,6 +527,9 @@ export default class ObsidianEsp extends Plugin {
 		}
 	}
 
+	/**
+	 * Ensures a folder exists in the vault, creating it if necessary.
+	 */
 	async ensureFolder(path: string) {
 		const existing = this.app.vault.getAbstractFileByPath(path);
 		if (existing instanceof TFolder) {
@@ -491,6 +543,9 @@ export default class ObsidianEsp extends Plugin {
 		await this.app.vault.createFolder(path);
 	}
 
+	/**
+	 * Loads plugin settings from the disk.
+	 */
 	async loadSettings() {
 		this.settings = Object.assign(
 			{},
@@ -499,6 +554,9 @@ export default class ObsidianEsp extends Plugin {
 		);
 	}
 
+	/**
+	 * Saves plugin settings to the disk.
+	 */
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
