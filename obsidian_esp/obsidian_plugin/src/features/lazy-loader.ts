@@ -96,7 +96,11 @@ export class LazyLoader {
 			if (!(topicFolder instanceof TFolder)) {
 				return;
 			}
-			await ensureBaseFileInFolder(plugin.app, topicFolder);
+			
+			const rootFolderAbstract = plugin.app.vault.getAbstractFileByPath(outputDir);
+			if (rootFolderAbstract instanceof TFolder) {
+				await ensureBaseFileInFolder(plugin.app, rootFolderAbstract);
+			}
 
 			const targetIndexPath = normalizePath(`${topicFolder.path}/${file.name}`);
 			let topicIndexFile = file;
@@ -116,7 +120,8 @@ export class LazyLoader {
 			}
 
 			// Replace the empty file with the topic index content
-			const indexContent = `![[${BASE_FILE_NAME}#Topic View]]\n`;
+			const baseFilePath = normalizePath(`${outputDir}/${BASE_FILE_NAME}`);
+			const indexContent = `![[${baseFilePath}#Topic View]]\n`;
 			await plugin.app.vault.modify(topicIndexFile, indexContent);
 
 			// Automate topic link update after lazy-load
