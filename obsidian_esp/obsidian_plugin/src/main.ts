@@ -19,6 +19,7 @@ import { GameDatabase, extractMasterNames } from './database/game-database';
 import { LazyLoader } from './features/lazy-loader';
 import { DATABASE_VIEW_TYPE, DatabaseView } from './ui/database-view';
 import { ProgressBar } from './ui/progress-bar';
+import { parseMastersInParallel } from './database/parallel-loader';
 
 declare module 'obsidian' {
 	interface MenuItem {
@@ -251,11 +252,36 @@ export default class ObsidianEsp extends Plugin {
 					new Notice(msg);
 				}
 				if (masters.length > 0) {
-					progress.update(85, 'Parsing database with masters...');
-					this.db = GameDatabase.loadWithMasters(
+					progress.update(80, 'Parsing masters in parallel...');
+					const wasmPath = normalizePath(
+						`${this.manifest.dir}/pkg/obsidian_esp_bg.wasm`,
+					);
+					const workerPath = normalizePath(
+						`${this.manifest.dir}/worker.js`,
+					);
+					const preparsed = await parseMastersInParallel(
+						this.app,
+						wasmPath,
+						workerPath,
+						masters,
+						(current, total, active) => {
+							const pct = 80 + (current / total) * 10; // 80% to 90%
+							const activeLabel =
+								active.length > 0
+									? ` (Parsing: ${active.join(', ')})`
+									: '';
+							progress.update(
+								pct,
+								`Parsed ${current} / ${total} masters${activeLabel}`,
+							);
+						},
+					);
+
+					progress.update(90, 'Merging database...');
+					this.db = GameDatabase.loadWithPreparsedMasters(
 						bytes,
 						file.name,
-						masters,
+						preparsed,
 					);
 				}
 			}

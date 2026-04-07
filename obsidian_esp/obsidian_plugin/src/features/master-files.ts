@@ -185,35 +185,42 @@ export async function loadValidationMasters(
 
 	const uniqueMasterNames = [...new Set(masterNames)];
 	const totalMasters = uniqueMasterNames.length;
+	let completed = 0;
 
-	for (let i = 0; i < totalMasters; i++) {
-		const masterName = uniqueMasterNames[i]!;
-		if (onProgress) {
-			onProgress(i + 1, totalMasters, masterName);
-		}
-		let masterPath: string | null = null;
-		for (const directory of dataDirectories) {
-			masterPath = await findFileCaseInsensitive(directory, masterName);
-			if (masterPath) {
-				break;
+	const results = await Promise.all(
+		uniqueMasterNames.map(async (masterName) => {
+			let masterPath: string | null = null;
+			for (const directory of dataDirectories) {
+				masterPath = await findFileCaseInsensitive(directory, masterName);
+				if (masterPath) break;
 			}
-		}
 
-		if (!masterPath) {
-			messages.push(
-				`Master '${masterName}' could not be found in the configured OpenMW data directories.`,
-			);
-			continue;
-		}
+			if (!masterPath) {
+				messages.push(
+					`Master '${masterName}' could not be found in the configured OpenMW data directories.`,
+				);
+				return null;
+			}
 
-		try {
-			const bytes = await readFile(masterPath);
-			masters.push([masterName, new Uint8Array(bytes)]);
-		} catch (error) {
-			const message =
-				error instanceof Error ? error.message : String(error);
-			messages.push(`Failed to read master '${masterName}': ${message}`);
-		}
+			try {
+				const bytes = await readFile(masterPath);
+				const result: MasterFile = [masterName, new Uint8Array(bytes)];
+				completed++;
+				if (onProgress) {
+					onProgress(completed, totalMasters, masterName);
+				}
+				return result;
+			} catch (error) {
+				const message =
+					error instanceof Error ? error.message : String(error);
+				messages.push(`Failed to read master '${masterName}': ${message}`);
+				return null;
+			}
+		}),
+	);
+
+	for (const r of results) {
+		if (r) masters.push(r);
 	}
 
 	return { masters, messages };

@@ -139,6 +139,15 @@ if exist "styles.css" (
   )
 )
 
+if exist "worker.js" (
+  copy /y "worker.js" "%PACKAGE_DIR%\worker.js" >nul
+  if errorlevel 1 (
+    echo [ERROR] Failed to copy worker.js.
+    popd
+    exit /b 1
+  )
+)
+
 if exist "pkg" (
   robocopy "pkg" "%PACKAGE_DIR%\pkg" /E >nul
   set "ROBOCOPY_EXIT=%ERRORLEVEL%"

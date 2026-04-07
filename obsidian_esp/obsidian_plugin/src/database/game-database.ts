@@ -59,6 +59,26 @@ export class GameDatabase {
 		});
 	}
 
+	/**
+	 * Load a plugin merged with pre-parsed masters.
+	 * Masters is an array of parsed object arrays.
+	 */
+	static loadWithPreparsedMasters(
+		pluginBytes: Uint8Array,
+		fileName: string,
+		masters: any[],
+	): GameDatabase {
+		const handle = (WasmGameDatabase as any).loadWithPreparsedMasters(
+			pluginBytes,
+			masters,
+		);
+		return new GameDatabase(handle, {
+			fileName,
+			objectCount: handle.objectCount(),
+			isMerged: true,
+		});
+	}
+
 	getActivators(): ActivatorRecord[] {
 		return this.handle.getActivators() as ActivatorRecord[];
 	}

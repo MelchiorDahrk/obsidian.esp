@@ -405,6 +405,50 @@ impl GameDatabase {
         Ok(GameDatabase { data, merged: true, link_only_changes })
     }
 
+    /// Load a plugin merged with pre-parsed masters.
+    /// `masters_js` is a JS array of object arrays (obtained via `load_objects` on workers).
+    #[wasm_bindgen(js_name = "loadWithPreparsedMasters")]
+    pub fn load_with_preparsed_masters(
+        plugin_bytes: &[u8],
+        masters_js: JsValue,
+    ) -> Result<GameDatabase, JsValue> {
+        let master_objects: Vec<Vec<TES3Object>> =
+            from_value(masters_js).map_err(|e| JsValue::from_str(&format!("Failed to deserialize master objects: {e}")))?;
+
+        // Parse plugin
+        let mut plugin_raw = Plugin::new();
+        plugin_raw
+            .load_bytes(plugin_bytes)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+
+        // Save original masters list before conversion
+        let original_masters: Vec<(String, u64)> = plugin_raw
+            .header()
+            .map(|h| h.masters.clone())
+            .unwrap_or_default();
+
+        let plugin_data = PluginData::from_plugin(plugin_raw);
+
+        // Convert object lists to PluginData
+        let master_datas: Vec<PluginData> = master_objects
+            .into_iter()
+            .map(|objects| PluginData::from_plugin(Plugin { objects }))
+            .collect();
+
+        let (data, link_only_changes) = compile::resolve::resolve_full_database(
+            plugin_data,
+            master_datas,
+            original_masters,
+        )
+        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+
+        Ok(GameDatabase {
+            data,
+            merged: true,
+            link_only_changes,
+        })
+    }
+
     /// Whether this database was loaded with masters (merged mode).
     #[wasm_bindgen(js_name = "isMerged")]
     pub fn is_merged(&self) -> bool {
