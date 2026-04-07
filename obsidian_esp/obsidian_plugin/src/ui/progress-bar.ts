@@ -4,14 +4,15 @@ export class ProgressBar {
 	private notice: Notice;
 	private barInner: HTMLElement;
 	private label: HTMLElement;
+	private titleEl: HTMLElement;
 
 	constructor(title: string) {
 		this.notice = new Notice('', 0);
 		// Add a class for styling if needed, but we'll use inline styles for now as per main.ts pattern
 		const progressEl = this.notice.noticeEl.createDiv();
-		const titleEl = progressEl.createDiv();
-		titleEl.style.fontWeight = 'var(--font-bold)';
-		titleEl.setText(title);
+		this.titleEl = progressEl.createDiv();
+		this.titleEl.style.fontWeight = 'var(--font-bold)';
+		this.titleEl.setText(title);
 
 		const barOuter = progressEl.createDiv();
 		barOuter.style.cssText =
@@ -31,6 +32,10 @@ export class ProgressBar {
 		const clampedPercent = Math.min(100, Math.max(0, percent));
 		this.barInner.style.width = `${clampedPercent}%`;
 		this.label.setText(message);
+	}
+
+	setTitle(title: string) {
+		this.titleEl.setText(title);
 	}
 
 	hide() {

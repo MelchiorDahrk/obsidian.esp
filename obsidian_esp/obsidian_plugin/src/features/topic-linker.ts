@@ -33,7 +33,7 @@ export async function updateTopicLinksForFolder(
 		(a, b) => b.length - a.length,
 	);
 
-	const filesToProcess = getFilesToProcess(app, folder);
+	const filesToProcess = await getFilesToProcess(app, folder);
 	let modifiedCount = 0;
 	const totalFiles = filesToProcess.length;
 
@@ -142,13 +142,22 @@ async function indexTopicsInFolder(
 ): Promise<Map<string, TopicInfo>> {
 	const topics = new Map<string, TopicInfo>();
 
-	const processFolder = (currentFolder: TFolder) => {
+	const processFolder = async (currentFolder: TFolder) => {
 		for (const child of currentFolder.children) {
 			if (child instanceof TFolder) {
-				processFolder(child);
+				await processFolder(child);
 			} else if (child instanceof TFile && child.extension === 'md') {
 				const cache = app.metadataCache.getFileCache(child);
-				const frontmatter = cache?.frontmatter;
+				let frontmatter = cache?.frontmatter;
+
+				// Fallback: Read file if metadata cache is not ready
+				if (!frontmatter) {
+					const content = await app.vault.read(child);
+					const { frontmatter: fmText } = splitFrontmatter(content);
+					if (fmText) {
+						frontmatter = parseBasicFrontmatter(fmText);
+					}
+				}
 
 				let type = frontmatter?.Type;
 				let topicName = frontmatter?.Topic;
@@ -176,20 +185,29 @@ async function indexTopicsInFolder(
 		}
 	};
 
-	processFolder(folder);
+	await processFolder(folder);
 	return topics;
 }
 
-function getFilesToProcess(app: App, folder: TFolder): TFile[] {
+async function getFilesToProcess(app: App, folder: TFolder): Promise<TFile[]> {
 	const files: TFile[] = [];
 
-	const collect = (currentFolder: TFolder) => {
+	const collect = async (currentFolder: TFolder) => {
 		for (const child of currentFolder.children) {
 			if (child instanceof TFolder) {
-				collect(child);
+				await collect(child);
 			} else if (child instanceof TFile && child.extension === 'md') {
 				const cache = app.metadataCache.getFileCache(child);
-				const frontmatter = cache?.frontmatter;
+				let frontmatter = cache?.frontmatter;
+
+				// Fallback: Read file if metadata cache is not ready
+				if (!frontmatter) {
+					const content = await app.vault.read(child);
+					const { frontmatter: fmText } = splitFrontmatter(content);
+					if (fmText) {
+						frontmatter = parseBasicFrontmatter(fmText);
+					}
+				}
 
 				// Mandatory Frontmatter Check as per user request
 				// Must contain Type property (Topic, Greeting, Persuasion, Journal)
@@ -219,15 +237,29 @@ function getFilesToProcess(app: App, folder: TFolder): TFile[] {
 			if (child instanceof TFolder) {
 				const childName = child.name.toLowerCase();
 				if (targetNames.some((n) => n.toLowerCase() === childName)) {
-					collect(child);
+					await collect(child);
 				}
 			}
 		}
 	} else {
-		collect(folder);
+		await collect(folder);
 	}
 
 	return files;
+}
+
+function parseBasicFrontmatter(fmText: string): Record<string, any> {
+	const result: Record<string, any> = {};
+	const lines = fmText.replace(/^---\n/, '').replace(/\n---\n$/, '').split('\n');
+	for (const line of lines) {
+		const colonIndex = line.indexOf(':');
+		if (colonIndex !== -1) {
+			const key = line.substring(0, colonIndex).trim();
+			const value = line.substring(colonIndex + 1).trim();
+			result[key] = value;
+		}
+	}
+	return result;
 }
 
 function splitFrontmatter(content: string): {

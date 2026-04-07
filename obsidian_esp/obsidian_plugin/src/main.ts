@@ -266,20 +266,29 @@ export default class ObsidianEsp extends Plugin {
 				this.db = GameDatabase.load(bytes, file.name);
 			}
 			progress.update(100, 'Done!');
+
+			if (this.db?.info.isMerged) {
+				this.lazyLoader = new LazyLoader(this.db, this.settings.outputFolder);
+				this.lazyLoader.register(this);
+			}
+
+			if (this.db) {
+				const baseName = file.name.replace(/\.[^.]+$/, '');
+				const folderPath = normalizePath(
+					`${this.settings.outputFolder}/${baseName}`,
+				);
+				const folder = this.app.vault.getAbstractFileByPath(folderPath);
+				if (folder instanceof TFolder) {
+					await this.updateTopicLinks(folder, false, progress);
+				}
+			}
 		} catch (error) {
 			const message =
 				error instanceof Error ? error.message : String(error);
 			new Notice(`Failed to load database: ${message}`);
 		} finally {
-			setTimeout(() => progress.hide(), 500);
+			this.renderStatusBar();
 		}
-
-		if (this.db?.info.isMerged) {
-			this.lazyLoader = new LazyLoader(this.db, this.settings.outputFolder);
-			this.lazyLoader.register(this);
-		}
-
-		this.renderStatusBar();
 	}
 
 	async initWasm() {
@@ -303,6 +312,7 @@ export default class ObsidianEsp extends Plugin {
 			return;
 		}
 
+		let progress: ProgressBar | undefined;
 		try {
 			const files = this.db.info.isMerged
 				? this.db.unpackModified()
@@ -352,7 +362,7 @@ export default class ObsidianEsp extends Plugin {
 			const total = resolved.length;
 			const BATCH_SIZE = 50;
 
-			const progress = new ProgressBar(`Unpacking ${fileName}`);
+			progress = new ProgressBar(`Unpacking ${fileName}`);
 
 			for (let i = 0; i < total; i += BATCH_SIZE) {
 				const batch = resolved.slice(i, i + BATCH_SIZE);
@@ -369,14 +379,15 @@ export default class ObsidianEsp extends Plugin {
 				progress.update(pct, `Unpacked ${done} / ${total} files`);
 			}
 
-			progress.hide();
+			// Wait a moment for last batch to be visible
+			await new Promise((r) => setTimeout(r, 100));
 
 			new Notice(`Unpacked ${created} files to ${outputDir}`);
 
 			// Automate topic link update after unpack
 			const unpackFolder = this.app.vault.getAbstractFileByPath(outputDir);
 			if (unpackFolder instanceof TFolder) {
-				await this.updateTopicLinks(unpackFolder, true);
+				await this.updateTopicLinks(unpackFolder, false, progress);
 			}
 		} catch (error) {
 			const message =
@@ -413,14 +424,14 @@ export default class ObsidianEsp extends Plugin {
 		await generatePropertyFilesForFolder(this.app, folder);
 	}
 
-	async updateTopicLinks(folder: TFolder, silent?: boolean) {
-		const allTopicNames = this.db?.info.isMerged
-			? this.db.getAllTopicNames()
-			: undefined;
+	async updateTopicLinks(folder: TFolder, silent?: boolean, existingProgress?: ProgressBar) {
+		const allTopicNames = this.db?.getAllTopicNames();
 
-		let progress: ProgressBar | undefined;
-		if (!silent) {
+		let progress = existingProgress;
+		if (!progress && !silent) {
 			progress = new ProgressBar(`Updating topic links: ${folder.name}`);
+		} else if (progress) {
+			progress.setTitle(`Updating topic links: ${folder.name}`);
 		}
 
 		await updateTopicLinksForFolder(
@@ -436,8 +447,8 @@ export default class ObsidianEsp extends Plugin {
 			},
 		);
 
-		if (progress) {
-			progress.hide();
+		if (progress && !existingProgress) {
+			progress.update(100, 'Done!');
 		}
 	}
 
