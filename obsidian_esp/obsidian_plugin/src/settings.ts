@@ -1,7 +1,11 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import ObsidianEsp from './main';
 
+/**
+ * Configuration options for the Obsidian.esp plugin.
+ */
 export interface ObsidianEspSettings {
+	/** Vault folder where unpacked plugin files are written. */
 	outputFolder: string;
 }
 
@@ -9,6 +13,9 @@ export const DEFAULT_SETTINGS: ObsidianEspSettings = {
 	outputFolder: 'TES3 Plugins',
 };
 
+/**
+ * UI tab in the Obsidian settings window for configuring the plugin.
+ */
 export class ObsidianEspSettingTab extends PluginSettingTab {
 	plugin: ObsidianEsp;
 

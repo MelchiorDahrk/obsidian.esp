@@ -10,16 +10,8 @@ import {
 	ObsidianEspSettings,
 	ObsidianEspSettingTab,
 } from './settings';
-import { updateTopicLinksForFolder } from './features/topic-linker';
-import {
-	addMasterToHeaderContent,
-	loadValidationMasters,
-} from './features/master-files';
-import { GameDatabase, extractMasterNames } from './database/game-database';
-import { LazyLoader } from './features/lazy-loader';
 import { DATABASE_VIEW_TYPE, DatabaseView } from './ui/database-view';
-import { ProgressBar } from './ui/progress-bar';
-import { parseMastersInParallel } from './database/parallel-loader';
+import { DatabaseManager } from './features/database-manager';
 
 declare module 'obsidian' {
 	interface MenuItem {
@@ -27,12 +19,14 @@ declare module 'obsidian' {
 	}
 }
 
+/**
+ * Main Obsidian plugin class for Obsidian.esp.
+ */
 export default class ObsidianEsp extends Plugin {
 	settings: ObsidianEspSettings;
 	wasmReady = false;
-	private db: GameDatabase | null = null;
 	private statusBarItem: HTMLElement;
-	private lazyLoader: LazyLoader | null = null;
+	private dbManager: DatabaseManager;
 
 	/**
 	 * Initializes the plugin, registers views, adds commands, and sets up settings.
@@ -40,6 +34,14 @@ export default class ObsidianEsp extends Plugin {
 	async onload() {
 		await this.loadSettings();
 		await this.initWasm();
+
+		// Initialize DatabaseManager to handle core logic
+		this.dbManager = new DatabaseManager(
+			this.app,
+			this.manifest.dir || '',
+			this.settings.outputFolder,
+			() => this.renderStatusBar(), // Refresh UI when DB state changes
+		);
 
 		this.registerView(
 			DATABASE_VIEW_TYPE,
@@ -53,7 +55,7 @@ export default class ObsidianEsp extends Plugin {
 			id: 'unpack',
 			name: 'Unpack loaded database',
 			callback: () => {
-				void this.unpackDatabase();
+				void this.dbManager.unpackDatabase();
 			},
 		});
 
@@ -65,6 +67,7 @@ export default class ObsidianEsp extends Plugin {
 			},
 		});
 
+		// Vault Context Menu Integration
 		this.registerEvent(
 			this.app.workspace.on('file-menu', (menu, file) => {
 				if (!(file instanceof TFolder)) {
@@ -98,7 +101,7 @@ export default class ObsidianEsp extends Plugin {
 							.setTitle('Update topic links')
 							.setIcon('link')
 							.onClick(() => {
-								void this.updateTopicLinks(file);
+								void this.dbManager.updateTopicLinks(file);
 							});
 					});
 				});
@@ -112,9 +115,7 @@ export default class ObsidianEsp extends Plugin {
 	 * Cleans up resources when the plugin is disabled.
 	 */
 	onunload() {
-		this.lazyLoader = null;
-		this.db?.free();
-		this.db = null;
+		this.dbManager.unloadDatabase();
 	}
 
 	/**
@@ -122,8 +123,9 @@ export default class ObsidianEsp extends Plugin {
 	 */
 	private renderStatusBar() {
 		this.statusBarItem.empty();
+		const db = this.dbManager.database;
 
-		if (this.db === null) {
+		if (db === null) {
 			const btn = this.statusBarItem.createEl('button', {
 				text: 'Load database',
 				cls: 'esp-db-status-btn',
@@ -134,7 +136,7 @@ export default class ObsidianEsp extends Plugin {
 			});
 			btn.addEventListener('click', () => this.promptForDatabase());
 		} else {
-			const { fileName, objectCount, isMerged } = this.db.info;
+			const { fileName, objectCount, isMerged } = db.info;
 			const mergedTag = isMerged ? ', merged' : '';
 			const btn = this.statusBarItem.createEl('button', {
 				text: `${fileName} (${objectCount.toLocaleString()} records${mergedTag})`,
@@ -168,7 +170,7 @@ export default class ObsidianEsp extends Plugin {
 			item.setTitle('Unpack database')
 				.setIcon('file-input')
 				.onClick(() => {
-					void this.unpackDatabase();
+					void this.dbManager.unpackDatabase();
 				});
 		});
 
@@ -184,10 +186,7 @@ export default class ObsidianEsp extends Plugin {
 			item.setTitle('Unload database')
 				.setIcon('x')
 				.onClick(() => {
-					this.lazyLoader = null;
-					this.db?.free();
-					this.db = null;
-					this.renderStatusBar();
+					this.dbManager.unloadDatabase();
 				});
 		});
 
@@ -198,7 +197,8 @@ export default class ObsidianEsp extends Plugin {
 	 * Opens or reveals the Database Explorer view.
 	 */
 	private async openDatabaseView() {
-		if (!this.db) return;
+		const db = this.dbManager.database;
+		if (!db) return;
 
 		// Reuse an existing database view leaf if one is already open.
 		const existing = this.app.workspace.getLeavesOfType(DATABASE_VIEW_TYPE);
@@ -207,7 +207,7 @@ export default class ObsidianEsp extends Plugin {
 		await leaf.setViewState({ type: DATABASE_VIEW_TYPE, active: true });
 
 		const view = leaf.view as DatabaseView;
-		view.setDatabase(this.db);
+		view.setDatabase(db);
 		await view.onOpen();
 		this.app.workspace.revealLeaf(leaf);
 	}
@@ -225,122 +225,14 @@ export default class ObsidianEsp extends Plugin {
 		input.type = 'file';
 		input.accept = '.esp,.esm,.ESP,.ESM';
 		input.addEventListener('change', () => {
-			void this.loadDatabase(input);
+			const file = input.files?.[0];
+			if (file) {
+				void this.dbManager.loadDatabase(file).then(() => {
+					this.dbManager.registerLazyLoader(this);
+				});
+			}
 		});
 		input.click();
-	}
-
-	/**
-	 * Reads the selected database file, resolves its masters, and initializes the in-memory database.
-	 */
-	private async loadDatabase(input: HTMLInputElement) {
-		const file = input.files?.[0];
-		if (!file) {
-			return;
-		}
-
-		this.db?.free();
-		this.db = null;
-		this.lazyLoader = null;
-		this.statusBarItem.empty();
-
-		const progress = new ProgressBar(`Loading database: ${file.name}`);
-		progress.update(0, 'Reading file...');
-
-		try {
-			const buffer = await file.arrayBuffer();
-			const bytes = new Uint8Array(buffer);
-			progress.update(20, 'Scanning for masters...');
-
-			// Step 1: Extract master dependencies from the file header
-			let masterNames: string[];
-			try {
-				masterNames = extractMasterNames(bytes);
-			} catch {
-				masterNames = [];
-			}
-
-			// Step 2: Load and parse master files in parallel if they exist
-			if (masterNames.length > 0) {
-				progress.update(30, 'Loading masters...');
-				const { masters, messages } = await loadValidationMasters(
-					masterNames,
-					(current, total, name) => {
-						const masterPct = 30 + (current / total) * 50; // 30% to 80%
-						progress.update(masterPct, `Loading master: ${name}`);
-					},
-				);
-				for (const msg of messages) {
-					new Notice(msg);
-				}
-				if (masters.length > 0) {
-					progress.update(80, 'Parsing masters in parallel...');
-					const wasmPath = normalizePath(
-						`${this.manifest.dir}/pkg/obsidian_esp_bg.wasm`,
-					);
-					const workerPath = normalizePath(
-						`${this.manifest.dir}/worker.js`,
-					);
-					
-					// Parallel parsing happens in Web Workers to avoid blocking the UI thread
-					const preparsed = await parseMastersInParallel(
-						this.app,
-						wasmPath,
-						workerPath,
-						masters,
-						(current, total, active) => {
-							const pct = 80 + (current / total) * 10; // 80% to 90%
-							const activeLabel =
-								active.length > 0
-									? ` (Parsing: ${active.join(', ')})`
-									: '';
-							progress.update(
-								pct,
-								`Parsed ${current} / ${total} masters${activeLabel}`,
-							);
-						},
-					);
-
-					progress.update(90, 'Merging database...');
-					this.db = GameDatabase.loadWithPreparsedMasters(
-						bytes,
-						file.name,
-						preparsed,
-					);
-				}
-			}
-
-			// Step 3: Fall back to plugin-only load if no masters were resolved
-			if (!this.db) {
-				progress.update(90, 'Parsing database...');
-				this.db = GameDatabase.load(bytes, file.name);
-			}
-			progress.update(100, 'Done!');
-
-			// Step 4: Initialize lazy loader for merged databases (allows loading data on demand)
-			if (this.db?.info.isMerged) {
-				this.lazyLoader = new LazyLoader(this.db, this.settings.outputFolder);
-				this.lazyLoader.register(this);
-			}
-
-			// Step 5: Automatically update topic links in the project folder if it exists
-			if (this.db) {
-				const baseName = file.name.replace(/\.[^.]+$/, '');
-				const folderPath = normalizePath(
-					`${this.settings.outputFolder}/${baseName}`,
-				);
-				const folder = this.app.vault.getAbstractFileByPath(folderPath);
-				if (folder instanceof TFolder) {
-					await this.updateTopicLinks(folder, false, progress);
-				}
-			}
-		} catch (error) {
-			const message =
-				error instanceof Error ? error.message : String(error);
-			new Notice(`Failed to load database: ${message}`);
-		} finally {
-			this.renderStatusBar();
-		}
 	}
 
 	/**
@@ -352,110 +244,14 @@ export default class ObsidianEsp extends Plugin {
 				`${this.manifest.dir}/pkg/obsidian_esp_bg.wasm`,
 			);
 			const wasmBuffer = await this.app.vault.adapter.readBinary(wasmPath);
-			initSync({ module: new Uint8Array(wasmBuffer) });
+			initSync(wasmBuffer);
 			this.wasmReady = true;
 		} catch (e) {
-			const error = e instanceof Error ? e.message : String(e);
-			console.error(`[Obsidian ESP] Failed to initialize WASM: ${error}`, e);
-			new Notice(`Obsidian ESP: Failed to initialize WASM. Check console for details. Error: ${error}`, 0);
+			const errorMsg = e instanceof Error ? e.message : String(e);
+			console.error(`[Obsidian ESP] Failed to initialize WASM: ${errorMsg}`, e);
+			new Notice(`Obsidian ESP: Failed to initialize WASM. Check console for details. Error: ${errorMsg}`, 0);
 		}
 	}
-
-	/**
-	 * Unpacks the loaded database into Markdown files in the vault.
-	 * If the database is merged, it only unpacks records modified by the plugin.
-	 */
-	async unpackDatabase() {
-		if (!this.db) {
-			new Notice('No database loaded.');
-			return;
-		}
-
-		let progress: ProgressBar | undefined;
-		try {
-			// Step 1: Request unpacked file contents from WASM
-			const files = this.db.info.isMerged
-				? this.db.unpackModified()
-				: this.db.unpack();
-			const fileName = this.db.info.fileName;
-
-			// Step 2: Inject the plugin itself into the virtual header metadata
-			const headerEntry = files.find(([path]) => path === 'header.md');
-			if (headerEntry) {
-				headerEntry[1] = addMasterToHeaderContent(
-					headerEntry[1],
-					fileName,
-				);
-			}
-
-			const baseName = fileName.replace(/\.[^.]+$/, '');
-			const outputDir = normalizePath(
-				`${this.settings.outputFolder}/${baseName}`,
-			);
-
-			// Step 3: Resolve all target paths and group folders to create them in batch
-			const folders = new Set<string>();
-			const resolved: [string, string][] = [];
-			for (const [relativePath, content] of files) {
-				const fullPath = normalizePath(`${outputDir}/${relativePath}`);
-				const parentDir = fullPath.substring(0, fullPath.lastIndexOf('/'));
-				if (parentDir) {
-					// Add every ancestor so "a/b/c" also creates "a/b" and "a".
-					let dir = parentDir;
-					while (dir && !folders.has(dir)) {
-						folders.add(dir);
-						dir = dir.substring(0, dir.lastIndexOf('/'));
-					}
-				}
-				resolved.push([fullPath, content]);
-			}
-
-			// Step 4: Ensure all necessary folders exist before writing files
-			const sortedFolders = [...folders].sort();
-			for (const dir of sortedFolders) {
-				await this.ensureFolder(dir);
-			}
-
-			// Step 5: Write files in batches using the low-level adapter for performance
-			const adapter = this.app.vault.adapter;
-			let created = 0;
-			const total = resolved.length;
-			const BATCH_SIZE = 50;
-
-			progress = new ProgressBar(`Unpacking ${fileName}`);
-
-			for (let i = 0; i < total; i += BATCH_SIZE) {
-				const batch = resolved.slice(i, i + BATCH_SIZE);
-				const results = await Promise.allSettled(
-					batch.map(([fullPath, content]) =>
-						adapter.write(fullPath, content),
-					),
-				);
-				for (const r of results) {
-					if (r.status === 'fulfilled') created++;
-				}
-				const done = Math.min(i + BATCH_SIZE, total);
-				const pct = Math.round((done / total) * 100);
-				progress.update(pct, `Unpacked ${done} / ${total} files`);
-			}
-
-			// Wait a moment for last batch to be visible
-			await new Promise((r) => setTimeout(r, 100));
-
-			new Notice(`Unpacked ${created} files to ${outputDir}`);
-
-			// Step 6: Automatically trigger topic link updates for the newly unpacked files
-			const unpackFolder = this.app.vault.getAbstractFileByPath(outputDir);
-			if (unpackFolder instanceof TFolder) {
-				await this.updateTopicLinks(unpackFolder, false, progress);
-			}
-		} catch (error) {
-			const message =
-				error instanceof Error ? error.message : String(error);
-			new Notice(`Failed to unpack: ${message}`);
-		}
-	}
-
 
 	/**
 	 * Prompts the user to select a folder from the vault and compiles it into an ESP file.
@@ -491,56 +287,6 @@ export default class ObsidianEsp extends Plugin {
 		}
 
 		await generatePropertyFilesForFolder(this.app, folder);
-	}
-
-	/**
-	 * Scans the specified folder for topic names and updates references to them with [[Links]].
-	 * @param folder The folder to scan.
-	 * @param silent If true, suppresses notifications.
-	 * @param existingProgress An optional existing progress bar to reuse.
-	 */
-	async updateTopicLinks(folder: TFolder, silent?: boolean, existingProgress?: ProgressBar) {
-		const allTopicNames = this.db?.getAllTopicNames();
-
-		let progress = existingProgress;
-		if (!progress && !silent) {
-			progress = new ProgressBar(`Updating topic links: ${folder.name}`);
-		} else if (progress) {
-			progress.setTitle(`Updating topic links: ${folder.name}`);
-		}
-
-		await updateTopicLinksForFolder(
-			this.app,
-			folder,
-			allTopicNames,
-			silent,
-			(current, total, message) => {
-				if (progress) {
-					const pct = Math.round((current / total) * 100);
-					progress.update(pct, message);
-				}
-			},
-		);
-
-		if (progress && !existingProgress) {
-			progress.update(100, 'Done!');
-		}
-	}
-
-	/**
-	 * Ensures a folder exists in the vault, creating it if necessary.
-	 */
-	async ensureFolder(path: string) {
-		const existing = this.app.vault.getAbstractFileByPath(path);
-		if (existing instanceof TFolder) {
-			return;
-		}
-
-		if (existing) {
-			return;
-		}
-
-		await this.app.vault.createFolder(path);
 	}
 
 	/**

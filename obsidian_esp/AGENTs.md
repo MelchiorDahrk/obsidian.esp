@@ -10,7 +10,7 @@ The plugin supports loading a full ESP/ESM file into a `PluginData` held in WASM
 
 **TS side (`obsidian_plugin/src/database/game-database.ts`):** `GameDatabase` holds the WASM handle. Add methods here that call into the WASM handle and return typed results to the rest of the plugin.
 
-**Accessing the DB in the plugin:** The loaded database is at `plugin.db` (typed `GameDatabase | null`). Check for `null` before use — it is only set after the user picks a file.
+**Accessing the DB in the plugin:** The loaded database is managed by `plugin.dbManager` (typed `DatabaseManager`). Access the active database via `plugin.dbManager.database` (typed `GameDatabase | null`). Check for `null` before use — it is only set after the user picks a file.
 
 ## Parallel Master Loading
 Large master files (Morrowind.esm, etc.) are loaded and parsed in parallel.

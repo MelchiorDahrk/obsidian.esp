@@ -26,12 +26,17 @@ The engine of the application, responsible for all heavy lifting regarding TES3 
 ### B. Obsidian Plugin (`obsidian_plugin/`)
 The user interface and integration layer, built for the [Obsidian](https://obsidain.md) knowledge management app.
 
-- **`src/main.ts`**: The plugin entry point. Manages the lifecycle, commands, and settings.
+- **`src/main.ts`**: The plugin entry point. Manages UI integration (commands, context menus, status bar) and lifecycle.
 - **`src/database/`**: Manages the WASM instance and provides a typed TypeScript interface to the `GameDatabase` held in WASM memory.
     - `worker.ts`: Background Web Worker that handles heavy WASM parsing off the main thread.
     - `parallel-loader.ts`: Coordinator that spawns and tracks workers for multi-master loading.
 - **`src/ui/`**: Contains the Database Explorer and custom views.
-- **`src/features/`**: High-level plugin features like "Unpack Plugin", "Compile Project", and "Link Repair".
+- **`src/features/`**: High-level plugin features.
+    - `database-manager.ts`: Orchestrates core operations (load, unpack, unload) and maintains database state.
+    - `path-manager.ts`: Centralizes vault path resolution and Morrowind project structure.
+- **`src/utils/`**: Shared utilities.
+    - `vault-writer.ts`: Atomic batch file operations and folder management.
+    - `progress-reporter.ts`: Unified interface for reporting long-running operation status to the UI.
 
 ## 3. Directory Structure
 
@@ -46,10 +51,9 @@ The user interface and integration layer, built for the [Obsidian](https://obsid
 ├── obsidian_plugin/            # Obsidian Plugin Source
 │   ├── src/
 │   │   ├── database/           # TS/WASM Bridge & DB Management
-│   │   │   ├── worker.ts       # Parallel parsing worker
-│   │   │   └── parallel-loader.ts # Worker coordinator
 │   │   ├── ui/                 # View and component logic
-│   │   └── features/           # Plugin-specific commands and logic
+│   │   ├── features/           # DatabaseManager and PathManager
+│   │   └── utils/              # VaultWriter and ProgressReporter
 │   └── pkg/                    # Compiled WASM artifacts (generated)
 ├── md_dialogue_spec.md         # Documentation for the Markdown format
 └── ARCHITECTURE.md             # This document

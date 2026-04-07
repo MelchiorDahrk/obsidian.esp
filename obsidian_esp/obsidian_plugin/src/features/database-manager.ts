@@ -1,0 +1,153 @@
+import { App, Notice, TFolder } from 'obsidian';
+import { GameDatabase } from '../database/game-database';
+import { DatabaseLoader } from '../database/database-loader';
+import { LazyLoader } from './lazy-loader';
+import { PathManager } from './path-manager';
+import { TopicLinker } from './topic-linker';
+import { VaultWriter } from '../utils/vault-writer';
+import { ProgressReporter } from '../utils/progress-reporter';
+import { addMasterToHeaderContent } from './master-files';
+import { ProgressBar } from '../ui/progress-bar';
+
+/**
+ * Handles core database operations like loading, unloading, and unpacking.
+ * Decouples business logic from the main plugin class and UI.
+ */
+export class DatabaseManager {
+	private db: GameDatabase | null = null;
+	private lazyLoader: LazyLoader | null = null;
+	private loader: DatabaseLoader;
+	private pathManager: PathManager;
+	private vaultWriter: VaultWriter;
+
+	constructor(
+		private app: App,
+		private manifestDir: string,
+		private outputFolder: string,
+		private onUpdate: () => void,
+	) {
+		this.loader = new DatabaseLoader(app, manifestDir);
+		this.pathManager = new PathManager(outputFolder);
+		this.vaultWriter = new VaultWriter(app);
+	}
+
+	get database(): GameDatabase | null {
+		return this.db;
+	}
+
+	/**
+	 * Loads a database file and initializes related services (lazy loader).
+	 */
+	async loadDatabase(file: File): Promise<void> {
+		this.unloadDatabase();
+
+		try {
+			const { db, messages } = await this.loader.load(file);
+			this.db = db;
+
+			for (const msg of messages) {
+				new Notice(msg);
+			}
+
+			if (this.db.info.isMerged) {
+				this.lazyLoader = new LazyLoader(this.db, this.outputFolder);
+				// plugin registration remains in main.ts for context
+			}
+
+			// Auto-update links if folder exists
+			const folderPath = this.pathManager.getPluginDir(file.name);
+			const folder = this.app.vault.getAbstractFileByPath(folderPath);
+			if (folder instanceof TFolder) {
+				await this.updateTopicLinks(folder, true);
+			}
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			new Notice(`Failed to load database: ${message}`);
+			throw error;
+		} finally {
+			this.onUpdate();
+		}
+	}
+
+	/**
+	 * Unpacks the current database into the vault.
+	 */
+	async unpackDatabase(): Promise<void> {
+		if (!this.db) {
+			new Notice('No database loaded.');
+			return;
+		}
+
+		const progress = new ProgressBar(`Unpacking ${this.db.info.fileName}`);
+		try {
+			const rawFiles = this.db.info.isMerged
+				? this.db.unpackModified()
+				: this.db.unpack();
+			
+			const fileName = this.db.info.fileName;
+
+			// Inject plugin into header
+			const headerEntry = rawFiles.find(([path]) => path === 'header.md');
+			if (headerEntry) {
+				headerEntry[1] = addMasterToHeaderContent(headerEntry[1], fileName);
+			}
+
+			// Resolve paths and write
+			const resolvedFiles = this.pathManager.resolveAbsolutePaths(fileName, rawFiles);
+			const createdCount = await this.vaultWriter.writeFiles(resolvedFiles, progress);
+
+			new Notice(`Unpacked ${createdCount} files.`);
+
+			// Run topic linker
+			const outputDir = this.pathManager.getPluginDir(fileName);
+			const folder = this.app.vault.getAbstractFileByPath(outputDir);
+			if (folder instanceof TFolder) {
+				await this.updateTopicLinks(folder, false, progress);
+			}
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			new Notice(`Failed to unpack: ${message}`);
+		} finally {
+			progress.update(100, 'Done');
+			this.onUpdate();
+		}
+	}
+
+	/**
+	 * Updates topic links in a given folder.
+	 */
+	async updateTopicLinks(folder: TFolder, silent = false, reporter?: ProgressReporter): Promise<void> {
+		const allTopicNames = this.db?.getAllTopicNames();
+		const linker = new TopicLinker(this.app);
+		
+		await linker.updateTopicLinks(folder, allTopicNames, (p) => {
+			if (reporter) {
+				const pct = Math.round((p.current / p.total) * 100);
+				reporter.update(pct, p.message);
+			}
+		});
+		
+		if (!silent) {
+			new Notice(`Updated topic links in ${folder.name}`);
+		}
+	}
+
+	/**
+	 * Registers the lazy loader with the plugin context.
+	 */
+	registerLazyLoader(plugin: any): void {
+		if (this.lazyLoader) {
+			this.lazyLoader.register(plugin);
+		}
+	}
+
+	/**
+	 * Frees database resources.
+	 */
+	unloadDatabase(): void {
+		this.lazyLoader = null;
+		this.db?.free();
+		this.db = null;
+		this.onUpdate();
+	}
+}

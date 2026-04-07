@@ -1,6 +1,7 @@
 import { Notice } from 'obsidian';
+import { ProgressReporter } from '../utils/progress-reporter';
 
-export class ProgressBar {
+export class ProgressBar implements ProgressReporter {
 	private notice: Notice;
 	private barInner: HTMLElement;
 	private label: HTMLElement;

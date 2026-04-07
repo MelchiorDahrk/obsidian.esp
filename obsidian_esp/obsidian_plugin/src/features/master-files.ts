@@ -1,7 +1,8 @@
 import { readFile, readdir } from 'fs/promises';
 import { homedir } from 'os';
 import { join } from 'path';
-import { App, TFile, TFolder, normalizePath } from 'obsidian';
+import { parseYaml, App, TFile, TFolder, normalizePath } from 'obsidian';
+import { splitFrontmatter } from '../utils/obsidian-utils';
 
 export type MasterFile = [string, Uint8Array];
 
@@ -14,47 +15,27 @@ const nodeGlobals = globalThis as typeof globalThis & {
 export function extractMasterNamesFromHeaderContent(
 	headerContent: string,
 ): string[] {
-	const lines = headerContent.replace(/\r/g, '').split('\n');
-	const masters: string[] = [];
-	let inMasters = false;
-
-	for (const line of lines) {
-		if (line.trim() === '---') {
-			continue;
-		}
-
-		if (inMasters) {
-			const listMatch = line.match(/^\s*-\s*(.+?)\s*$/);
-			if (listMatch) {
-				const listValue = listMatch[1];
-				if (listValue) {
-					masters.push(stripQuotes(listValue.trim()));
-				}
-				continue;
-			}
-
-			if (/^[A-Za-z0-9 _-]+:/.test(line)) {
-				inMasters = false;
-			} else {
-				continue;
-			}
-		}
-
-		const mastersMatch = line.match(/^Masters:\s*(.*)$/i);
-		if (!mastersMatch) {
-			continue;
-		}
-
-		const inlineValue = (mastersMatch[1] ?? '').trim();
-		if (inlineValue.length > 0) {
-			masters.push(stripQuotes(inlineValue));
-			inMasters = false;
-		} else {
-			inMasters = true;
-		}
+	const { frontmatter } = splitFrontmatter(headerContent);
+	if (!frontmatter) {
+		return ['Morrowind.esm'];
 	}
 
-	return masters.length > 0 ? masters : ['Morrowind.esm'];
+	try {
+		// Remove the --- markers before parsing
+		const yamlText = frontmatter.replace(/^---\n/, '').replace(/\n---\n$/, '').trim();
+		const data = parseYaml(yamlText);
+		const masters = data?.Masters;
+
+		if (Array.isArray(masters)) {
+			return masters.map((m) => String(m).trim());
+		} else if (masters) {
+			return [String(masters).trim()];
+		}
+	} catch (e) {
+		console.warn('Failed to parse Masters from header:', e);
+	}
+
+	return ['Morrowind.esm'];
 }
 
 export async function readHeaderFile(
@@ -92,6 +73,10 @@ async function pathExists(path: string): Promise<boolean> {
 	}
 }
 
+/**
+ * Searches common system paths to locate the OpenMW configuration file.
+ * Returns null if the file cannot be found.
+ */
 async function findOpenMwConfigPath(): Promise<string | null> {
 	const home = homedir();
 	const candidates = [
@@ -120,6 +105,9 @@ async function findOpenMwConfigPath(): Promise<string | null> {
 	return null;
 }
 
+/**
+ * Parses openmw.cfg to extract all configured 'data' and 'data-local' directories.
+ */
 async function loadOpenMwDataDirectories(): Promise<string[]> {
 	const configPath = await findOpenMwConfigPath();
 	if (!configPath) {
@@ -151,6 +139,9 @@ async function loadOpenMwDataDirectories(): Promise<string[]> {
 	return directories;
 }
 
+/**
+ * Performs a case-insensitive search for a file within a directory.
+ */
 async function findFileCaseInsensitive(
 	directory: string,
 	fileName: string,
@@ -168,6 +159,10 @@ async function findFileCaseInsensitive(
 	}
 }
 
+/**
+ * Locates and reads the binary content of the specified master files.
+ * It searches iteratively through all directories configured in OpenMW.
+ */
 export async function loadValidationMasters(
 	masterNames: string[],
 	onProgress?: (current: number, total: number, name: string) => void,
