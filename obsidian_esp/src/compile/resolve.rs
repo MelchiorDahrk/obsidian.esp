@@ -3,7 +3,7 @@ use merge_to_master::traits::MergeInto;
 use merge_to_master::{DialogueGroup, Exterior, Interior, PluginData, merge_load_order};
 use std::collections::HashSet;
 use std::path::PathBuf;
-use tes3::esp::{DialogueType2, ObjectFlags, ObjectInfo};
+use tes3::esp::{DialogueType2, ObjectFlags, ObjectInfo, DialogueData, QuestState, Filter};
 
 pub trait RemoveUnmodified {
     fn remove_unmodified(&mut self);
@@ -82,11 +82,30 @@ pub fn resolve(
     // 3. Set modified=true on plugin content
     plugin.set_all_modified(true);
 
-    // 4. Snapshot the prev_id/next_id of all master dialogue infos *before* merging.
-    //    After merge_into, repair_links() will update these links in-place on master infos
-    //    that are still marked modified=false. We need to detect those link changes so we
-    //    can mark those infos as modified and include them in the output.
+    // 4. Snapshot the master dialogue infos *before* merging so we can detect
+    //    which infos changed. We record both the link pointers (prev/next) and a
+    //    lightweight content snapshot that excludes the link fields. Later we will
+    //    treat pure link-pointer updates as non-semantic and not mark those infos
+    //    as modified for pruning/export.
     use std::collections::HashMap;
+
+    #[derive(Clone, PartialEq)]
+    struct InfoKey {
+        flags: ObjectFlags,
+        data: DialogueData,
+        speaker_id: String,
+        speaker_race: String,
+        speaker_class: String,
+        speaker_faction: String,
+        speaker_cell: String,
+        player_faction: String,
+        sound_path: String,
+        text: String,
+        quest_state: Option<QuestState>,
+        filters: Vec<Filter>,
+        script_text: String,
+    }
+
     let mut link_snapshots: HashMap<_, _> = master_data
         .dialogues
         .values()
@@ -99,7 +118,22 @@ pub fn resolve(
                     let info_id = info.id.clone();
                     let prev_id = info.prev_id.clone();
                     let next_id = info.next_id.clone();
-                    (info_id, (prev_id, next_id))
+                    let content = InfoKey {
+                        flags: info.flags,
+                        data: info.data.clone(),
+                        speaker_id: info.speaker_id.clone(),
+                        speaker_race: info.speaker_race.clone(),
+                        speaker_class: info.speaker_class.clone(),
+                        speaker_faction: info.speaker_faction.clone(),
+                        speaker_cell: info.speaker_cell.clone(),
+                        player_faction: info.player_faction.clone(),
+                        sound_path: info.sound_path.clone(),
+                        text: info.text.clone(),
+                        quest_state: info.quest_state.clone(),
+                        filters: info.filters.clone(),
+                        script_text: info.script_text.clone(),
+                    };
+                    (info_id, (prev_id, next_id, content))
                 })
                 .collect();
             (key, snapshot)
@@ -129,7 +163,7 @@ pub fn resolve(
             continue;
         };
         for info in group.infos.iter_mut().skip_while(|info| info.modified()) {
-            if let Some((old_prev, old_next)) = snapshots.get(&info.id) {
+            if let Some((old_prev, old_next, _old_content)) = snapshots.get(&info.id) {
                 if info.prev_id != *old_prev || info.next_id != *old_next {
                     info.set_modified(true);
                 }
@@ -159,7 +193,7 @@ pub fn resolve_full_database(
     mut plugin: PluginData,
     masters: Vec<PluginData>,
     original_masters: Vec<(String, u64)>,
-) -> Result<PluginData> {
+) -> Result<(PluginData, Vec<(String, String)>)> {
     let touched_journal_topics: HashSet<_> = plugin
         .dialogues
         .iter()
@@ -179,8 +213,27 @@ pub fn resolve_full_database(
     // 3. Set modified=true on plugin content
     plugin.set_all_modified(true);
 
-    // 4. Snapshot the prev_id/next_id of all master dialogue infos *before* merging.
+    // 4. Snapshot the master dialogue infos *before* merging so we can detect
+    //    link-only changes vs content changes (see comments in `resolve`).
     use std::collections::HashMap;
+
+    #[derive(Clone, PartialEq)]
+    struct InfoKey2 {
+        flags: ObjectFlags,
+        data: DialogueData,
+        speaker_id: String,
+        speaker_race: String,
+        speaker_class: String,
+        speaker_faction: String,
+        speaker_cell: String,
+        player_faction: String,
+        sound_path: String,
+        text: String,
+        quest_state: Option<QuestState>,
+        filters: Vec<Filter>,
+        script_text: String,
+    }
+
     let link_snapshots: HashMap<_, _> = master_data
         .dialogues
         .values()
@@ -193,7 +246,22 @@ pub fn resolve_full_database(
                     let info_id = info.id.clone();
                     let prev_id = info.prev_id.clone();
                     let next_id = info.next_id.clone();
-                    (info_id, (prev_id, next_id))
+                    let content = InfoKey2 {
+                        flags: info.flags,
+                        data: info.data.clone(),
+                        speaker_id: info.speaker_id.clone(),
+                        speaker_race: info.speaker_race.clone(),
+                        speaker_class: info.speaker_class.clone(),
+                        speaker_faction: info.speaker_faction.clone(),
+                        speaker_cell: info.speaker_cell.clone(),
+                        player_faction: info.player_faction.clone(),
+                        sound_path: info.sound_path.clone(),
+                        text: info.text.clone(),
+                        quest_state: info.quest_state.clone(),
+                        filters: info.filters.clone(),
+                        script_text: info.script_text.clone(),
+                    };
+                    (info_id, (prev_id, next_id, content))
                 })
                 .collect();
             (key, snapshot)
@@ -216,15 +284,39 @@ pub fn resolve_full_database(
         }
     }
 
-    // 7. Mark any master info whose links changed as modified
-    for group in master_data.dialogues.values_mut() {
-        let Some(snapshots) = link_snapshots.get(&group.dialogue.id) else {
-            continue;
-        };
-        for info in group.infos.iter_mut().skip_while(|info| info.modified()) {
-            if let Some((old_prev, old_next)) = snapshots.get(&info.id) {
-                if info.prev_id != *old_prev || info.next_id != *old_next {
-                    info.set_modified(true);
+    // 7. Mark infos modified when links changed, and record link-only
+    //    modifications so callers (e.g., unpack/export) can ignore them.
+    let mut link_only_changes: Vec<(String, String)> = Vec::new();
+    for (dialogue_id, group) in master_data.dialogues.iter_mut() {
+        if let Some(snapshots) = link_snapshots.get(dialogue_id) {
+            for info in group.infos.iter_mut().skip_while(|info| info.modified()) {
+                if let Some((old_prev, old_next, old_content)) = snapshots.get(&info.id) {
+                    if info.prev_id != *old_prev || info.next_id != *old_next {
+                        // Mark modified as before so the info survives pruning.
+                        info.set_modified(true);
+
+                        // Determine whether only prev/next changed by comparing
+                        // the content snapshot (excluding the links).
+                        let current = InfoKey2 {
+                            flags: info.flags,
+                            data: info.data.clone(),
+                            speaker_id: info.speaker_id.clone(),
+                            speaker_race: info.speaker_race.clone(),
+                            speaker_class: info.speaker_class.clone(),
+                            speaker_faction: info.speaker_faction.clone(),
+                            speaker_cell: info.speaker_cell.clone(),
+                            player_faction: info.player_faction.clone(),
+                            sound_path: info.sound_path.clone(),
+                            text: info.text.clone(),
+                            quest_state: info.quest_state.clone(),
+                            filters: info.filters.clone(),
+                            script_text: info.script_text.clone(),
+                        };
+
+                        if &current == old_content {
+                            link_only_changes.push((dialogue_id.clone(), info.id.clone()));
+                        }
+                    }
                 }
             }
         }
@@ -238,5 +330,5 @@ pub fn resolve_full_database(
     master_data.header.file_type = tes3::esp::FileType::Esp;
     master_data.header.num_objects = 0;
 
-    Ok(master_data)
+    Ok((master_data, link_only_changes))
 }

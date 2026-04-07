@@ -313,6 +313,7 @@ pub fn extract_master_names(bytes: &[u8]) -> Result<JsValue, JsValue> {
 pub struct GameDatabase {
     data: PluginData,
     merged: bool,
+    link_only_changes: Vec<(String, String)>,
 }
 
 #[wasm_bindgen]
@@ -325,7 +326,7 @@ impl GameDatabase {
             .load_bytes(bytes)
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
         let data = PluginData::from_plugin(plugin);
-        Ok(GameDatabase { data, merged: false })
+        Ok(GameDatabase { data, merged: false, link_only_changes: Vec::new() })
     }
 
     /// Load a plugin merged with its masters into a single resolved database.
@@ -362,14 +363,14 @@ impl GameDatabase {
             master_datas.push(PluginData::from_plugin(master_raw));
         }
 
-        let data = compile::resolve::resolve_full_database(
+        let (data, link_only_changes) = compile::resolve::resolve_full_database(
             plugin_data,
             master_datas,
             original_masters,
         )
         .map_err(|e| JsValue::from_str(&e.to_string()))?;
 
-        Ok(GameDatabase { data, merged: true })
+        Ok(GameDatabase { data, merged: true, link_only_changes })
     }
 
     /// Whether this database was loaded with masters (merged mode).
@@ -418,7 +419,39 @@ impl GameDatabase {
     /// Unpacks only the modified (plugin-owned) dialogues into markdown project files.
     #[wasm_bindgen(js_name = "unpackModified")]
     pub fn unpack_modified(&self) -> Result<JsValue, JsValue> {
-        let files = export::collect_modified_project_files(&self.data);
+        let mut files = export::collect_modified_project_files(&self.data);
+
+        // Filter out files that only had link-pointer (prev/next) changes.
+        if !self.link_only_changes.is_empty() {
+            use std::collections::HashSet;
+            let ignore: HashSet<_> = self.link_only_changes.iter().collect();
+            files.retain(|(_path, content)| {
+                fn parse_frontmatter_values(s: &str) -> Option<(String, String)> {
+                    let mut topic: Option<String> = None;
+                    let mut diagid: Option<String> = None;
+                    for line in s.lines() {
+                        if line.starts_with("Topic:") {
+                            topic = Some(line["Topic:".len()..].trim().to_string());
+                        } else if line.starts_with("DiagID:") {
+                            diagid = Some(line["DiagID:".len()..].trim().to_string());
+                        }
+                        if topic.is_some() && diagid.is_some() {
+                            break;
+                        }
+                    }
+                    match (topic, diagid) {
+                        (Some(t), Some(d)) => Some((t, d)),
+                        _ => None,
+                    }
+                }
+
+                if let Some((t, d)) = parse_frontmatter_values(content) {
+                    !ignore.contains(&(t, d))
+                } else {
+                    true
+                }
+            });
+        }
 
         let result = Array::new();
         for (path, content) in files {
