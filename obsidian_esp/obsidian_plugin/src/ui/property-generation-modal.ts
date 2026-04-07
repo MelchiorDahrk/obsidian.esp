@@ -63,14 +63,6 @@ class PropertyGenerationModal extends Modal {
 		this.renderMasterSection();
 		this.renderOptionSection();
 
-		const staticSection = this.contentEl.createDiv({
-			cls: 'esp-property-generation-section',
-		});
-		staticSection.createEl('h3', { text: 'Always included' });
-		staticSection.createEl('p', {
-			text: 'Static options and the no-faction entry are always included.',
-		});
-
 		const buttonRow = this.contentEl.createDiv({
 			cls: 'modal-button-container',
 		});
