@@ -62,7 +62,8 @@ The user interface and integration layer, built for the [Obsidian](https://obsid
 1. **Load**: User selects a `.esp` or `.esm` file.
 2. **Load into DB**: The Rust core parses the binary file into a `PluginData` structure in WASM memory.
 3. **Generate Markdown**: `src/export.rs` iterates over the records and generates Markdown strings according to the [Dialogue Specification](file:///c:/Users/Admin/Projects/obsidian.esp/obsidian_esp/md_dialogue_spec.md).
-4. **Write**: The Obsidian plugin writes these files to the vault.
+4. **Filter Changes**: The Rust core identifies "link-only changes"—dialogue responses where ONLY the `PrevID` or `NextID` changed due to insertions elsewhere in the chain. These are often filtered out to prevent excessive vault updates.
+5. **Write**: The Obsidian plugin writes these files to the vault.
 
 ### Game Database
 - The **`GameDatabase`** struct in `src/lib.rs` holds the state of loaded plugins.

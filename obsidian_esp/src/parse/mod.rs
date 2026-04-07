@@ -6,12 +6,14 @@ pub mod frontmatter;
 pub mod header;
 pub mod info;
 
+/// The internal representation of a full project parsed from Markdown files.
 #[derive(Debug)]
 pub struct ParsedPlugin {
     pub header: ParsedHeader,
     pub infos: Vec<ParsedInfo>,
 }
 
+/// Data parsed from the project's `header.md` or `header.yaml`.
 #[derive(Debug)]
 pub struct ParsedHeader {
     pub author: String,
@@ -20,6 +22,7 @@ pub struct ParsedHeader {
     pub masters: Vec<String>,
 }
 
+/// Data parsed from an individual dialogue Markdown file.
 #[derive(Debug, Default)]
 pub struct ParsedInfo {
     pub source_path: String,
@@ -28,6 +31,7 @@ pub struct ParsedInfo {
     pub text: String,
 }
 
+/// YAML frontmatter content for an individual dialogue response.
 #[derive(Debug, Default)]
 pub struct ParsedInfoFrontmatter {
     pub topic_override: Option<String>,
@@ -66,6 +70,10 @@ pub enum FilterValue {
     Integer(i32),
 }
 
+/// Returns the sort order index from a filename (e.g., `Topic ~5.md` -> 5).
+/// 
+/// This index is used to maintain evaluation order when `PrevID` links are not 
+/// explicitly provided.
 fn default_sort_order(file_name: &str) -> u64 {
     if let Some(idx) = file_name.rfind(" ~") {
         file_name[idx + 2..].parse().unwrap_or(u64::MAX)
@@ -107,6 +115,10 @@ fn parse_header_content(content: &str) -> Result<ParsedHeader> {
         .with_context(|| "Failed to parse header.md")
 }
 
+/// Parses a set of file contents into a `ParsedPlugin`.
+/// 
+/// `files` is a list of `(relative_path, content)` pairs. This handles normalizing 
+/// paths and sorting files based on the project's directory structure conventions.
 pub fn parse_project_files(
     files: Vec<(String, String)>,
     default_header: Option<ParsedHeader>,
@@ -211,7 +223,10 @@ pub fn parse_project_files(
     Ok(ParsedPlugin { header, infos })
 }
 
+/// Reads all Markdown files in a project directory and parses them into a `ParsedPlugin`.
 pub fn parse_project_directory(path: &Path) -> Result<ParsedPlugin> {
+    // TODO: Extract the directory traversal logic below into a separate function/iterator 
+    // to improve readability and testability.
     let mut files = Vec::new();
 
     let entries = std::fs::read_dir(path)

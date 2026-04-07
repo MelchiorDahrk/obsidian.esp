@@ -7,6 +7,7 @@ use winnow::error::ContextError;
 use winnow::prelude::*;
 use winnow::token::*;
 
+/// Parses the `Masters` list from the header frontmatter.
 fn parse_masters_list<'s>(input: &mut &'s str) -> Result<Vec<String>> {
     let _ = space_or_tab.parse_next(input)?;
     let _ = eol_or_eof.parse_next(input)?;
@@ -22,6 +23,7 @@ fn parse_masters_list<'s>(input: &mut &'s str) -> Result<Vec<String>> {
     Ok(masters)
 }
 
+/// Parses the `header.md` frontmatter delimited by `---` blocks.
 pub fn parse_header<'s>(input: &mut &'s str) -> Result<ParsedHeader> {
     let _ = delimited(space0, "---", line_ending).parse_next(input)?;
 

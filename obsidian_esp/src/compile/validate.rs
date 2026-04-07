@@ -17,6 +17,15 @@ struct ValidationDatabase {
     script_variables: HashMap<String, HashSet<String>>,
 }
 
+/// Validates an authored project against a set of master plugins.
+/// 
+/// It checks that:
+/// - All referenced record IDs (NPCs, Factions, Classes, etc.) exist in the masters.
+/// - Cell names are valid.
+/// - Local variables referenced in dialogue filters exist on the script attached to the speaker.
+/// - Journal topics exist.
+/// 
+/// Returns a human-readable log of all warnings and informational messages.
 pub fn validate_project(
     parsed: &ParsedPlugin,
     masters: &[(String, Vec<u8>)],
@@ -64,6 +73,8 @@ pub fn validate_project(
     Ok(render_log(&warnings))
 }
 
+/// Populates the `ValidationDatabase` by indexing relevant IDs and script data 
+/// from a master plugin.
 fn collect_master_ids(database: &mut ValidationDatabase, plugin: Plugin) {
     for object in plugin.objects {
         match object {
@@ -134,6 +145,7 @@ fn collect_master_ids(database: &mut ValidationDatabase, plugin: Plugin) {
     }
 }
 
+/// Helper to extract the primary ID string from most TES3 object types.
 fn object_id(object: &TES3Object) -> Option<&str> {
     match object {
         TES3Object::GameSetting(record) => Some(&record.id),
@@ -169,6 +181,7 @@ fn object_id(object: &TES3Object) -> Option<&str> {
     }
 }
 
+/// Performs all validation checks for a single `DialogueInfo` entry.
 fn validate_info(
     info: &ParsedInfo,
     database: &ValidationDatabase,
@@ -338,6 +351,7 @@ fn validate_filter(
     }
 }
 
+/// Reports a warning if the specified value is not found in the set of `known_ids`.
 fn warn_if_missing(
     info: &ParsedInfo,
     field_name: &str,

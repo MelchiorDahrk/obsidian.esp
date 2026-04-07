@@ -5,10 +5,12 @@ use winnow::combinator::*;
 use winnow::prelude::*;
 use winnow::token::*;
 
+/// Consumes zero or more horizontal space characters (space or tab).
 pub fn space_or_tab<'s>(input: &mut &'s str) -> Result<&'s str> {
     take_while(0.., (' ', '\t')).parse_next(input)
 }
 
+/// Consumes a line ending (CRLF or LF) or the end of the input.
 pub fn eol_or_eof<'s>(input: &mut &'s str) -> Result<&'s str> {
     alt((line_ending, eof.value(""))).parse_next(input)
 }
@@ -22,10 +24,12 @@ pub fn unquoted_string<'s>(input: &mut &'s str) -> Result<&'s str> {
     .parse_next(input)
 }
 
+/// Parses a boolean value case-insensitively ("true" or "false").
 pub fn parse_bool<'s>(input: &mut &'s str) -> Result<bool> {
     alt((Caseless("true").value(true), Caseless("false").value(false))).parse_next(input)
 }
 
+/// Parses a sex identifier ("male", "female", or "any") and returns the engine constant.
 pub fn parse_sex<'s>(input: &mut &'s str) -> Result<i32> {
     alt((
         Caseless("male").value(0),
@@ -47,7 +51,8 @@ pub fn parse_yaml_key<'s>(input: &mut &'s str) -> Result<&'s str> {
     .parse_next(input)
 }
 
-/// Parses the value for a key, handles inline values, list items with `-`, and indented multiline blocks.
+/// Parses a YAML value. Supports inline strings, list items (using `-`), 
+/// and indented multiline blocks (optionally prefixed with `|`).
 pub fn parse_yaml_value_or_list<'s>(input: &mut &'s str) -> Result<Option<String>> {
     let _ = space_or_tab.parse_next(input)?;
 

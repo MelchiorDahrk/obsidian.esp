@@ -5,6 +5,10 @@ use std::collections::HashSet;
 use std::path::PathBuf;
 use tes3::esp::{DialogueType2, ObjectFlags, ObjectInfo, DialogueData, QuestState, Filter};
 
+/// A trait for removing records that haven't been modified from a container.
+///
+/// This is used during the resolution pass to prune master records that were 
+/// loaded only for context and haven't actually been changed by the plugin.
 pub trait RemoveUnmodified {
     fn remove_unmodified(&mut self);
 }
@@ -61,6 +65,14 @@ impl RemoveUnmodified for PluginData {
     }
 }
 
+/// Resolves an authored plugin against its master files.
+/// 
+/// 1. Merges masters into a single baseline.
+/// 2. Merges the authored plugin into that baseline.
+/// 3. Detects semantic changes in dialogue (beyond simple link updates).
+/// 4. Prunes everything that wasn't modified.
+/// 
+/// Returns a `PluginData` containing only the modified records, ready for saving as an ESP.
 pub fn resolve(
     mut plugin: PluginData,
     master_paths: &[PathBuf],
@@ -106,6 +118,8 @@ pub fn resolve(
         script_text: String,
     }
 
+    // TODO: Extract this InfoKey and snapshotting logic into a shared utility
+    // to avoid duplication between `resolve` and `resolve_full_database`.
     let mut link_snapshots: HashMap<_, _> = master_data
         .dialogues
         .values()

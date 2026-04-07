@@ -20,8 +20,11 @@ use merge_to_master::merge_load_order;
 use merge_to_master::traits::*;
 use merge_to_master::{Cells, Dialogues, Objects, PluginData};
 
-/// Returns the absolute paths of the plugins in the users load order.
+/// Returns the absolute paths of all Morrowind plugins found in the user's OpenMW load order.
 ///
+/// This function locates the `openmw.cfg` file, parses its data directories to build a 
+/// virtual file system (VFS), and then iterates through the content files to find
+/// their corresponding absolute paths on disk.
 pub fn collect_load_order() -> Vec<PathBuf> {
     // This takes care of finding the users `openmw.cfg` file and parsing it
     // into structures we can work with.
@@ -53,6 +56,10 @@ pub fn collect_load_order() -> Vec<PathBuf> {
         .collect()
 }
 
+/// Given a list of master plugin names, returns their absolute paths and file sizes.
+///
+/// It searches for each master name within the user's load order (retrieved via 
+/// `collect_load_order`). The file size is required for the TES3 header's master list.
 pub fn collect_master_paths(master_names: &[String]) -> (Vec<PathBuf>, Vec<(String, u64)>) {
     let load_order = collect_load_order();
 
@@ -101,6 +108,8 @@ struct PropertyValueSet {
     cells: Vec<String>,
 }
 
+/// Inserts a value into a collection if it's not already present, performing case-insensitive
+/// matching but preserving the original casing of the first instance found.
 fn push_unique_value(values: &mut BTreeMap<String, String>, value: &str) {
     let trimmed = value.trim();
     if trimmed.is_empty() {
@@ -112,6 +121,10 @@ fn push_unique_value(values: &mut BTreeMap<String, String>, value: &str) {
         .or_insert_with(|| trimmed.to_string());
 }
 
+/// Iterates through a plugin's objects and extracts unique ID/Name values for specific
+/// record types (Factions, Races, Classes, etc.) based on the provided options.
+///
+/// This is primarily used to provide autocomplete data to the Obsidian plugin.
 fn collect_property_values(
     plugin: Plugin,
     options: &PropertyExtractionOptions,
@@ -155,6 +168,7 @@ fn collect_property_values(
     }
 }
 
+/// Returns a fallback `ParsedHeader` used when no `header.yaml` is provided in the project.
 fn default_header() -> parse::ParsedHeader {
     parse::ParsedHeader {
         author: String::new(),
@@ -164,6 +178,9 @@ fn default_header() -> parse::ParsedHeader {
     }
 }
 
+/// Compiles a set of Markdown files and an optional header into a binary TES3 plugin (`.esp`).
+///
+/// Under the hood, this calls `compile_project_files_with_log` and discards the log output.
 pub fn compile_project_files(
     files: Vec<(String, String)>,
     allow_default_header: bool,
@@ -173,6 +190,14 @@ pub fn compile_project_files(
         .map(|(bytes, _log)| bytes)
 }
 
+/// The core project compilation routine.
+///
+/// 1. Parses Markdown project files into an internal representation.
+/// 2. Validates the project against provided master plugin data (for ID/Script checking).
+/// 3. Compiles the internal representation into TES3 records.
+/// 4. Serializes the records into the final plugin byte array.
+///
+/// Returns the binary plugin data and a compilation/validation log string.
 pub fn compile_project_files_with_log(
     files: Vec<(String, String)>,
     allow_default_header: bool,
@@ -204,6 +229,7 @@ pub fn compile_project_files_with_log(
     Ok((bytes, log))
 }
 
+/// Deserializes a TES3 plugin from bytes into a `JsValue` containing an array of records.
 #[wasm_bindgen]
 pub fn load_objects(array: &[u8]) -> Result<JsValue, JsValue> {
     let mut plugin = Plugin::new();
@@ -216,6 +242,7 @@ pub fn load_objects(array: &[u8]) -> Result<JsValue, JsValue> {
     Ok(value)
 }
 
+/// Serializes an array of records from a `JsValue` into a TES3 plugin byte array.
 #[wasm_bindgen]
 pub fn save_objects(value: JsValue) -> Result<Uint8Array, JsValue> {
     let mut plugin = Plugin {
@@ -236,6 +263,7 @@ pub fn save_objects(value: JsValue) -> Result<Uint8Array, JsValue> {
 }
 
 
+/// Compiles a project (Markdown files) into a TES3 plugin.
 #[wasm_bindgen]
 pub fn compile_project(files: JsValue, allow_default_header: bool) -> Result<Uint8Array, JsValue> {
     let files: Vec<(String, String)> = from_value(files)?;
@@ -249,6 +277,9 @@ pub fn compile_project(files: JsValue, allow_default_header: bool) -> Result<Uin
     Ok(array)
 }
 
+/// Compiles a project (Markdown files) into a TES3 plugin and returns both the bytes and a log.
+///
+/// `masters` should be a JS array of `[name: string, bytes: Uint8Array]` pairs for validation.
 #[wasm_bindgen]
 pub fn compile_project_with_log(
     files: JsValue,
@@ -276,6 +307,7 @@ pub fn compile_project_with_log(
     Ok(result.into())
 }
 
+/// Extracts unique property values (IDs, Names) from a plugin for use in UI autocompletion.
 #[wasm_bindgen]
 pub fn extract_property_values(
     array: &[u8],
@@ -423,6 +455,8 @@ impl GameDatabase {
 
         // Filter out files that only had link-pointer (prev/next) changes.
         if !self.link_only_changes.is_empty() {
+            // TODO: Extract this link-only change filtering logic into a separate function/method
+            // for better readability and reusability.
             use std::collections::HashSet;
             let ignore: HashSet<_> = self.link_only_changes.iter().collect();
             files.retain(|(_path, content)| {

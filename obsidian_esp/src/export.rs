@@ -10,6 +10,8 @@ use tes3::esp::{
 };
 use uncased::AsUncased;
 
+/// Sanitizes a string for use as a filename by replacing reserved characters and 
+/// control characters with underscores.
 fn sanitize_file_stem(input: &str) -> String {
     let mut sanitized = String::with_capacity(input.len());
 
@@ -27,6 +29,7 @@ fn sanitize_file_stem(input: &str) -> String {
     }
 }
 
+/// Maps a dialogue type to its corresponding directory name in the project structure.
 fn format_type_directory(dialogue_type: tes3::esp::DialogueType2) -> &'static str {
     match dialogue_type {
         tes3::esp::DialogueType2::Topic => "Topic",
@@ -37,10 +40,12 @@ fn format_type_directory(dialogue_type: tes3::esp::DialogueType2) -> &'static st
     }
 }
 
+/// Encodes newlines for use in single-line YAML values.
 fn encode_inline_value(value: &str) -> String {
     value.replace("\r\n", "\\r\\n").replace('\n', "\\n")
 }
 
+/// Pushes a simple key-value property to the output string in YAML format.
 fn push_field(output: &mut String, key: &str, value: Option<impl AsRef<str>>) {
     output.push_str(key);
     output.push(':');
@@ -51,6 +56,8 @@ fn push_field(output: &mut String, key: &str, value: Option<impl AsRef<str>>) {
     output.push('\n');
 }
 
+/// Pushes a potentially multiline key-value property to the output string.
+/// Uses YAML block scalar format (`|`) if the value contains newlines.
 fn push_multiline_field(output: &mut String, key: &str, value: Option<impl AsRef<str>>) {
     if let Some(value) = value {
         output.push_str(key);
@@ -148,6 +155,7 @@ fn format_rank(rank: i8) -> Option<String> {
     (rank != -1).then(|| format!("Rank {rank}"))
 }
 
+/// Returns a string representation of a quest flag's boolean state.
 fn format_quest_flag(quest_state: Option<QuestState>, needle: QuestState) -> &'static str {
     if quest_state == Some(needle) {
         "true"
@@ -156,6 +164,7 @@ fn format_quest_flag(quest_state: Option<QuestState>, needle: QuestState) -> &'s
     }
 }
 
+/// Renders the project's `header.md` frontmatter from the plugin's header data.
 fn render_header(plugin: &PluginData) -> String {
     let mut output = String::from("---\n");
     push_field(
@@ -183,10 +192,13 @@ fn render_header(plugin: &PluginData) -> String {
     output
 }
 
+/// Renders an individual `DialogueInfo` record into Markdown frontmatter and body.
 fn render_info(topic: &str, info: &DialogueInfo) -> String {
     render_info_with_source(topic, info, None)
 }
 
+/// Renders an individual `DialogueInfo` record into Markdown, optionally including 
+/// a `Source` field in the frontmatter.
 fn render_info_with_source(topic: &str, info: &DialogueInfo, source: Option<&str>) -> String {
     let mut output = String::from("---\n");
     let is_journal = info.data.dialogue_type == tes3::esp::DialogueType::Journal;
@@ -313,6 +325,9 @@ fn render_info_with_source(topic: &str, info: &DialogueInfo, source: Option<&str
     output
 }
 
+/// Returns the sort priority for a dialogue type. Lower values come first.
+/// 
+/// The Morrowind engine requires journal entries to be defined before other types.
 fn dialogue_priority(dialogue_type: tes3::esp::DialogueType2) -> u8 {
     match dialogue_type {
         tes3::esp::DialogueType2::Journal => 0,
@@ -323,6 +338,8 @@ fn dialogue_priority(dialogue_type: tes3::esp::DialogueType2) -> u8 {
     }
 }
 
+/// Returns the dialogue groups from the plugin sorted by type priority and then 
+/// case-insensitively by ID.
 fn sorted_dialogue_groups(plugin: &PluginData) -> Vec<&merge_to_master::DialogueGroup> {
     plugin
         .dialogues
@@ -360,6 +377,7 @@ pub fn collect_project_files(plugin: &PluginData) -> Vec<(String, String)> {
     files
 }
 
+/// Writes all project files for the given `PluginData` into the specified directory.
 pub fn write_project_directory(plugin: &PluginData, output_dir: &Path) -> Result<()> {
     std::fs::create_dir_all(output_dir)
         .with_context(|| format!("Failed to create directory: {}", output_dir.display()))?;
@@ -377,6 +395,7 @@ pub fn write_project_directory(plugin: &PluginData, output_dir: &Path) -> Result
     Ok(())
 }
 
+/// Loads a plugin from the given path and writes its contents as Markdown project files.
 pub fn plugin_to_markdown(plugin_path: &Path, output_dir: &Path) -> Result<()> {
     let plugin = PluginData::from_path(plugin_path)
         .with_context(|| format!("Failed to load plugin: {}", plugin_path.display()))?;

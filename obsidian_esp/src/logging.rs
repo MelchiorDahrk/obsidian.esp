@@ -7,6 +7,10 @@ use wasm_bindgen::prelude::*;
 // Note: Filter log levels at compile time using tracing features.
 // <https://docs.rs/tracing/latest/tracing/level_filters/index.html>
 
+/// Initializes the global tracing subscriber for native environments.
+/// 
+/// Logs are written to stdout in a non-blocking fashion. Returns a `WorkerGuard` 
+/// which must be held to ensure all logs are flushed before the program exits.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn init_logger() -> WorkerGuard {
     // Non-WASM (native) logging: Log to stdout (or to a file, etc.)
@@ -30,6 +34,9 @@ pub fn init_logger() -> WorkerGuard {
     guard
 }
 
+/// Initializes the global tracing subscriber for WASM environments.
+/// 
+/// Logs are redirected to the browser's JavaScript console. Returns a `WorkerGuard`.
 #[cfg(target_arch = "wasm32")]
 pub fn init_logger() -> WorkerGuard {
     // WASM-specific logging: Log to the JS console
@@ -55,6 +62,7 @@ pub fn init_logger() -> WorkerGuard {
     guard
 }
 
+/// Returns an object that implements `std::io::Write` by calling `console.log` in JS.
 #[cfg(target_arch = "wasm32")]
 fn console_log_writer() -> impl std::io::Write {
     use std::fmt::Write;

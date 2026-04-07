@@ -42,6 +42,9 @@ const VALID_VOICE_TOPICS: &[&str] = &[
     "Alarm", "Attack", "Flee", "Hello", "Hit", "Idle", "Intruder", "Thief",
 ];
 
+/// Generates a unique, numeric-only `DialogueInfo` ID within the given set of IDs.
+/// 
+/// The Morrowind engine requires INFO IDs to be numeric strings (INAM subrecord).
 fn generate_info_id(existing_ids: &HashSet<String>) -> String {
     let mut id = String::new();
     loop {
@@ -160,6 +163,10 @@ parse_filter_functions!(
     VariableCompare
 );
 
+/// Resolves a `FilterFunction` from a `FilterType` and an optional function name string.
+/// 
+/// Handles mapping generic type conditions (like `Journal`, `Item`) to their specific 
+/// internal enum variants and parsing function names for `FilterType::Function`.
 fn filter_function_from_parts(
     filter_type: FilterType,
     function_name: Option<&str>,
@@ -194,6 +201,11 @@ fn filter_function_from_parts(
     Ok(function)
 }
 
+/// Repairs the `next_id` links in a `DialogueGroup` based on the current order of `infos`.
+/// 
+/// Unlike `group.repair_links()`, this function ONLY updates `next_id` and leaves 
+/// `prev_id` untouched. This is crucial for topics where the user has manually 
+/// specified a chain via `PrevID` fields.
 fn repair_next_links(group: &mut DialogueGroup) {
     let infos = group.infos.make_contiguous();
 
@@ -207,6 +219,8 @@ fn repair_next_links(group: &mut DialogueGroup) {
     }
 }
 
+/// Validates that a topic name is valid for its dialogue type (e.g. valid Greetings, 
+/// valid Voice commands).
 fn validate_dialogue_topic(dialogue_type: tes3::esp::DialogueType2, topic: &str) -> Result<()> {
     let valid_topics = match dialogue_type {
         tes3::esp::DialogueType2::Greeting => Some(VALID_GREETING_TOPICS),
@@ -236,6 +250,8 @@ fn validate_dialogue_topic(dialogue_type: tes3::esp::DialogueType2, topic: &str)
     Ok(())
 }
 
+/// Compiles a `ParsedPlugin` (internal Markdown representation) into a `PluginData` 
+/// (native TES3 record representation).
 pub fn compile(parsed: ParsedPlugin) -> Result<PluginData> {
     let mut plugin = PluginData::new();
     let mut groups_with_preserved_links = HashSet::new();
@@ -258,6 +274,8 @@ pub fn compile(parsed: ParsedPlugin) -> Result<PluginData> {
     // 2. Build Dialogues
     let mut last_ids_by_topic: HashMap<String, String> = HashMap::new();
 
+    // TODO: Extract the loop body below into a separate function/method for building
+    // a `DialogueInfo` from a `ParsedDialogueInfo`.
     for parsed_info in parsed.infos {
         let dialogue_type = parsed_info
             .frontmatter

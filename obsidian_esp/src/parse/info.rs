@@ -9,6 +9,7 @@ use winnow::error::ContextError;
 use winnow::prelude::*;
 use winnow::token::*;
 
+/// Parses a filter comparison operator (e.g., `>=`, `==`, `!=`).
 fn parse_filter_comparison(input: &mut &str) -> Result<FilterComparison> {
     alt((
         ">=".value(FilterComparison::GreaterEqual),
@@ -22,6 +23,7 @@ fn parse_filter_comparison(input: &mut &str) -> Result<FilterComparison> {
     .parse_next(input)
 }
 
+/// Parses a filter value as either a float or an integer.
 fn parse_filter_value(input: &mut &str) -> Result<FilterValue> {
     let raw = take_till(1.., |c: char| c == '\r' || c == '\n').parse_next(input)?;
     let raw = raw.trim();
@@ -37,6 +39,9 @@ fn parse_filter_value(input: &mut &str) -> Result<FilterValue> {
     }
 }
 
+/// Parses a variable expression including an ID, comparison operator, and value.
+/// 
+/// Example: `my_variable >= 10`
 pub fn parse_variable_expression<'s>(
     input: &mut &'s str,
 ) -> Result<(String, FilterComparison, FilterValue)> {
@@ -49,6 +54,7 @@ pub fn parse_variable_expression<'s>(
     Ok((id, comparison, value))
 }
 
+/// Parses a complete dialogue info file (frontmatter + body text).
 pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter, String)> {
     let _ = delimited(space0, "---", line_ending).parse_next(input)?;
 
@@ -56,6 +62,8 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
 
     let mut filters_map: BTreeMap<u8, (Option<FilterType>, Option<String>)> = BTreeMap::new();
 
+    // TODO: Extract the loop body below into a separate function/method to handle 
+    // dispatching YAML keys to `ParsedInfoFrontmatter` fields.
     while let Ok((_, peeked)) =
         take_till::<_, &'s str, ContextError>(1.., ['\n', '\r']).parse_peek(*input)
     {
