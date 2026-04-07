@@ -6,3 +6,5 @@ Cargo.lock
 
 pkg
 obsidian_plugin/release/
+
+build.log
