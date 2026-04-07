@@ -1,4 +1,4 @@
-use crate::parse::{FilterValue, ParsedPlugin};
+use crate::parse::{FilterValue, ParsedInfo, ParsedPlugin};
 use anyhow::{Result, ensure};
 use merge_to_master::{DialogueGroup, PluginData};
 use std::fmt::Write;
@@ -274,129 +274,13 @@ pub fn compile(parsed: ParsedPlugin) -> Result<PluginData> {
     // 2. Build Dialogues
     let mut last_ids_by_topic: HashMap<String, String> = HashMap::new();
 
-    // TODO: Extract the loop body below into a separate function/method for building
-    // a `DialogueInfo` from a `ParsedDialogueInfo`.
     for parsed_info in parsed.infos {
-        let dialogue_type = parsed_info
-            .frontmatter
-            .dialogue_type
-            .unwrap_or(tes3::esp::DialogueType2::Topic);
-        validate_dialogue_topic(dialogue_type, &parsed_info.topic)?;
+        let (topic_key, info) =
+            compile_dialogue_info(parsed_info, &mut last_ids_by_topic, &mut plugin)?;
 
-        let topic_key = parsed_info.topic.to_ascii_lowercase();
-        if parsed_info.frontmatter.diag_id.is_some() || parsed_info.frontmatter.prev_id.is_some() {
-            groups_with_preserved_links.insert(topic_key.clone());
+        if group_has_preserved_links(&info) {
+            groups_with_preserved_links.insert(topic_key);
         }
-        let group = plugin
-            .dialogues
-            .entry(topic_key.clone())
-            .or_insert_with(|| DialogueGroup {
-                dialogue: Dialogue {
-                    flags: ObjectFlags::empty(),
-                    id: parsed_info.topic.clone(),
-                    dialogue_type,
-                },
-                infos: Default::default(),
-            });
-
-        // Collect the set of IDs already present in this group (to guarantee uniqueness).
-        let existing_ids = group.infos.iter().map(|i| i.id.clone()).collect();
-
-        let id = if let Some(id) = &parsed_info.frontmatter.diag_id {
-            ensure!(
-                id.chars().all(|c| c.is_ascii_digit()),
-                "DiagID must be numeric: {id}"
-            );
-            id.clone()
-        } else {
-            generate_info_id(&existing_ids)
-        };
-
-        let data = DialogueData {
-            dialogue_type: match dialogue_type {
-                tes3::esp::DialogueType2::Topic => tes3::esp::DialogueType::Topic,
-                tes3::esp::DialogueType2::Voice => tes3::esp::DialogueType::Voice,
-                tes3::esp::DialogueType2::Greeting => tes3::esp::DialogueType::Greeting,
-                tes3::esp::DialogueType2::Persuasion => tes3::esp::DialogueType::Persuasion,
-                tes3::esp::DialogueType2::Journal => tes3::esp::DialogueType::Journal,
-            },
-            disposition: parsed_info.frontmatter.disposition.unwrap_or(0),
-            speaker_rank: parsed_info.frontmatter.speaker_rank.unwrap_or(-1),
-            speaker_sex: match parsed_info.frontmatter.speaker_sex {
-                Some(0) => Sex::Male,
-                Some(1) => Sex::Female,
-                _ => Sex::Any,
-            },
-            player_rank: parsed_info.frontmatter.player_rank.unwrap_or(-1),
-        };
-
-        let mut filters = Vec::new();
-        for pf in parsed_info.frontmatter.filters {
-            let filter_value = match pf.value {
-                FilterValue::Float(f) => tes3::esp::FilterValue::Float(f),
-                FilterValue::Integer(i) => tes3::esp::FilterValue::Integer(i),
-            };
-
-            let function_enum =
-                filter_function_from_parts(pf.filter_type, pf.function_name.as_deref())?;
-
-            filters.push(Filter {
-                index: pf.index,
-                filter_type: pf.filter_type,
-                function: function_enum,
-                comparison: pf.comparison,
-                id: pf.id,
-                value: filter_value,
-            });
-        }
-
-        let quest_state = parsed_info
-            .frontmatter
-            .quest_state
-            .and_then(|s| match s.as_str() {
-                "Name" => Some(QuestState::Name),
-                "Finished" => Some(QuestState::Finished),
-                "Restart" => Some(QuestState::Restart),
-                _ => None,
-            });
-
-        // Preserve an authored prev_id verbatim. When it is omitted, fall back to
-        // the previously generated info id for this topic only.
-        let prev_id = if let Some(pid) = &parsed_info.frontmatter.prev_id {
-            ensure!(
-                pid.chars().all(|c| c.is_ascii_digit()),
-                "PrevID must be numeric: {pid}"
-            );
-            pid.clone()
-        } else {
-            last_ids_by_topic
-                .get(&topic_key)
-                .cloned()
-                .unwrap_or_default()
-        };
-
-        last_ids_by_topic.insert(topic_key, id.clone());
-
-        let info = DialogueInfo {
-            flags: ObjectFlags::empty(),
-            id,
-            prev_id,
-            next_id: String::new(), // Filled by repair_links
-            data,
-            speaker_id: parsed_info.frontmatter.speaker_id.unwrap_or_default(),
-            speaker_race: parsed_info.frontmatter.speaker_race.unwrap_or_default(),
-            speaker_class: parsed_info.frontmatter.speaker_class.unwrap_or_default(),
-            speaker_faction: parsed_info.frontmatter.speaker_faction.unwrap_or_default(),
-            speaker_cell: parsed_info.frontmatter.speaker_cell.unwrap_or_default(),
-            player_faction: parsed_info.frontmatter.player_faction.unwrap_or_default(),
-            sound_path: parsed_info.frontmatter.sound_path.unwrap_or_default(),
-            text: parsed_info.text,
-            quest_state,
-            filters,
-            script_text: parsed_info.frontmatter.script_text.unwrap_or_default(),
-        };
-
-        group.insert_info(info);
     }
 
     for (topic_key, group) in plugin.dialogues.iter_mut() {
@@ -408,4 +292,148 @@ pub fn compile(parsed: ParsedPlugin) -> Result<PluginData> {
     }
 
     Ok(plugin)
+}
+
+/// Determines if a specific dialogue info file requires its topic topic to use 
+/// manual link ordering (preserving existing author linkage) rather than automatic 
+/// alphabetical/temporal ordering.
+fn group_has_preserved_links(info: &DialogueInfo) -> bool {
+    // If DiagID or PrevID were authored, we assume manual ordering.
+    // (Note: This is a bit of a heuristic since we're checking values not the presence 
+    // of the field in Markdown, but it matches the previous logic).
+    !info.prev_id.is_empty()
+}
+
+/// Transforms a single `ParsedInfo` into a native TES3 `DialogueInfo` record.
+///
+/// This involves:
+/// 1. Generating or validating the `DiagID`.
+/// 2. Mapping human-readable types (Race, Class, etc.) to native formats.
+/// 3. Compiling filters and script text.
+/// 4. Resolving the `PrevID` link sequence.
+/// 
+/// The resulting record is inserted into the provided `PluginData` within the 
+/// appropriate `DialogueGroup`.
+fn compile_dialogue_info(
+    parsed_info: ParsedInfo,
+    last_ids_by_topic: &mut HashMap<String, String>,
+    plugin: &mut PluginData,
+) -> Result<(String, DialogueInfo)> {
+    let dialogue_type = parsed_info
+        .frontmatter
+        .dialogue_type
+        .unwrap_or(tes3::esp::DialogueType2::Topic);
+    validate_dialogue_topic(dialogue_type, &parsed_info.topic)?;
+
+    let topic_key = parsed_info.topic.to_ascii_lowercase();
+    let group = plugin
+        .dialogues
+        .entry(topic_key.clone())
+        .or_insert_with(|| DialogueGroup {
+            dialogue: Dialogue {
+                flags: ObjectFlags::empty(),
+                id: parsed_info.topic.clone(),
+                dialogue_type,
+            },
+            infos: Default::default(),
+        });
+
+    let existing_ids: HashSet<String> = group.infos.iter().map(|i| i.id.clone()).collect();
+
+    let id = if let Some(id) = &parsed_info.frontmatter.diag_id {
+        ensure!(
+            id.chars().all(|c| c.is_ascii_digit()),
+            "DiagID must be numeric: {id}"
+        );
+        id.clone()
+    } else {
+        generate_info_id(&existing_ids)
+    };
+
+    let data = DialogueData {
+        dialogue_type: match dialogue_type {
+            tes3::esp::DialogueType2::Topic => tes3::esp::DialogueType::Topic,
+            tes3::esp::DialogueType2::Voice => tes3::esp::DialogueType::Voice,
+            tes3::esp::DialogueType2::Greeting => tes3::esp::DialogueType::Greeting,
+            tes3::esp::DialogueType2::Persuasion => tes3::esp::DialogueType::Persuasion,
+            tes3::esp::DialogueType2::Journal => tes3::esp::DialogueType::Journal,
+        },
+        disposition: parsed_info.frontmatter.disposition.unwrap_or(0),
+        speaker_rank: parsed_info.frontmatter.speaker_rank.unwrap_or(-1),
+        speaker_sex: match parsed_info.frontmatter.speaker_sex {
+            Some(0) => Sex::Male,
+            Some(1) => Sex::Female,
+            _ => Sex::Any,
+        },
+        player_rank: parsed_info.frontmatter.player_rank.unwrap_or(-1),
+    };
+
+    let mut filters = Vec::new();
+    for pf in parsed_info.frontmatter.filters {
+        let filter_value = match pf.value {
+            FilterValue::Float(f) => tes3::esp::FilterValue::Float(f),
+            FilterValue::Integer(i) => tes3::esp::FilterValue::Integer(i),
+        };
+
+        let function_enum =
+            filter_function_from_parts(pf.filter_type, pf.function_name.as_deref())?;
+
+        filters.push(Filter {
+            index: pf.index,
+            filter_type: pf.filter_type,
+            function: function_enum,
+            comparison: pf.comparison,
+            id: pf.id,
+            value: filter_value,
+        });
+    }
+
+    let quest_state = parsed_info
+        .frontmatter
+        .quest_state
+        .and_then(|s| match s.as_str() {
+            "Name" => Some(QuestState::Name),
+            "Finished" => Some(QuestState::Finished),
+            "Restart" => Some(QuestState::Restart),
+            _ => None,
+        });
+
+    let prev_id = if let Some(pid) = &parsed_info.frontmatter.prev_id {
+        ensure!(
+            pid.chars().all(|c| c.is_ascii_digit()),
+            "PrevID must be numeric: {pid}"
+        );
+        pid.clone()
+    } else {
+        last_ids_by_topic
+            .get(&topic_key)
+            .cloned()
+            .unwrap_or_default()
+    };
+
+    last_ids_by_topic.insert(topic_key.clone(), id.clone());
+
+    let info = DialogueInfo {
+        flags: ObjectFlags::empty(),
+        id,
+        prev_id,
+        next_id: String::new(),
+        data,
+        speaker_id: parsed_info.frontmatter.speaker_id.unwrap_or_default(),
+        speaker_race: parsed_info.frontmatter.speaker_race.unwrap_or_default(),
+        speaker_class: parsed_info.frontmatter.speaker_class.unwrap_or_default(),
+        speaker_faction: parsed_info.frontmatter.speaker_faction.unwrap_or_default(),
+        speaker_cell: parsed_info.frontmatter.speaker_cell.unwrap_or_default(),
+        player_faction: parsed_info.frontmatter.player_faction.unwrap_or_default(),
+        sound_path: parsed_info.frontmatter.sound_path.unwrap_or_default(),
+        text: parsed_info.text,
+        quest_state,
+        filters,
+        script_text: parsed_info.frontmatter.script_text.unwrap_or_default(),
+    };
+
+    let info_clone = info.clone();
+    group.insert_info(info);
+
+    Ok((topic_key, info_clone))
 }

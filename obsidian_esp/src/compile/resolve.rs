@@ -4,6 +4,73 @@ use merge_to_master::{DialogueGroup, Exterior, Interior, PluginData, merge_load_
 use std::collections::HashSet;
 use std::path::PathBuf;
 use tes3::esp::{DialogueType2, ObjectFlags, ObjectInfo, DialogueData, QuestState, Filter};
+use std::collections::HashMap;
+
+#[derive(Clone, PartialEq)]
+struct InfoSnapshot {
+    flags: ObjectFlags,
+    data: DialogueData,
+    speaker_id: String,
+    speaker_race: String,
+    speaker_class: String,
+    speaker_faction: String,
+    speaker_cell: String,
+    player_faction: String,
+    sound_path: String,
+    text: String,
+    quest_state: Option<QuestState>,
+    filters: Vec<Filter>,
+    script_text: String,
+}
+
+impl From<&tes3::esp::DialogueInfo> for InfoSnapshot {
+    fn from(info: &tes3::esp::DialogueInfo) -> Self {
+        Self {
+            flags: info.flags,
+            data: info.data.clone(),
+            speaker_id: info.speaker_id.clone(),
+            speaker_race: info.speaker_race.clone(),
+            speaker_class: info.speaker_class.clone(),
+            speaker_faction: info.speaker_faction.clone(),
+            speaker_cell: info.speaker_cell.clone(),
+            player_faction: info.player_faction.clone(),
+            sound_path: info.sound_path.clone(),
+            text: info.text.clone(),
+            quest_state: info.quest_state.clone(),
+            filters: info.filters.clone(),
+            script_text: info.script_text.clone(),
+        }
+    }
+}
+
+type LinkSnapshots = HashMap<String, HashMap<String, (String, String, InfoSnapshot)>>;
+
+/// Captures the current link pointers (prev/next) and a semantic content snapshot for all 
+/// dialogue infos in the provided dataset.
+///
+/// This provides a baseline used to detect which records have changed during a merge 
+/// and specifically whether those changes are "semantic" (content changes) or merely 
+/// "structural" (link-pointer updates due to list re-ordering).
+fn create_link_snapshots(data: &PluginData) -> LinkSnapshots {
+    data.dialogues
+        .values()
+        .map(|dialogue| {
+            let key = dialogue.dialogue.id.clone();
+            let snapshot: HashMap<_, _> = dialogue
+                .infos
+                .iter()
+                .map(|info| {
+                    let info_id = info.id.clone();
+                    let prev_id = info.prev_id.clone();
+                    let next_id = info.next_id.clone();
+                    let content = InfoSnapshot::from(info);
+                    (info_id, (prev_id, next_id, content))
+                })
+                .collect();
+            (key, snapshot)
+        })
+        .collect()
+}
 
 /// A trait for removing records that haven't been modified from a container.
 ///
@@ -99,60 +166,7 @@ pub fn resolve(
     //    lightweight content snapshot that excludes the link fields. Later we will
     //    treat pure link-pointer updates as non-semantic and not mark those infos
     //    as modified for pruning/export.
-    use std::collections::HashMap;
-
-    #[derive(Clone, PartialEq)]
-    struct InfoKey {
-        flags: ObjectFlags,
-        data: DialogueData,
-        speaker_id: String,
-        speaker_race: String,
-        speaker_class: String,
-        speaker_faction: String,
-        speaker_cell: String,
-        player_faction: String,
-        sound_path: String,
-        text: String,
-        quest_state: Option<QuestState>,
-        filters: Vec<Filter>,
-        script_text: String,
-    }
-
-    // TODO: Extract this InfoKey and snapshotting logic into a shared utility
-    // to avoid duplication between `resolve` and `resolve_full_database`.
-    let mut link_snapshots: HashMap<_, _> = master_data
-        .dialogues
-        .values()
-        .map(|dialogue| {
-            let key = dialogue.dialogue.id.clone();
-            let snapshot: HashMap<_, _> = dialogue
-                .infos
-                .iter()
-                .map(|info| {
-                    let info_id = info.id.clone();
-                    let prev_id = info.prev_id.clone();
-                    let next_id = info.next_id.clone();
-                    let content = InfoKey {
-                        flags: info.flags,
-                        data: info.data.clone(),
-                        speaker_id: info.speaker_id.clone(),
-                        speaker_race: info.speaker_race.clone(),
-                        speaker_class: info.speaker_class.clone(),
-                        speaker_faction: info.speaker_faction.clone(),
-                        speaker_cell: info.speaker_cell.clone(),
-                        player_faction: info.player_faction.clone(),
-                        sound_path: info.sound_path.clone(),
-                        text: info.text.clone(),
-                        quest_state: info.quest_state.clone(),
-                        filters: info.filters.clone(),
-                        script_text: info.script_text.clone(),
-                    };
-                    (info_id, (prev_id, next_id, content))
-                })
-                .collect();
-            (key, snapshot)
-        })
-        .collect();
+    let link_snapshots = create_link_snapshots(&master_data);
 
     // 5. Merge our plugin into masters (also calls repair_links inside)
     plugin.merge_into(&mut master_data);
@@ -229,58 +243,7 @@ pub fn resolve_full_database(
 
     // 4. Snapshot the master dialogue infos *before* merging so we can detect
     //    link-only changes vs content changes (see comments in `resolve`).
-    use std::collections::HashMap;
-
-    #[derive(Clone, PartialEq)]
-    struct InfoKey2 {
-        flags: ObjectFlags,
-        data: DialogueData,
-        speaker_id: String,
-        speaker_race: String,
-        speaker_class: String,
-        speaker_faction: String,
-        speaker_cell: String,
-        player_faction: String,
-        sound_path: String,
-        text: String,
-        quest_state: Option<QuestState>,
-        filters: Vec<Filter>,
-        script_text: String,
-    }
-
-    let link_snapshots: HashMap<_, _> = master_data
-        .dialogues
-        .values()
-        .map(|dialogue| {
-            let key = dialogue.dialogue.id.clone();
-            let snapshot: HashMap<_, _> = dialogue
-                .infos
-                .iter()
-                .map(|info| {
-                    let info_id = info.id.clone();
-                    let prev_id = info.prev_id.clone();
-                    let next_id = info.next_id.clone();
-                    let content = InfoKey2 {
-                        flags: info.flags,
-                        data: info.data.clone(),
-                        speaker_id: info.speaker_id.clone(),
-                        speaker_race: info.speaker_race.clone(),
-                        speaker_class: info.speaker_class.clone(),
-                        speaker_faction: info.speaker_faction.clone(),
-                        speaker_cell: info.speaker_cell.clone(),
-                        player_faction: info.player_faction.clone(),
-                        sound_path: info.sound_path.clone(),
-                        text: info.text.clone(),
-                        quest_state: info.quest_state.clone(),
-                        filters: info.filters.clone(),
-                        script_text: info.script_text.clone(),
-                    };
-                    (info_id, (prev_id, next_id, content))
-                })
-                .collect();
-            (key, snapshot)
-        })
-        .collect();
+    let link_snapshots = create_link_snapshots(&master_data);
 
     // 5. Merge our plugin into masters
     plugin.merge_into(&mut master_data);
@@ -311,21 +274,7 @@ pub fn resolve_full_database(
 
                         // Determine whether only prev/next changed by comparing
                         // the content snapshot (excluding the links).
-                        let current = InfoKey2 {
-                            flags: info.flags,
-                            data: info.data.clone(),
-                            speaker_id: info.speaker_id.clone(),
-                            speaker_race: info.speaker_race.clone(),
-                            speaker_class: info.speaker_class.clone(),
-                            speaker_faction: info.speaker_faction.clone(),
-                            speaker_cell: info.speaker_cell.clone(),
-                            player_faction: info.player_faction.clone(),
-                            sound_path: info.sound_path.clone(),
-                            text: info.text.clone(),
-                            quest_state: info.quest_state.clone(),
-                            filters: info.filters.clone(),
-                            script_text: info.script_text.clone(),
-                        };
+                        let current = InfoSnapshot::from(&*info);
 
                         if &current == old_content {
                             link_only_changes.push((dialogue_id.clone(), info.id.clone()));

@@ -454,38 +454,7 @@ impl GameDatabase {
         let mut files = export::collect_modified_project_files(&self.data);
 
         // Filter out files that only had link-pointer (prev/next) changes.
-        if !self.link_only_changes.is_empty() {
-            // TODO: Extract this link-only change filtering logic into a separate function/method
-            // for better readability and reusability.
-            use std::collections::HashSet;
-            let ignore: HashSet<_> = self.link_only_changes.iter().collect();
-            files.retain(|(_path, content)| {
-                fn parse_frontmatter_values(s: &str) -> Option<(String, String)> {
-                    let mut topic: Option<String> = None;
-                    let mut diagid: Option<String> = None;
-                    for line in s.lines() {
-                        if line.starts_with("Topic:") {
-                            topic = Some(line["Topic:".len()..].trim().to_string());
-                        } else if line.starts_with("DiagID:") {
-                            diagid = Some(line["DiagID:".len()..].trim().to_string());
-                        }
-                        if topic.is_some() && diagid.is_some() {
-                            break;
-                        }
-                    }
-                    match (topic, diagid) {
-                        (Some(t), Some(d)) => Some((t, d)),
-                        _ => None,
-                    }
-                }
-
-                if let Some((t, d)) = parse_frontmatter_values(content) {
-                    !ignore.contains(&(t, d))
-                } else {
-                    true
-                }
-            });
-        }
+        self.filter_link_only_changes(&mut files);
 
         let result = Array::new();
         for (path, content) in files {
@@ -520,5 +489,49 @@ impl GameDatabase {
         }
 
         Ok(result.into())
+    }
+
+    /// Prunes a list of generated files by removing any dialogue blocks that only 
+    /// contain "structural" link changes and no "semantic" content changes.
+    ///
+    /// This prevents the user's workspace from being cluttered with hundreds of 
+    /// "modified" files when they only changed the order of responses in a topic.
+    fn filter_link_only_changes(&self, files: &mut Vec<(String, String)>) {
+        if self.link_only_changes.is_empty() {
+            return;
+        }
+
+        use std::collections::HashSet;
+        let ignore: HashSet<_> = self.link_only_changes.iter().collect();
+        files.retain(|(_path, content)| {
+            if let Some((t, d)) = self.parse_frontmatter_values(content) {
+                !ignore.contains(&(t, d))
+            } else {
+                true
+            }
+        });
+    }
+
+    /// Parses the `Topic` and `DiagID` fields from a Markdown file's YAML frontmatter.
+    /// 
+    /// This is a lightweight parser used specifically for filtering link-only changes
+    /// during the export pass.
+    fn parse_frontmatter_values(&self, s: &str) -> Option<(String, String)> {
+        let mut topic: Option<String> = None;
+        let mut diagid: Option<String> = None;
+        for line in s.lines() {
+            if line.starts_with("Topic:") {
+                topic = Some(line["Topic:".len()..].trim().to_string());
+            } else if line.starts_with("DiagID:") {
+                diagid = Some(line["DiagID:".len()..].trim().to_string());
+            }
+            if topic.is_some() && diagid.is_some() {
+                break;
+            }
+        }
+        match (topic, diagid) {
+            (Some(t), Some(d)) => Some((t, d)),
+            _ => None,
+        }
     }
 }

@@ -225,8 +225,15 @@ pub fn parse_project_files(
 
 /// Reads all Markdown files in a project directory and parses them into a `ParsedPlugin`.
 pub fn parse_project_directory(path: &Path) -> Result<ParsedPlugin> {
-    // TODO: Extract the directory traversal logic below into a separate function/iterator 
-    // to improve readability and testability.
+    let files = collect_project_files_from_disk(path)?;
+    parse_project_files(files, None)
+}
+
+/// Discovers and reads all valid project Markdown files from the local filesystem.
+///
+/// This includes the top-level `header.md` and all dialogue files within the 
+/// expected directory hierarchy: `{TypeDir}/{TopicDir}/{File.md}`.
+fn collect_project_files_from_disk(path: &Path) -> Result<Vec<(String, String)>> {
     let mut files = Vec::new();
 
     let entries = std::fs::read_dir(path)
@@ -295,6 +302,6 @@ pub fn parse_project_directory(path: &Path) -> Result<ParsedPlugin> {
             }
         }
     }
-
-    parse_project_files(files, None)
+    
+    Ok(files)
 }
