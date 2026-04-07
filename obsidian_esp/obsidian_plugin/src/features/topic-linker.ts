@@ -12,6 +12,7 @@ export async function updateTopicLinksForFolder(
 	folder: TFolder,
 	allTopicNames?: string[],
 	silent?: boolean,
+	onProgress?: (current: number, total: number, message: string) => void,
 ) {
 	const topics = await indexTopicsInFolder(app, folder);
 
@@ -34,8 +35,14 @@ export async function updateTopicLinksForFolder(
 
 	const filesToProcess = getFilesToProcess(app, folder);
 	let modifiedCount = 0;
+	const totalFiles = filesToProcess.length;
 
-	for (const file of filesToProcess) {
+	for (let i = 0; i < totalFiles; i++) {
+		const file = filesToProcess[i];
+		if (!file) continue;
+		if (onProgress) {
+			onProgress(i + 1, totalFiles, `Processing: ${file.name}`);
+		}
 		const content = await app.vault.read(file);
 		const { frontmatter, body } = splitFrontmatter(content);
 

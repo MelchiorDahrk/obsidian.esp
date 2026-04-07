@@ -18,6 +18,7 @@ import {
 import { GameDatabase, extractMasterNames } from './database/game-database';
 import { LazyLoader } from './features/lazy-loader';
 import { DATABASE_VIEW_TYPE, DatabaseView } from './ui/database-view';
+import { ProgressBar } from './ui/progress-bar';
 
 declare module 'obsidian' {
 	interface MenuItem {
@@ -220,11 +221,14 @@ export default class ObsidianEsp extends Plugin {
 		this.db = null;
 		this.lazyLoader = null;
 		this.statusBarItem.empty();
-		this.statusBarItem.createEl('span', { text: 'Loading database...' });
+
+		const progress = new ProgressBar(`Loading database: ${file.name}`);
+		progress.update(0, 'Reading file...');
 
 		try {
 			const buffer = await file.arrayBuffer();
 			const bytes = new Uint8Array(buffer);
+			progress.update(20, 'Scanning for masters...');
 
 			// Try to merge with masters
 			let masterNames: string[];
@@ -235,12 +239,19 @@ export default class ObsidianEsp extends Plugin {
 			}
 
 			if (masterNames.length > 0) {
-				const { masters, messages } =
-					await loadValidationMasters(masterNames);
+				progress.update(30, 'Loading masters...');
+				const { masters, messages } = await loadValidationMasters(
+					masterNames,
+					(current, total, name) => {
+						const masterPct = 30 + (current / total) * 50; // 30% to 80%
+						progress.update(masterPct, `Loading master: ${name}`);
+					},
+				);
 				for (const msg of messages) {
 					new Notice(msg);
 				}
 				if (masters.length > 0) {
+					progress.update(85, 'Parsing database with masters...');
 					this.db = GameDatabase.loadWithMasters(
 						bytes,
 						file.name,
@@ -251,12 +262,16 @@ export default class ObsidianEsp extends Plugin {
 
 			// Fall back to plugin-only load
 			if (!this.db) {
+				progress.update(90, 'Parsing database...');
 				this.db = GameDatabase.load(bytes, file.name);
 			}
+			progress.update(100, 'Done!');
 		} catch (error) {
 			const message =
 				error instanceof Error ? error.message : String(error);
 			new Notice(`Failed to load database: ${message}`);
+		} finally {
+			setTimeout(() => progress.hide(), 500);
 		}
 
 		if (this.db?.info.isMerged) {
@@ -337,17 +352,7 @@ export default class ObsidianEsp extends Plugin {
 			const total = resolved.length;
 			const BATCH_SIZE = 50;
 
-			const progress = new Notice('', 0);
-			const progressEl = progress.noticeEl.createDiv();
-			const barOuter = progressEl.createDiv();
-			barOuter.style.cssText =
-				'width:100%;height:6px;background:var(--background-modifier-border);border-radius:3px;margin-top:4px;';
-			const barInner = barOuter.createDiv();
-			barInner.style.cssText =
-				'width:0%;height:100%;background:var(--interactive-accent);border-radius:3px;transition:width 0.15s;';
-			const label = progressEl.createDiv();
-			label.style.marginTop = '4px';
-			label.setText(`Unpacking: 0 / ${total}`);
+			const progress = new ProgressBar(`Unpacking ${fileName}`);
 
 			for (let i = 0; i < total; i += BATCH_SIZE) {
 				const batch = resolved.slice(i, i + BATCH_SIZE);
@@ -361,8 +366,7 @@ export default class ObsidianEsp extends Plugin {
 				}
 				const done = Math.min(i + BATCH_SIZE, total);
 				const pct = Math.round((done / total) * 100);
-				barInner.style.width = `${pct}%`;
-				label.setText(`Unpacking: ${done} / ${total}`);
+				progress.update(pct, `Unpacked ${done} / ${total} files`);
 			}
 
 			progress.hide();
@@ -413,12 +417,28 @@ export default class ObsidianEsp extends Plugin {
 		const allTopicNames = this.db?.info.isMerged
 			? this.db.getAllTopicNames()
 			: undefined;
+
+		let progress: ProgressBar | undefined;
+		if (!silent) {
+			progress = new ProgressBar(`Updating topic links: ${folder.name}`);
+		}
+
 		await updateTopicLinksForFolder(
 			this.app,
 			folder,
 			allTopicNames,
 			silent,
+			(current, total, message) => {
+				if (progress) {
+					const pct = Math.round((current / total) * 100);
+					progress.update(pct, message);
+				}
+			},
 		);
+
+		if (progress) {
+			progress.hide();
+		}
 	}
 
 	async ensureFolder(path: string) {

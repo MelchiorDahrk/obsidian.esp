@@ -170,6 +170,7 @@ async function findFileCaseInsensitive(
 
 export async function loadValidationMasters(
 	masterNames: string[],
+	onProgress?: (current: number, total: number, name: string) => void,
 ): Promise<{ masters: MasterFile[]; messages: string[] }> {
 	const messages: string[] = [];
 	const masters: MasterFile[] = [];
@@ -182,7 +183,14 @@ export async function loadValidationMasters(
 		return { masters, messages };
 	}
 
-	for (const masterName of [...new Set(masterNames)]) {
+	const uniqueMasterNames = [...new Set(masterNames)];
+	const totalMasters = uniqueMasterNames.length;
+
+	for (let i = 0; i < totalMasters; i++) {
+		const masterName = uniqueMasterNames[i]!;
+		if (onProgress) {
+			onProgress(i + 1, totalMasters, masterName);
+		}
 		let masterPath: string | null = null;
 		for (const directory of dataDirectories) {
 			masterPath = await findFileCaseInsensitive(directory, masterName);
