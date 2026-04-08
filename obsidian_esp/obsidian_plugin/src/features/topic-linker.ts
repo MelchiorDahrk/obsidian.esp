@@ -6,7 +6,11 @@ import { PathManager } from './path-manager';
 interface TopicInfo {
 	name: string;
 	files: TFile[];
+	type?: string;
+	folder?: TFolder;
 }
+
+const DIALOGUE_TYPES = ['Topic', 'Greeting', 'Persuasion', 'Journal', 'Voice'];
 
 export interface LinkerProgress {
 	current: number;
@@ -123,15 +127,13 @@ export class TopicLinker {
 	private async createOrUpdateTopicIndex(topic: TopicInfo, rootFolder: TFolder): Promise<boolean> {
 		if (topic.files.length === 0) return false;
 
-		const firstFile = topic.files[0];
-		if (!firstFile) return false;
-
-		const topicFolder = firstFile.parent;
+		const topicFolder = topic.folder ?? topic.files[0]!.parent;
 		if (!topicFolder) return false;
 
 		const baseFilePath = normalizePath(`${rootFolder.path}/${BASE_FILE_NAME}`);
+		const viewName = `${topic.type ?? 'Topic'} View`;
 		const indexPath = normalizePath(`${topicFolder.path}/${topic.name}.md`);
-		const indexContent = `![[${baseFilePath}#Topic View]]\n`;
+		const indexContent = `![[${baseFilePath}#${viewName}]]\n`;
 
 		const existing = this.app.vault.getAbstractFileByPath(indexPath);
 		if (existing instanceof TFile) {
@@ -168,20 +170,26 @@ export class TopicLinker {
 					// If frontmatter is missing (e.g. newly created file), try to infer from path
 					if (!type || !topicName) {
 						const parts = child.path.split('/');
-						const typeIndex = parts.indexOf('Topic');
-						if (typeIndex !== -1 && typeIndex < parts.length - 1) {
-							type = 'Topic';
-							topicName = parts[typeIndex + 1];
+						for (const t of DIALOGUE_TYPES) {
+							const idx = parts.indexOf(t);
+							if (idx !== -1 && idx < parts.length - 1) {
+								type = t;
+								topicName = parts[idx + 1];
+								break;
+							}
 						}
 					}
 
-					if (type === 'Topic' && topicName) {
-						const existing: TopicInfo = topics.get(topicName) || {
-							name: topicName,
-							files: [],
-						};
+					if (type && topicName && DIALOGUE_TYPES.includes(type)) {
+						const parent = child.parent;
+						if (!parent) continue;
+						const key = normalizePath(parent.path);
+						let existing = topics.get(key);
+						if (!existing) {
+							existing = { name: topicName, files: [], type, folder: parent };
+							topics.set(key, existing);
+						}
 						existing.files.push(child);
-						topics.set(topicName, existing);
 					}
 				}
 			}
@@ -209,7 +217,7 @@ export class TopicLinker {
 					let type = frontmatter?.Type;
 					if (Array.isArray(type)) type = type[0];
 
-					const hasValidType = ['Topic', 'Greeting', 'Persuasion', 'Journal'].includes(type || '');
+					const hasValidType = DIALOGUE_TYPES.includes(type || '');
 					const hasTopic = !!frontmatter?.Topic;
 
 					if (hasValidType && hasTopic) {
@@ -221,11 +229,10 @@ export class TopicLinker {
 
 		// Optimized scanning: If we are at the root, only look into dialogue category folders
 		if (PathManager.isPluginRoot(folder)) {
-			const targetNames = ['Topic', 'Greeting', 'Persuasion', 'Journal'];
 			for (const child of folder.children) {
 				if (child instanceof TFolder) {
 					const childName = child.name.toLowerCase();
-					if (targetNames.some((n) => n.toLowerCase() === childName)) {
+					if (DIALOGUE_TYPES.some((n) => n.toLowerCase() === childName)) {
 						await collect(child);
 					}
 				}

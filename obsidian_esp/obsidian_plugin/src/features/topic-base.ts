@@ -48,6 +48,66 @@ views:
       - Variable3
       - Variable4
       - Variable5
+  - type: table
+    name: "Greeting View"
+    order:
+      - file.name
+      - DiagID
+      - Disposition
+      - ID
+      - Faction
+      - Cell
+      - Variable0
+      - Variable1
+      - Variable2
+      - Variable3
+      - Variable4
+      - Variable5
+  - type: table
+    name: "Journal View"
+    order:
+      - file.name
+      - DiagID
+      - Disposition
+      - ID
+      - Faction
+      - Cell
+      - Variable0
+      - Variable1
+      - Variable2
+      - Variable3
+      - Variable4
+      - Variable5
+  - type: table
+    name: "Persuasion View"
+    order:
+      - file.name
+      - DiagID
+      - Disposition
+      - ID
+      - Faction
+      - Cell
+      - Variable0
+      - Variable1
+      - Variable2
+      - Variable3
+      - Variable4
+      - Variable5
+  - type: table
+    name: "Voice View"
+    order:
+      - file.name
+      - DiagID
+      - Disposition
+      - ID
+      - Faction
+      - Cell
+      - Variable0
+      - Variable1
+      - Variable2
+      - Variable3
+      - Variable4
+      - Variable5
 `;
 
 export async function ensureBaseFileInFolder(
