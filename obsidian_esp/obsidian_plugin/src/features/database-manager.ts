@@ -49,8 +49,8 @@ export class DatabaseManager {
 				new Notice(msg);
 			}
 
-			if (this.db.info.isMerged) {
-				this.lazyLoader = new LazyLoader(this.db, this.outputFolder);
+			if (this.db) {
+				this.lazyLoader = new LazyLoader(this.db, this.outputFolder, this.app);
 				// plugin registration remains in main.ts for context
 			}
 

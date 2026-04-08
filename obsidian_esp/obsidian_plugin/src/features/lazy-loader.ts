@@ -1,4 +1,4 @@
-import { TFile, TFolder, normalizePath } from 'obsidian';
+import { App, TFile, TFolder, normalizePath } from 'obsidian';
 import type ObsidianEsp from '../main';
 import type { GameDatabase } from '../database/game-database';
 import { BASE_FILE_NAME, ensureBaseFileInFolder } from './topic-base';
@@ -16,8 +16,12 @@ export class LazyLoader {
 	private vaultWriter: VaultWriter;
 	private pathManager: PathManager;
 
-	constructor(private db: GameDatabase, private outputFolder: string) {
-		this.vaultWriter = new VaultWriter((db as any).app); // VaultWriter needs app, which we can get from db context or just pass it
+	constructor(
+		private db: GameDatabase,
+		private outputFolder: string,
+		private app: App,
+	) {
+		this.vaultWriter = new VaultWriter(app);
 		this.pathManager = new PathManager(outputFolder);
 
 		// Build a case-insensitive lookup set of all valid topic names in the database
@@ -30,8 +34,6 @@ export class LazyLoader {
 	 * Registers vault listeners to watch for new file creation.
 	 */
 	register(plugin: ObsidianEsp): void {
-		this.vaultWriter = new VaultWriter(plugin.app); // Re-initialize with correct app instance
-
 		plugin.registerEvent(
 			plugin.app.vault.on('create', (file) => {
 				if (file instanceof TFile) {
@@ -70,7 +72,8 @@ export class LazyLoader {
 			const fileName = this.db.info.fileName;
 			const pluginDir = this.pathManager.getPluginDir(fileName);
 
-			// Step 2: Ensure the plugin root has the required Base View file
+			// Step 2: Ensure the plugin root exists and has the required Base View file
+			await this.vaultWriter.ensureFolder(pluginDir);
 			const rootFolderAbstract = plugin.app.vault.getAbstractFileByPath(pluginDir);
 			if (rootFolderAbstract instanceof TFolder) {
 				await ensureBaseFileInFolder(plugin.app, rootFolderAbstract);
@@ -87,6 +90,9 @@ export class LazyLoader {
 			const topicFolderPath = firstResolved[0].substring(0, firstResolved[0].lastIndexOf('/'));
 			const targetIndexPath = normalizePath(`${topicFolderPath}/${file.name}`);
 			
+			// Step 4a: Ensure target folder exists before renaming
+			await this.vaultWriter.ensureFolder(topicFolderPath);
+
 			let topicIndexFile = file;
 			if (file.path !== targetIndexPath) {
 				await plugin.app.fileManager.renameFile(file, targetIndexPath);
