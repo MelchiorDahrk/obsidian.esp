@@ -150,7 +150,7 @@ async function findFileCaseInsensitive(
 		const entries = await readdir(directory, { withFileTypes: true });
 		const match = entries.find(
 			(entry) =>
-				entry.isFile() &&
+				(entry.isFile() || entry.isSymbolicLink()) &&
 				entry.name.toLowerCase() === fileName.toLowerCase(),
 		);
 		return match ? join(directory, match.name) : null;

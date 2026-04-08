@@ -243,7 +243,7 @@ fn collect_project_files_from_disk(path: &Path) -> Result<Vec<(String, String)>>
         let entry = entry?;
         let entry_path = entry.path();
 
-        if entry.file_type()?.is_file() {
+        if entry.path().is_file() {
             if entry_path.extension().and_then(|e| e.to_str()) != Some("md") {
                 continue;
             }
@@ -272,7 +272,7 @@ fn collect_project_files_from_disk(path: &Path) -> Result<Vec<(String, String)>>
 
         for topic_dir in topic_dirs {
             let topic_dir = topic_dir?;
-            if !topic_dir.file_type()?.is_dir() {
+            if !topic_dir.path().is_dir() {
                 continue;
             }
 
@@ -282,7 +282,7 @@ fn collect_project_files_from_disk(path: &Path) -> Result<Vec<(String, String)>>
 
             for file in topic_files {
                 let file = file?;
-                if !file.file_type()?.is_file() {
+                if !file.path().is_file() {
                     continue;
                 }
 
