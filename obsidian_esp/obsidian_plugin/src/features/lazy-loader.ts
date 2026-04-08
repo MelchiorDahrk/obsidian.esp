@@ -89,7 +89,7 @@ export class LazyLoader {
 
 			const topicFolderPath = firstResolved[0].substring(0, firstResolved[0].lastIndexOf('/'));
 			const targetIndexPath = normalizePath(`${topicFolderPath}/${file.name}`);
-			
+
 			// Step 4a: Ensure target folder exists before renaming
 			await this.vaultWriter.ensureFolder(topicFolderPath);
 
@@ -108,6 +108,33 @@ export class LazyLoader {
 			const baseFilePath = normalizePath(`${pluginDir}/${BASE_FILE_NAME}`);
 			const indexContent = `![[${baseFilePath}#Topic View]]\n`;
 			await plugin.app.vault.modify(topicIndexFile, indexContent);
+
+			// Intent: When a user clicks an unresolved [[Topic]] and the plugin lazily
+			// generates the topic index file, keep the file opened in read/preview
+			// mode rather than leaving it in edit mode. This preserves the user's
+			// expectation of viewing the generated content and avoids immediately
+			// switching focus to editing an auto-populated index.
+			// We use a microtask yield to avoid racing with Obsidian's internal
+			// open/rename handling; failure to switch is non-fatal.
+			await Promise.resolve();
+			try {
+				const leaves = this.app.workspace.getLeavesOfType('markdown');
+				for (const leaf of leaves) {
+					const v: any = leaf.view as any;
+					if (v?.file && v.file.path === topicIndexFile.path) {
+						await leaf.setViewState({
+							type: 'markdown',
+							active: true,
+							state: { file: topicIndexFile.path, mode: 'preview' },
+						});
+						break;
+					}
+				}
+			} catch (err) {
+				// Non-fatal: leave as-is if anything goes wrong. Log at debug level.
+				// eslint-disable-next-line no-console
+				console.warn('LazyLoader: failed to switch leaf to preview mode', err);
+			}
 
 			// Step 7: Trigger a link update to connect the new topic to existing dialogue
 			const rootFolder = plugin.app.vault.getAbstractFileByPath(pluginDir);
