@@ -8,3 +8,4 @@ pkg
 obsidian_plugin/release/
 
 build.log
+build_error.txt
