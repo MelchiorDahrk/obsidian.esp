@@ -23,11 +23,18 @@ export class LazyLoader {
 	) {
 		this.vaultWriter = new VaultWriter(app);
 		this.pathManager = new PathManager(outputFolder);
+		this.topicNames = new Set();
+	}
 
-		// Build a case-insensitive lookup set of all valid topic names in the database
-		this.topicNames = new Set(
-			db.getAllTopicNames().map((n) => n.toLowerCase()),
-		);
+	static async create(
+		db: GameDatabase,
+		outputFolder: string,
+		app: App,
+	): Promise<LazyLoader> {
+		const loader = new LazyLoader(db, outputFolder, app);
+		const topicNames = await db.getAllTopicNames();
+		loader.topicNames = new Set(topicNames.map((name) => name.toLowerCase()));
+		return loader;
 	}
 
 	/**
@@ -66,7 +73,7 @@ export class LazyLoader {
 
 		try {
 			// Step 1: Unpack specific topic records from WASM
-			const files = this.db.unpackTopic(file.basename);
+			const files = await this.db.unpackTopic(file.basename);
 			if (files.length === 0) return;
 
 			const fileName = this.db.info.fileName;

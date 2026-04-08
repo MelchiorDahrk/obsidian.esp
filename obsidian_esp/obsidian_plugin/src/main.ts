@@ -115,7 +115,7 @@ export default class ObsidianEsp extends Plugin {
 	 * Cleans up resources when the plugin is disabled.
 	 */
 	onunload() {
-		this.dbManager.unloadDatabase();
+		void this.dbManager.unloadDatabase();
 	}
 
 	/**
@@ -186,7 +186,7 @@ export default class ObsidianEsp extends Plugin {
 			item.setTitle('Unload database')
 				.setIcon('x')
 				.onClick(() => {
-					this.dbManager.unloadDatabase();
+					void this.dbManager.unloadDatabase();
 				});
 		});
 

@@ -1,8 +1,8 @@
-import { App, Notice, normalizePath, TFolder } from 'obsidian';
-import { GameDatabase, extractMasterNames } from './game-database';
+import { App } from 'obsidian';
+import { GameDatabase } from './game-database';
 import { loadValidationMasters } from '../features/master-files';
-import { parseMastersInParallel } from './parallel-loader';
 import { ProgressBar } from '../ui/progress-bar';
+import { extractMasterNamesFromPluginBytes } from './header-parser';
 
 export interface LoadResult {
     db: GameDatabase;
@@ -36,10 +36,10 @@ export class DatabaseLoader {
             const bytes = new Uint8Array(buffer);
             progress.update(20, 'Scanning for masters...');
 
-            // Step 2: Extract master names from the binary header
+            // Step 2: Extract master names from the binary header without crossing into WASM
             let masterNames: string[];
             try {
-                masterNames = extractMasterNames(bytes);
+                masterNames = extractMasterNamesFromPluginBytes(bytes);
             } catch {
                 masterNames = [];
             }
@@ -62,33 +62,42 @@ export class DatabaseLoader {
                 messages.push(...masterMessages);
 
                 if (masters.length > 0) {
-                    progress.update(80, 'Parsing masters in parallel...');
-                    const wasmPath = normalizePath(`${this.manifestDir}/pkg/obsidian_esp_bg.wasm`);
-                    const workerPath = normalizePath(`${this.manifestDir}/worker.js`);
-                    
-                    // Use Web Workers to parse large master files (like Morrowind.esm) concurrently
-                    const preparsed = await parseMastersInParallel(
+                    progress.update(80, 'Loading database in worker...');
+                    const { db: loadedDb, ingressCount } = await GameDatabase.load(
                         this.app,
-                        wasmPath,
-                        workerPath,
+                        this.manifestDir,
+                        bytes,
+                        file.name,
                         masters,
-                        (current, total, active) => {
-                            const pct = 80 + (current / total) * 10; // 80% to 90%
-                            const activeLabel = active.length > 0 ? ` (Parsing: ${active.join(', ')})` : '';
-                            progress.update(pct, `Parsed ${current} / ${total} masters${activeLabel}`);
-                        },
                     );
+                    db = loadedDb;
 
-                    progress.update(90, 'Merging database...');
-                    // Merge the preparsed master records with the target plugin data in WASM
-                    db = GameDatabase.loadWithPreparsedMasters(bytes, file.name, preparsed);
+                    const expectedIngressCount = masters.length + 1;
+                    if (ingressCount !== expectedIngressCount) {
+                        messages.push(
+                            `Expected ${expectedIngressCount} JS->WASM byte ingress operations during database load, but observed ${ingressCount}.`,
+                        );
+                    }
                 }
             }
 
             // Step 4: Fallback to standalone load if no masters or resolution failed
             if (!db) {
-                progress.update(90, 'Parsing database...');
-                db = GameDatabase.load(bytes, file.name);
+                progress.update(90, 'Loading database in worker...');
+                const { db: loadedDb, ingressCount } = await GameDatabase.load(
+                    this.app,
+                    this.manifestDir,
+                    bytes,
+                    file.name,
+                    [],
+                );
+                db = loadedDb;
+
+                if (ingressCount !== 1) {
+                    messages.push(
+                        `Expected 1 JS->WASM byte ingress operation during database load, but observed ${ingressCount}.`,
+                    );
+                }
             }
 
             progress.update(100, 'Done!');

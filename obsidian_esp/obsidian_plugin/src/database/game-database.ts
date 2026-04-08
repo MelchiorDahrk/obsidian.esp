@@ -1,11 +1,6 @@
-import {
-	GameDatabase as WasmGameDatabase,
-	extractMasterNames as wasmExtractMasterNames,
-} from '../../pkg/obsidian_esp.js';
+import { App, normalizePath } from 'obsidian';
+import type { MasterFile } from '../features/master-files';
 
-/**
- * Represents a basic game record (Activator) for display in the explorer.
- */
 export interface ActivatorRecord {
 	id: string;
 	name: string;
@@ -13,132 +8,206 @@ export interface ActivatorRecord {
 	script: string;
 }
 
-/**
- * Summary information about a loaded game database.
- */
 export interface GameDatabaseInfo {
 	fileName: string;
 	objectCount: number;
 	isMerged: boolean;
 }
 
-/**
- * Parse raw plugin bytes and return the master names from the header.
- * Lightweight — does not create a full GameDatabase.
- */
-export function extractMasterNames(bytes: Uint8Array): string[] {
-	return wasmExtractMasterNames(bytes) as string[];
+interface WorkerRequest {
+	id: number;
+	method: string;
+	params?: unknown;
 }
 
-/**
- * Wrapper for the WASM-backed game database.
- * Manages the lifecycle of the in-memory plugin data and provides typed access to its contents.
- */
+interface WorkerSuccessResponse {
+	id: number;
+	ok: true;
+	result: unknown;
+}
+
+interface WorkerErrorResponse {
+	id: number;
+	ok: false;
+	error: string;
+}
+
+type WorkerResponse = WorkerSuccessResponse | WorkerErrorResponse;
+
+interface LoadDatabaseResult {
+	info: GameDatabaseInfo;
+	ingressCount: number;
+}
+
+function toTransferableBuffer(bytes: Uint8Array): ArrayBuffer {
+	if (
+		bytes.byteOffset === 0 &&
+		bytes.byteLength === bytes.buffer.byteLength
+	) {
+		return bytes.buffer as ArrayBuffer;
+	}
+
+	return bytes.slice().buffer;
+}
+
 export class GameDatabase {
-	private handle: WasmGameDatabase;
 	readonly info: GameDatabaseInfo;
 
-	private constructor(handle: WasmGameDatabase, info: GameDatabaseInfo) {
-		this.handle = handle;
+	private nextRequestId = 1;
+	private readonly pending = new Map<
+		number,
+		{
+			resolve: (value: unknown) => void;
+			reject: (error: Error) => void;
+		}
+	>();
+	private topicNamesCache: string[] | null = null;
+	private disposed = false;
+
+	private constructor(
+		private readonly worker: Worker,
+		private readonly workerUrl: string,
+		info: GameDatabaseInfo,
+	) {
 		this.info = info;
+		this.worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
+			const message = event.data;
+			const pending = this.pending.get(message.id);
+			if (!pending) {
+				return;
+			}
+
+			this.pending.delete(message.id);
+			if (message.ok) {
+				pending.resolve(message.result);
+				return;
+			}
+
+			pending.reject(new Error(message.error));
+		};
+
+		this.worker.onerror = (event) => {
+			const error = new Error(event.message || 'Database worker failed.');
+			for (const pending of this.pending.values()) {
+				pending.reject(error);
+			}
+			this.pending.clear();
+		};
 	}
 
-	/**
-	 * Loads a single plugin file (ESP/ESM) from raw bytes.
-	 * This does not resolve master dependencies.
-	 */
-	static load(bytes: Uint8Array, fileName: string): GameDatabase {
-		const handle = new WasmGameDatabase(bytes);
-		return new GameDatabase(handle, {
-			fileName,
-			objectCount: handle.objectCount(),
-			isMerged: false,
-		});
-	}
-
-	/**
-	 * Load a plugin merged with its masters into a single resolved database.
-	 * Masters is an array of [name, bytes] pairs.
-	 */
-	static loadWithMasters(
+	static async load(
+		app: App,
+		manifestDir: string,
 		pluginBytes: Uint8Array,
 		fileName: string,
-		masters: [string, Uint8Array][],
-	): GameDatabase {
-		const handle = WasmGameDatabase.loadWithMasters(pluginBytes, masters);
-		return new GameDatabase(handle, {
-			fileName,
-			objectCount: handle.objectCount(),
-			isMerged: true,
+		masters: MasterFile[],
+	): Promise<{ db: GameDatabase; ingressCount: number }> {
+		const wasmPath = normalizePath(`${manifestDir}/pkg/obsidian_esp_bg.wasm`);
+		const workerPath = normalizePath(`${manifestDir}/worker.js`);
+		const wasmBuffer = await app.vault.adapter.readBinary(wasmPath);
+		const workerScript = await app.vault.adapter.read(workerPath);
+		const workerBlob = new Blob([workerScript], {
+			type: 'application/javascript',
 		});
-	}
+		const workerUrl = URL.createObjectURL(workerBlob);
+		const worker = new Worker(workerUrl);
 
-	/**
-	 * Load a plugin merged with pre-parsed masters.
-	 * Masters is an array of parsed object arrays.
-	 */
-	static loadWithPreparsedMasters(
-		pluginBytes: Uint8Array,
-		fileName: string,
-		masters: any[],
-	): GameDatabase {
-		const handle = (WasmGameDatabase as any).loadWithPreparsedMasters(
-			pluginBytes,
-			masters,
-		);
-		return new GameDatabase(handle, {
+		const client = new GameDatabase(worker, workerUrl, {
 			fileName,
-			objectCount: handle.objectCount(),
-			isMerged: true,
+			objectCount: 0,
+			isMerged: masters.length > 0,
 		});
-	}
 
-	/**
-	 * Returns all Activator records in the database.
-	 */
-	getActivators(): ActivatorRecord[] {
-		return this.handle.getActivators() as ActivatorRecord[];
-	}
+		try {
+			await client.invoke('init', { wasmBuffer }, [wasmBuffer]);
 
-	/**
-	 * Unpacks the entire database into a list of [filePath, content] pairs.
-	 */
-	unpack(): [string, string][] {
-		const unpacked = this.handle.unpack() as unknown;
-		if (!Array.isArray(unpacked)) {
-			throw new Error('Unexpected unpacked plugin output.');
+			const masterPayload = masters.map(([name, bytes]) => [
+				name,
+				toTransferableBuffer(bytes),
+			] as const);
+			const pluginBuffer = toTransferableBuffer(pluginBytes);
+			const transfer = [pluginBuffer, ...masterPayload.map(([, buffer]) => buffer)];
+			const loadResult = (await client.invoke(
+				'loadDatabase',
+				{
+					fileName,
+					pluginBytes: pluginBuffer,
+					masters: masterPayload,
+				},
+				transfer,
+			)) as LoadDatabaseResult;
+
+			client.info.fileName = loadResult.info.fileName;
+			client.info.objectCount = loadResult.info.objectCount;
+			client.info.isMerged = loadResult.info.isMerged;
+
+			return { db: client, ingressCount: loadResult.ingressCount };
+		} catch (error) {
+			await client.free();
+			throw error;
 		}
-		return unpacked as [string, string][];
 	}
 
-	/** Unpack only the plugin's own modified dialogues. */
-	unpackModified(): [string, string][] {
-		const unpacked = this.handle.unpackModified() as unknown;
-		if (!Array.isArray(unpacked)) {
-			throw new Error('Unexpected unpacked plugin output.');
+	async getActivators(): Promise<ActivatorRecord[]> {
+		return (await this.invoke('getActivators')) as ActivatorRecord[];
+	}
+
+	async unpack(): Promise<[string, string][]> {
+		return (await this.invoke('unpack')) as [string, string][];
+	}
+
+	async unpackModified(): Promise<[string, string][]> {
+		return (await this.invoke('unpackModified')) as [string, string][];
+	}
+
+	async getAllTopicNames(): Promise<string[]> {
+		if (this.topicNamesCache) {
+			return this.topicNamesCache;
 		}
-		return unpacked as [string, string][];
+
+		const names = (await this.invoke('getAllTopicNames')) as string[];
+		this.topicNamesCache = names;
+		return names;
 	}
 
-	/** Returns a sorted list of all topic names in the full database. */
-	getAllTopicNames(): string[] {
-		return this.handle.getAllTopicNames() as string[];
+	async unpackTopic(topicName: string): Promise<[string, string][]> {
+		return (await this.invoke('unpackTopic', { topicName })) as [string, string][];
 	}
 
-	/** Unpack a single topic's info files (for lazy loading). */
-	unpackTopic(topicName: string): [string, string][] {
-		const unpacked = this.handle.unpackTopic(topicName) as unknown;
-		if (!Array.isArray(unpacked)) {
-			throw new Error('Unexpected unpacked topic output.');
+	async free(): Promise<void> {
+		if (this.disposed) {
+			return;
 		}
-		return unpacked as [string, string][];
+
+		this.disposed = true;
+		try {
+			await this.invoke('freeDatabase');
+		} catch {
+			// Ignore termination-time worker failures.
+		} finally {
+			for (const pending of this.pending.values()) {
+				pending.reject(new Error('Database worker was disposed.'));
+			}
+			this.pending.clear();
+			this.worker.terminate();
+			URL.revokeObjectURL(this.workerUrl);
+		}
 	}
 
-	/**
-	 * Releases the memory held by the WASM object.
-	 * MUST be called when the database is no longer needed to prevent memory leaks.
-	 */
-	free(): void {
-		this.handle.free();
+	private invoke(
+		method: string,
+		params?: unknown,
+		transfer?: Transferable[],
+	): Promise<unknown> {
+		if (this.disposed) {
+			return Promise.reject(new Error('Database worker is disposed.'));
+		}
+
+		const id = this.nextRequestId++;
+		const request: WorkerRequest = { id, method, params };
+		return new Promise((resolve, reject) => {
+			this.pending.set(id, { resolve, reject });
+			this.worker.postMessage(request, transfer ?? []);
+		});
 	}
 }

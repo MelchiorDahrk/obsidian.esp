@@ -39,7 +39,7 @@ export class DatabaseManager {
 	 * Loads a database file and initializes related services (lazy loader).
 	 */
 	async loadDatabase(file: File): Promise<void> {
-		this.unloadDatabase();
+		await this.unloadDatabase();
 
 		try {
 			const { db, messages } = await this.loader.load(file);
@@ -50,7 +50,11 @@ export class DatabaseManager {
 			}
 
 			if (this.db) {
-				this.lazyLoader = new LazyLoader(this.db, this.outputFolder, this.app);
+				this.lazyLoader = await LazyLoader.create(
+					this.db,
+					this.outputFolder,
+					this.app,
+				);
 				// plugin registration remains in main.ts for context
 			}
 
@@ -78,11 +82,11 @@ export class DatabaseManager {
 			return;
 		}
 
-		const progress = new ProgressBar(`Unpacking ${this.db.info.fileName}`);
+			const progress = new ProgressBar(`Unpacking ${this.db.info.fileName}`);
 		try {
 			const rawFiles = this.db.info.isMerged
-				? this.db.unpackModified()
-				: this.db.unpack();
+				? await this.db.unpackModified()
+				: await this.db.unpack();
 			
 			const fileName = this.db.info.fileName;
 
@@ -117,7 +121,7 @@ export class DatabaseManager {
 	 * Updates topic links in a given folder.
 	 */
 	async updateTopicLinks(folder: TFolder, silent = false, reporter?: ProgressReporter): Promise<void> {
-		const allTopicNames = this.db?.getAllTopicNames();
+		const allTopicNames = this.db ? await this.db.getAllTopicNames() : undefined;
 		const linker = new TopicLinker(this.app);
 		
 		await linker.updateTopicLinks(folder, allTopicNames, (p) => {
@@ -144,9 +148,9 @@ export class DatabaseManager {
 	/**
 	 * Frees database resources.
 	 */
-	unloadDatabase(): void {
+	async unloadDatabase(): Promise<void> {
 		this.lazyLoader = null;
-		this.db?.free();
+		await this.db?.free();
 		this.db = null;
 		this.onUpdate();
 	}

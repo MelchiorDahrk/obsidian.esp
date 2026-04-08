@@ -1,0 +1,103 @@
+const TES3_TAG = 'TES3';
+const HEDR_TAG = 'HEDR';
+const MAST_TAG = 'MAST';
+const DATA_TAG = 'DATA';
+
+function readTag(bytes: Uint8Array, offset: number): string {
+	if (offset + 4 > bytes.length) {
+		throw new Error('Unexpected end of plugin header.');
+	}
+
+	return String.fromCharCode(
+		bytes[offset] ?? 0,
+		bytes[offset + 1] ?? 0,
+		bytes[offset + 2] ?? 0,
+		bytes[offset + 3] ?? 0,
+	);
+}
+
+function readU32(bytes: Uint8Array, offset: number): number {
+	if (offset + 4 > bytes.length) {
+		throw new Error('Unexpected end of plugin header.');
+	}
+
+	const byte0 = bytes[offset] ?? 0;
+	const byte1 = bytes[offset + 1] ?? 0;
+	const byte2 = bytes[offset + 2] ?? 0;
+	const byte3 = bytes[offset + 3] ?? 0;
+
+	return (
+		byte0 |
+		(byte1 << 8) |
+		(byte2 << 16) |
+		(byte3 << 24)
+	) >>> 0;
+}
+
+function decodeString(bytes: Uint8Array): string {
+	let end = bytes.length;
+	while (end > 0 && bytes[end - 1] === 0) {
+		end--;
+	}
+
+	return new TextDecoder().decode(bytes.subarray(0, end));
+}
+
+export function extractMasterNamesFromPluginBytes(bytes: Uint8Array): string[] {
+	if (bytes.length < 16) {
+		throw new Error('Plugin is too small to contain a TES3 header.');
+	}
+
+	if (readTag(bytes, 0) !== TES3_TAG) {
+		throw new Error('Plugin does not start with a TES3 header record.');
+	}
+
+	const recordSize = readU32(bytes, 4);
+	const recordEnd = 12 + recordSize + 4;
+	if (recordEnd > bytes.length) {
+		throw new Error('Plugin header record is truncated.');
+	}
+
+	let offset = 16; // Skip record header and TES3 object flags.
+	const masters: string[] = [];
+
+	while (offset + 8 <= recordEnd) {
+		const tag = readTag(bytes, offset);
+		offset += 4;
+		const size = readU32(bytes, offset);
+		offset += 4;
+
+		if (offset + size > recordEnd) {
+			throw new Error(`Plugin header subrecord '${tag}' is truncated.`);
+		}
+
+		if (tag === HEDR_TAG) {
+			offset += size;
+			continue;
+		}
+
+		if (tag === MAST_TAG) {
+			const masterName = decodeString(bytes.subarray(offset, offset + size));
+			offset += size;
+
+			if (offset + 8 > recordEnd || readTag(bytes, offset) !== DATA_TAG) {
+				throw new Error(`Plugin header master '${masterName}' is missing DATA.`);
+			}
+
+			offset += 4;
+			const dataSize = readU32(bytes, offset);
+			offset += 4;
+			if (offset + dataSize > recordEnd) {
+				throw new Error(`Plugin header master '${masterName}' has truncated DATA.`);
+			}
+
+			masters.push(masterName);
+			offset += dataSize;
+			continue;
+		}
+
+		throw new Error(`Unexpected TES3 header subrecord '${tag}'.`);
+	}
+
+	return masters;
+}

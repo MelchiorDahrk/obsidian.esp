@@ -10,6 +10,7 @@ pub mod parse;
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use anyhow::Result;
 use openmw_config::OpenMWConfiguration;
@@ -22,7 +23,7 @@ use merge_to_master::{Cells, Dialogues, Objects, PluginData};
 
 /// Returns the absolute paths of all Morrowind plugins found in the user's OpenMW load order.
 ///
-/// This function locates the `openmw.cfg` file, parses its data directories to build a 
+/// This function locates the `openmw.cfg` file, parses its data directories to build a
 /// virtual file system (VFS), and then iterates through the content files to find
 /// their corresponding absolute paths on disk.
 pub fn collect_load_order() -> Vec<PathBuf> {
@@ -58,7 +59,7 @@ pub fn collect_load_order() -> Vec<PathBuf> {
 
 /// Given a list of master plugin names, returns their absolute paths and file sizes.
 ///
-/// It searches for each master name within the user's load order (retrieved via 
+/// It searches for each master name within the user's load order (retrieved via
 /// `collect_load_order`). The file size is required for the TES3 header's master list.
 pub fn collect_master_paths(master_names: &[String]) -> (Vec<PathBuf>, Vec<(String, u64)>) {
     let load_order = collect_load_order();
@@ -88,6 +89,70 @@ use js_sys::{Array, Uint8Array};
 use js_sys::{Object, Reflect};
 use serde_wasm_bindgen::{from_value, to_value};
 use wasm_bindgen::prelude::*;
+
+static BYTE_INGRESS_COUNTER: AtomicUsize = AtomicUsize::new(0);
+
+fn record_byte_ingress() {
+    BYTE_INGRESS_COUNTER.fetch_add(1, Ordering::Relaxed);
+}
+
+fn load_plugin_from_slice(bytes: &[u8]) -> Result<Plugin, JsValue> {
+    record_byte_ingress();
+    let mut plugin = Plugin::new();
+    plugin
+        .load_bytes(bytes)
+        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+    Ok(plugin)
+}
+
+fn load_plugin_from_buffer(bytes: &PluginBytes) -> Result<Plugin, JsValue> {
+    let mut plugin = Plugin::new();
+    plugin
+        .load_bytes(bytes.as_slice())
+        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+    Ok(plugin)
+}
+
+/// A WASM-owned plugin byte buffer.
+///
+/// This is the single intended JS -> WASM ingress point for large TES3 binary payloads
+/// used during database loading.
+#[wasm_bindgen]
+pub struct PluginBytes {
+    bytes: Vec<u8>,
+}
+
+#[wasm_bindgen]
+impl PluginBytes {
+    #[wasm_bindgen(constructor)]
+    pub fn new(bytes: &[u8]) -> PluginBytes {
+        record_byte_ingress();
+        PluginBytes {
+            bytes: bytes.to_vec(),
+        }
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn len(&self) -> usize {
+        self.bytes.len()
+    }
+}
+
+impl PluginBytes {
+    fn as_slice(&self) -> &[u8] {
+        &self.bytes
+    }
+}
+
+#[wasm_bindgen(js_name = "resetByteIngressCounter")]
+pub fn reset_byte_ingress_counter() {
+    BYTE_INGRESS_COUNTER.store(0, Ordering::Relaxed);
+}
+
+#[wasm_bindgen(js_name = "getByteIngressCounter")]
+pub fn get_byte_ingress_counter() -> usize {
+    BYTE_INGRESS_COUNTER.load(Ordering::Relaxed)
+}
 
 #[derive(Default, Deserialize)]
 #[serde(default)]
@@ -208,8 +273,8 @@ pub fn compile_project_files_with_log(
     let parsed =
         parse::parse_project_files(files, default_header).map_err(|error| error.to_string())?;
     let authored_masters = parsed.header.masters.clone();
-    let log =
-        compile::validate::validate_project(&parsed, &masters).map_err(|error| error.to_string())?;
+    let log = compile::validate::validate_project(&parsed, &masters)
+        .map_err(|error| error.to_string())?;
 
     let mut compiled = compile::compile(parsed).map_err(|error| error.to_string())?;
     compiled.header.masters = authored_masters
@@ -232,10 +297,7 @@ pub fn compile_project_files_with_log(
 /// Deserializes a TES3 plugin from bytes into a `JsValue` containing an array of records.
 #[wasm_bindgen]
 pub fn load_objects(array: &[u8]) -> Result<JsValue, JsValue> {
-    let mut plugin = Plugin::new();
-    plugin
-        .load_bytes(array)
-        .map_err(|e| JsValue::from(e.to_string()))?;
+    let plugin = load_plugin_from_slice(array)?;
 
     let value = to_value(&plugin.objects)?;
 
@@ -261,7 +323,6 @@ pub fn save_objects(value: JsValue) -> Result<Uint8Array, JsValue> {
 
     Ok(array)
 }
-
 
 /// Compiles a project (Markdown files) into a TES3 plugin.
 #[wasm_bindgen]
@@ -309,14 +370,8 @@ pub fn compile_project_with_log(
 
 /// Extracts unique property values (IDs, Names) from a plugin for use in UI autocompletion.
 #[wasm_bindgen]
-pub fn extract_property_values(
-    array: &[u8],
-    options: JsValue,
-) -> Result<JsValue, JsValue> {
-    let mut plugin = Plugin::new();
-    plugin
-        .load_bytes(array)
-        .map_err(|error| JsValue::from(error.to_string()))?;
+pub fn extract_property_values(array: &[u8], options: JsValue) -> Result<JsValue, JsValue> {
+    let plugin = load_plugin_from_slice(array)?;
 
     let options: PropertyExtractionOptions = from_value(options)?;
     let values = collect_property_values(plugin, &options);
@@ -328,10 +383,7 @@ pub fn extract_property_values(
 /// Lightweight — avoids creating a full GameDatabase just to read the header.
 #[wasm_bindgen(js_name = "extractMasterNames")]
 pub fn extract_master_names(bytes: &[u8]) -> Result<JsValue, JsValue> {
-    let mut plugin = Plugin::new();
-    plugin
-        .load_bytes(bytes)
-        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+    let plugin = load_plugin_from_slice(bytes)?;
     let names: Vec<String> = plugin
         .header()
         .map(|h| h.masters.iter().map(|(name, _)| name.clone()).collect())
@@ -353,12 +405,25 @@ impl GameDatabase {
     /// Parse raw ESP/ESM bytes into a structured PluginData held in WASM memory.
     #[wasm_bindgen(constructor)]
     pub fn load(bytes: &[u8]) -> Result<GameDatabase, JsValue> {
-        let mut plugin = Plugin::new();
-        plugin
-            .load_bytes(bytes)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let plugin = load_plugin_from_slice(bytes)?;
         let data = PluginData::from_plugin(plugin);
-        Ok(GameDatabase { data, merged: false, link_only_changes: Vec::new() })
+        Ok(GameDatabase {
+            data,
+            merged: false,
+            link_only_changes: Vec::new(),
+        })
+    }
+
+    /// Parse raw ESP/ESM bytes from a WASM-owned buffer into a structured `PluginData`.
+    #[wasm_bindgen(js_name = "loadFromBytes")]
+    pub fn load_from_bytes(bytes: &PluginBytes) -> Result<GameDatabase, JsValue> {
+        let plugin = load_plugin_from_buffer(bytes)?;
+        let data = PluginData::from_plugin(plugin);
+        Ok(GameDatabase {
+            data,
+            merged: false,
+            link_only_changes: Vec::new(),
+        })
     }
 
     /// Load a plugin merged with its masters into a single resolved database.
@@ -395,14 +460,15 @@ impl GameDatabase {
             master_datas.push(PluginData::from_plugin(master_raw));
         }
 
-        let (data, link_only_changes) = compile::resolve::resolve_full_database(
-            plugin_data,
-            master_datas,
-            original_masters,
-        )
-        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let (data, link_only_changes) =
+            compile::resolve::resolve_full_database(plugin_data, master_datas, original_masters)
+                .map_err(|e| JsValue::from_str(&e.to_string()))?;
 
-        Ok(GameDatabase { data, merged: true, link_only_changes })
+        Ok(GameDatabase {
+            data,
+            merged: true,
+            link_only_changes,
+        })
     }
 
     /// Load a plugin merged with pre-parsed masters.
@@ -412,8 +478,9 @@ impl GameDatabase {
         plugin_bytes: &[u8],
         masters_js: JsValue,
     ) -> Result<GameDatabase, JsValue> {
-        let master_objects: Vec<Vec<TES3Object>> =
-            from_value(masters_js).map_err(|e| JsValue::from_str(&format!("Failed to deserialize master objects: {e}")))?;
+        let master_objects: Vec<Vec<TES3Object>> = from_value(masters_js).map_err(|e| {
+            JsValue::from_str(&format!("Failed to deserialize master objects: {e}"))
+        })?;
 
         // Parse plugin
         let mut plugin_raw = Plugin::new();
@@ -435,12 +502,48 @@ impl GameDatabase {
             .map(|objects| PluginData::from_plugin(Plugin { objects }))
             .collect();
 
-        let (data, link_only_changes) = compile::resolve::resolve_full_database(
-            plugin_data,
-            master_datas,
-            original_masters,
-        )
-        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let (data, link_only_changes) =
+            compile::resolve::resolve_full_database(plugin_data, master_datas, original_masters)
+                .map_err(|e| JsValue::from_str(&e.to_string()))?;
+
+        Ok(GameDatabase {
+            data,
+            merged: true,
+            link_only_changes,
+        })
+    }
+
+    /// Load a plugin merged with master buffers that already live in this WASM instance.
+    #[wasm_bindgen(js_name = "loadWithMasterBuffers")]
+    pub fn load_with_master_buffers(
+        plugin_bytes: &PluginBytes,
+        masters_js: JsValue,
+    ) -> Result<GameDatabase, JsValue> {
+        let master_entries: Vec<(String, Vec<u8>)> =
+            from_value(masters_js).map_err(|e| JsValue::from_str(&e.to_string()))?;
+
+        let plugin_raw = load_plugin_from_buffer(plugin_bytes)?;
+
+        let original_masters: Vec<(String, u64)> = plugin_raw
+            .header()
+            .map(|h| h.masters.clone())
+            .unwrap_or_default();
+
+        let plugin_data = PluginData::from_plugin(plugin_raw);
+
+        let mut master_datas = Vec::with_capacity(master_entries.len());
+        for (name, bytes) in master_entries {
+            record_byte_ingress();
+            let mut master_raw = Plugin::new();
+            master_raw.load_bytes(&bytes).map_err(|e| {
+                JsValue::from_str(&format!("Failed to load master '{name}': {e}"))
+            })?;
+            master_datas.push(PluginData::from_plugin(master_raw));
+        }
+
+        let (data, link_only_changes) =
+            compile::resolve::resolve_full_database(plugin_data, master_datas, original_masters)
+                .map_err(|e| JsValue::from_str(&e.to_string()))?;
 
         Ok(GameDatabase {
             data,
@@ -535,10 +638,10 @@ impl GameDatabase {
         Ok(result.into())
     }
 
-    /// Prunes a list of generated files by removing any dialogue blocks that only 
+    /// Prunes a list of generated files by removing any dialogue blocks that only
     /// contain "structural" link changes and no "semantic" content changes.
     ///
-    /// This prevents the user's workspace from being cluttered with hundreds of 
+    /// This prevents the user's workspace from being cluttered with hundreds of
     /// "modified" files when they only changed the order of responses in a topic.
     fn filter_link_only_changes(&self, files: &mut Vec<(String, String)>) {
         if self.link_only_changes.is_empty() {
@@ -557,7 +660,7 @@ impl GameDatabase {
     }
 
     /// Parses the `Topic` and `DiagID` fields from a Markdown file's YAML frontmatter.
-    /// 
+    ///
     /// This is a lightweight parser used specifically for filtering link-only changes
     /// during the export pass.
     fn parse_frontmatter_values(&self, s: &str) -> Option<(String, String)> {

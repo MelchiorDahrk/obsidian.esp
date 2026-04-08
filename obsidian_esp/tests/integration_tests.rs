@@ -7,8 +7,7 @@ use std::iter::zip;
 use std::path::Path;
 use tes3::esp::{
     Cell, Class, Dialogue, DialogueData, DialogueInfo, DialogueType, DialogueType2, Faction,
-    FileType, GlobalValue, GlobalVariable, Header, Npc, ObjectFlags, Plugin, Race, Sex,
-    TES3Object,
+    FileType, GlobalValue, GlobalVariable, Header, Npc, ObjectFlags, Plugin, Race, Sex, TES3Object,
 };
 use uncased::AsUncased;
 
@@ -85,6 +84,15 @@ fn collect_project_files(path: &Path) -> Result<Vec<(String, String)>> {
     }
 
     Ok(files)
+}
+
+#[test]
+fn test_plugin_bytes_tracks_byte_ingress() {
+    obsidian_esp::reset_byte_ingress_counter();
+    let bytes = obsidian_esp::PluginBytes::new(&[1, 2, 3, 4]);
+
+    assert_eq!(bytes.len(), 4);
+    assert_eq!(obsidian_esp::get_byte_ingress_counter(), 1);
 }
 
 #[test]
@@ -387,17 +395,16 @@ fn test_compile_project_files_generates_esp_bytes() -> Result<()> {
 #[test]
 fn test_example_quest_all_properties_compiles() -> Result<()> {
     let markdown_path = Path::new("tests/example_quest_all_properties/project");
-    let bytes = obsidian_esp::compile_project_files(
-        collect_project_files(markdown_path)?,
-        false,
-        false,
-    )
-        .map_err(anyhow::Error::msg)?;
+    let bytes =
+        obsidian_esp::compile_project_files(collect_project_files(markdown_path)?, false, false)
+            .map_err(anyhow::Error::msg)?;
 
     let mut plugin = Plugin::new();
     plugin.load_bytes(&bytes)?;
 
-    let header = plugin.header().expect("compiled plugin should contain a header");
+    let header = plugin
+        .header()
+        .expect("compiled plugin should contain a header");
     assert_eq!(header.author.to_string(), "Example Author");
     assert_eq!(
         header.description.to_string(),
@@ -500,21 +507,18 @@ fn test_compile_project_files_with_log_reports_invalid_references() -> Result<()
         files,
         false,
         false,
-        vec![("Morrowind.esm".to_string(), build_validation_master_bytes()?)],
+        vec![(
+            "Morrowind.esm".to_string(),
+            build_validation_master_bytes()?,
+        )],
     )
     .map_err(anyhow::Error::msg)?;
 
     let mut plugin = Plugin::new();
     plugin.load_bytes(&bytes)?;
 
-    assert!(
-        !log.contains("ID 'Aumsi' was not found"),
-        "{log}"
-    );
-    assert!(
-        !log.contains("Variable0 'GameHour' was not found"),
-        "{log}"
-    );
+    assert!(!log.contains("ID 'Aumsi' was not found"), "{log}");
+    assert!(!log.contains("Variable0 'GameHour' was not found"), "{log}");
     assert!(
         !log.contains("Variable0 'existing journal' was not found"),
         "{log}"
@@ -581,10 +585,10 @@ fn test_topic_index_is_ignored() -> Result<()> {
     ];
 
     let parsed = obsidian_esp::parse::parse_project_files(files, None)?;
-    
+
     // Should only contain the 1 valid dialogue info, not the index file
     assert_eq!(parsed.infos.len(), 1);
     assert_eq!(parsed.infos[0].source_path, "Topic/sample/sample ~0.md");
-    
+
     Ok(())
 }

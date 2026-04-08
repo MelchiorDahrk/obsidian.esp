@@ -44,7 +44,7 @@ export class DatabaseView extends ItemView {
 			return;
 		}
 
-		this.renderActivators(container);
+		await this.renderActivators(container);
 	}
 
 	async onClose(): Promise<void> {
@@ -61,10 +61,10 @@ export class DatabaseView extends ItemView {
 	// Table rendering
 	// -------------------------------------------------------------------
 
-	private renderActivators(container: HTMLElement): void {
+	private async renderActivators(container: HTMLElement): Promise<void> {
 		if (!this.db) return;
 
-		const activators = this.db.getActivators();
+		const activators = await this.db.getActivators();
 
 		// Toolbar showing the record count.
 		const toolbar = container.createDiv({ cls: 'esp-vt-toolbar' });
