@@ -229,9 +229,14 @@ pub fn resolve_full_database(
         .map(|(topic_id, _)| topic_id.clone())
         .collect();
 
-    // 1. Fold masters into a single merged dataset
-    let mut master_data = PluginData::new();
-    for m in masters {
+    // 1. Fold masters into a single merged dataset.
+    // Take the first master directly to avoid a redundant O(K²) re-insertion pass
+    // through all dialogue groups (merge_into uses a HashMap index with O(N)-per-insert
+    // position updates, making re-merging into an empty PluginData much slower than the
+    // original from_plugin parse). Additional masters are still merged in normally.
+    let mut masters_iter = masters.into_iter();
+    let mut master_data = masters_iter.next().unwrap_or_default();
+    for m in masters_iter {
         m.merge_into(&mut master_data);
     }
 

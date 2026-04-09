@@ -1,5 +1,6 @@
 import { App, normalizePath } from 'obsidian';
 import type { MasterFile } from '../features/master-files';
+import { parseMastersInParallel } from './parallel-loader';
 
 export interface ActivatorRecord {
 	id: string;
@@ -101,9 +102,17 @@ export class GameDatabase {
 		pluginBytes: Uint8Array,
 		fileName: string,
 		masters: MasterFile[],
+		onParseProgress?: (completed: number, total: number, activeNames: string[]) => void,
 	): Promise<{ db: GameDatabase; ingressCount: number }> {
 		const wasmPath = normalizePath(`${manifestDir}/pkg/obsidian_esp_bg.wasm`);
 		const workerPath = normalizePath(`${manifestDir}/worker.js`);
+
+		// Parse masters in parallel workers before spawning the main merge worker.
+		const parsedMasters =
+			masters.length > 0
+				? await parseMastersInParallel(app, wasmPath, workerPath, masters, onParseProgress)
+				: [];
+
 		const wasmBuffer = await app.vault.adapter.readBinary(wasmPath);
 		const workerScript = await app.vault.adapter.read(workerPath);
 		const workerBlob = new Blob([workerScript], {
@@ -121,20 +130,16 @@ export class GameDatabase {
 		try {
 			await client.invoke('init', { wasmBuffer }, [wasmBuffer]);
 
-			const masterPayload = masters.map(([name, bytes]) => [
-				name,
-				toTransferableBuffer(bytes),
-			] as const);
 			const pluginBuffer = toTransferableBuffer(pluginBytes);
-			const transfer = [pluginBuffer, ...masterPayload.map(([, buffer]) => buffer)];
 			const loadResult = (await client.invoke(
 				'loadDatabase',
 				{
 					fileName,
 					pluginBytes: pluginBuffer,
-					masters: masterPayload,
+					masters: [],
+					parsedMasters,
 				},
-				transfer,
+				[pluginBuffer],
 			)) as LoadDatabaseResult;
 
 			client.info.fileName = loadResult.info.fileName;

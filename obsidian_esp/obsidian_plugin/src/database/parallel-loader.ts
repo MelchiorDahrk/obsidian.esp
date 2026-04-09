@@ -31,10 +31,10 @@ export async function parseMastersInParallel(
 					const worker = new Worker(workerUrl);
 					worker.onmessage = (e) => {
 						active.delete(name);
-						if (e.data.success) {
+						if (e.data.ok) {
 							completed++;
 							if (onProgress) onProgress(completed, total, [...active]);
-							resolve(e.data.objects);
+							resolve(e.data.result);
 						} else {
 							if (onProgress) onProgress(completed, total, [...active]);
 							reject(new Error(`Worker failed for ${name}: ${e.data.error}`));
@@ -49,8 +49,9 @@ export async function parseMastersInParallel(
 					};
 					worker.postMessage(
 						{
-							wasmBuffer,
-							masterBytes,
+							id: 1,
+							method: 'parseMaster',
+							params: { wasmBuffer, masterBytes },
 						},
 						[wasmBuffer.slice(0), masterBytes.buffer as ArrayBuffer],
 					);

@@ -49,34 +49,32 @@ export class DatabaseLoader {
             // Step 3: If masters are found, resolve and parse them
             if (masterNames.length > 0) {
                 progress.update(30, 'Loading masters...');
-                
+
                 // Locate and read master files from the configured OpenMW directories
                 const { masters, messages: masterMessages } = await loadValidationMasters(
                     masterNames,
                     (current, total, name) => {
-                        const masterPct = 30 + (current / total) * 50; // 30% to 80%
+                        const masterPct = 30 + (current / total) * 35; // 30% to 65%
                         progress.update(masterPct, `Loading master: ${name}`);
                     },
                 );
                 messages.push(...masterMessages);
 
                 if (masters.length > 0) {
-                    progress.update(80, 'Loading database in worker...');
-                    const { db: loadedDb, ingressCount } = await GameDatabase.load(
+                    progress.update(65, 'Parsing masters in parallel...');
+                    const { db: loadedDb } = await GameDatabase.load(
                         this.app,
                         this.manifestDir,
                         bytes,
                         file.name,
                         masters,
+                        (completed, total) => {
+                            const pct = 65 + (completed / total) * 20; // 65% to 85%
+                            progress.update(pct, `Parsing masters: ${completed}/${total}`);
+                        },
                     );
                     db = loadedDb;
-
-                    const expectedIngressCount = masters.length + 1;
-                    if (ingressCount !== expectedIngressCount) {
-                        messages.push(
-                            `Expected ${expectedIngressCount} JS->WASM byte ingress operations during database load, but observed ${ingressCount}.`,
-                        );
-                    }
+                    progress.update(85, 'Loading database in worker...');
                 }
             }
 

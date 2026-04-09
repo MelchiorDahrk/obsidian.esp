@@ -27,7 +27,9 @@ type WasmExports = typeof obsidianEsp & {
 			pluginBytes: InstanceType<WasmExports['PluginBytes']>,
 			masters: [string, Uint8Array][],
 		): any;
+		loadWithPreparsedMasters(pluginBytes: Uint8Array, parsedMasters: any[]): any;
 	};
+	load_objects(bytes: Uint8Array): any;
 	resetByteIngressCounter(): void;
 	getByteIngressCounter(): number;
 };
@@ -48,9 +50,23 @@ function handleLoadDatabase(params: {
 	fileName: string;
 	pluginBytes: ArrayBuffer;
 	masters: [string, ArrayBuffer][];
+	parsedMasters?: any[];
 }): { info: { fileName: string; objectCount: number; isMerged: boolean }; ingressCount: number } {
 	freeDatabase();
 	wasm.resetByteIngressCounter();
+
+	if (params.parsedMasters && params.parsedMasters.length > 0) {
+		const pluginBytes = new Uint8Array(params.pluginBytes);
+		database = wasm.GameDatabase.loadWithPreparsedMasters(pluginBytes, params.parsedMasters);
+		return {
+			info: {
+				fileName: params.fileName,
+				objectCount: database.objectCount(),
+				isMerged: true,
+			},
+			ingressCount: wasm.getByteIngressCounter(),
+		};
+	}
 
 	const pluginBuffer = new wasm.PluginBytes(new Uint8Array(params.pluginBytes));
 	const masterBuffers = params.masters.map(
@@ -89,6 +105,11 @@ function handleRequest(request: WorkerRequest): unknown {
 		case 'init':
 			wasm.initSync({ module: request.params.wasmBuffer });
 			return null;
+		case 'parseMaster': {
+			wasm.initSync({ module: request.params.wasmBuffer });
+			const masterBytes = new Uint8Array(request.params.masterBytes);
+			return wasm.load_objects(masterBytes);
+		}
 		case 'loadDatabase':
 			return handleLoadDatabase(request.params);
 		case 'getActivators':
