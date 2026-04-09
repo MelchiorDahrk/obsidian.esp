@@ -6,6 +6,7 @@ Cargo.lock
 
 pkg
 obsidian_plugin/release/
+obsidian_plugin/worker.js
 
 build.log
 build_error.txt
