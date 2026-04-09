@@ -29,7 +29,6 @@ export class DatabaseLoader {
     async load(file: File): Promise<LoadResult> {
         const progress = new ProgressBar(`Loading database: ${file.name}`);
         progress.update(0, 'Reading file...');
-
         try {
             // Step 1: Read the binary content of the plugin
             const buffer = await file.arrayBuffer();
@@ -105,6 +104,12 @@ export class DatabaseLoader {
         } catch (error) {
             progress.update(100, 'Failed');
             throw error;
+        } finally {
+            try {
+                progress.hide();
+            } catch {
+                // best-effort: ignore hide failures
+            }
         }
     }
 }

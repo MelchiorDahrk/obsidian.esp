@@ -113,6 +113,11 @@ export class DatabaseManager {
 			new Notice(`Failed to unpack: ${message}`);
 		} finally {
 			progress.update(100, 'Done');
+			try {
+				progress.hide();
+			} catch {
+				// best-effort: ignore hide failures
+			}
 			this.onUpdate();
 		}
 	}
