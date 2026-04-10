@@ -142,6 +142,64 @@ export class DatabaseManager {
 	}
 
 	/**
+	 * Cleans incidental dialogue edits from a folder based on current database.
+	 */
+	async cleanIncidentalEdits(folder: TFolder): Promise<void> {
+		if (!this.db) {
+			new Notice('No database loaded. Please load a database first to compare against.');
+			return;
+		}
+
+		const progress = new ProgressBar(`Cleaning incidental edits in ${folder.name}`);
+		try {
+			const files: [string, string][] = [];
+			const readVaultRecursive = async (parent: TFolder) => {
+				for (const child of parent.children) {
+					if (child instanceof TFolder) {
+						await readVaultRecursive(child);
+					} else if (child.name.endsWith('.md')) {
+						const content = await this.app.vault.read(child as any);
+						files.push([child.path, content]);
+					}
+				}
+			};
+			await readVaultRecursive(folder);
+
+			if (files.length === 0) {
+				new Notice('No markdown files found in the selected folder.');
+				return;
+			}
+
+			progress.update(50, 'Analyzing dialogue edits...');
+			const incidentalPaths = await this.db.findIncidentalEdits(files);
+
+			if (incidentalPaths.length === 0) {
+				new Notice('No incidental dialogue edits found.');
+				return;
+			}
+
+			progress.update(80, `Removing ${incidentalPaths.length} files...`);
+			
+			let removedCount = 0;
+			for (const fp of incidentalPaths) {
+				const f = this.app.vault.getAbstractFileByPath(fp);
+				if (f) {
+					await this.app.vault.trash(f, true); // System trash
+					removedCount++;
+				}
+			}
+
+			new Notice(`Successfully removed ${removedCount} incidental dialogue edits.`);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			new Notice(`Failed to clean edits: ${message}`);
+		} finally {
+			progress.update(100, 'Done');
+			try { progress.hide(); } catch {}
+		}
+	}
+
+	/**
 	 * Registers the lazy loader with the plugin context.
 	 */
 	registerLazyLoader(plugin: any): void {

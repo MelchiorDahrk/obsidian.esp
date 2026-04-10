@@ -179,6 +179,10 @@ export class GameDatabase {
 		return (await this.invoke('unpackTopic', { topicName })) as [string, string][];
 	}
 
+	async findIncidentalEdits(files: [string, string][]): Promise<string[]> {
+		return (await this.invoke('findIncidentalEdits', { files })) as string[];
+	}
+
 	async free(): Promise<void> {
 		if (this.disposed) {
 			return;

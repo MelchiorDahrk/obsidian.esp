@@ -104,6 +104,15 @@ export default class ObsidianEsp extends Plugin {
 								void this.dbManager.updateTopicLinks(file);
 							});
 					});
+
+					submenu.addItem((subItem) => {
+						subItem
+							.setTitle('Clean incidental dialogue edits')
+							.setIcon('trash')
+							.onClick(() => {
+								void this.dbManager.cleanIncidentalEdits(file);
+							});
+					});
 				});
 			}),
 		);

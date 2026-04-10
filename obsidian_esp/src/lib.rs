@@ -681,4 +681,42 @@ impl GameDatabase {
             _ => None,
         }
     }
+
+    /// Evaluates a list of markdown file contents and returns the paths of those that 
+    /// are "incidental" (i.e. functionally identical to the master database).
+    #[wasm_bindgen(js_name = "findIncidentalEdits")]
+    pub fn find_incidental_edits(&self, files: JsValue) -> Result<JsValue, JsValue> {
+        let files: Vec<(String, String)> = from_value(files)?;
+        let parsed = parse::parse_project_files(files.clone(), None)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let compiled = compile::compile(parsed).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let plugin_data = PluginData::from_plugin(compiled.into_plugin());
+
+        let result = Array::new();
+        
+        for (path, content) in files {
+            if let Some((topic, diagid)) = self.parse_frontmatter_values(&content) {
+                // Does this vault topic exist in the compiled set?
+                if let Some(group) = plugin_data.dialogues.get(&topic.to_ascii_lowercase()) {
+                    if let Some(authored_info) = group.infos.iter().find(|i| i.id.eq_ignore_ascii_case(&diagid)) {
+                        // Does it exist in the master database?
+                        if let Some(master_group) = self.data.dialogues.get(&topic.to_ascii_lowercase()) {
+                            if let Some(master_info) = master_group.infos.iter().find(|i| i.id.eq_ignore_ascii_case(&diagid)) {
+                                // Ignore link fields (prev/next) when comparing content
+                                let mut authored_clone = authored_info.clone();
+                                authored_clone.prev_id = master_info.prev_id.clone();
+                                authored_clone.next_id = master_info.next_id.clone();
+                                
+                                if authored_clone == *master_info {
+                                    result.push(&JsValue::from_str(&path));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(result.into())
+    }
 }

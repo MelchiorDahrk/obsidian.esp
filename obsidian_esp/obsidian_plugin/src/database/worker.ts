@@ -122,6 +122,8 @@ function handleRequest(request: WorkerRequest): unknown {
 			return requireDatabase().getAllTopicNames();
 		case 'unpackTopic':
 			return requireDatabase().unpackTopic(request.params.topicName);
+		case 'findIncidentalEdits':
+			return requireDatabase().findIncidentalEdits(request.params.files);
 		case 'freeDatabase':
 			freeDatabase();
 			return null;
