@@ -189,6 +189,21 @@ export class DatabaseManager {
 				}
 			}
 
+			// Clean up any folders that might now be empty
+			const cleanEmptyFolders = async (parent: TFolder) => {
+				// We must clone the array since we might modify it by trashing
+				for (const child of [...parent.children]) {
+					if (child instanceof TFolder) {
+						await cleanEmptyFolders(child);
+					}
+				}
+				// Don't delete the root folder selected by the user, only subfolders
+				if (parent !== folder && parent.children.length === 0) {
+					await this.app.vault.trash(parent, true);
+				}
+			};
+			await cleanEmptyFolders(folder);
+
 			new Notice(`Successfully removed ${removedCount} incidental dialogue edits.`);
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
