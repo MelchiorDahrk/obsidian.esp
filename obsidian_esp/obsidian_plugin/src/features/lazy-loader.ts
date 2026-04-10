@@ -113,7 +113,7 @@ export class LazyLoader {
 
 			// Step 6: Populate the topic index file with the Base View embed
 			const baseFilePath = normalizePath(`${pluginDir}/${BASE_FILE_NAME}`);
-			const indexContent = `![[${baseFilePath}#Topic View]]\n`;
+			const indexContent = `---\ncssclasses:\n  - esp-topic-base-view\n---\n![[${baseFilePath}#Topic View]]\n`;
 			await plugin.app.vault.modify(topicIndexFile, indexContent);
 
 			// Intent: When a user clicks an unresolved [[Topic]] and the plugin lazily

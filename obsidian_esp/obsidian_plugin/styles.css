@@ -196,8 +196,18 @@
 	margin: 0;
 }
 
+
 .esp-property-generation-label {
 	color: var(--text-normal);
 	font-size: var(--font-ui-medium);
+}
+
+/* -----------------------------------------------------------------------
+ * Topic base view — layout overrides
+ * ----------------------------------------------------------------------- */
+
+/* Allow the topic base view table to expand beyond the readable line width */
+:is(.esp-topic-base-view, .esp-topic-base-view .markdown-preview-view, .markdown-preview-view.esp-topic-base-view).is-readable-line-width .markdown-preview-sizer {
+	max-width: max-content;
 }
 

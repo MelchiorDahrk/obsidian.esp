@@ -1,4 +1,4 @@
-import { Menu, Notice, Plugin, TFolder, normalizePath } from 'obsidian';
+import { FileView, Menu, Notice, Plugin, TFolder, normalizePath } from 'obsidian';
 import { initSync } from '../pkg/obsidian_esp.js';
 import {
 	compileFolderSelection,
@@ -114,6 +114,30 @@ export default class ObsidianEsp extends Plugin {
 							});
 					});
 				});
+			}),
+		);
+
+		this.registerEvent(
+			this.app.workspace.on('file-open', async (file) => {
+				const view = this.app.workspace.getActiveViewOfType(FileView);
+				if (!view || !file) return;
+
+				let isTopicBase = false;
+				if (file.extension === 'base') {
+					isTopicBase = true;
+				} else if (file.extension === 'md') {
+					// Check for topic base embed pattern
+					const content = await this.app.vault.cachedRead(file);
+					if (content.includes('base.base#')) {
+						isTopicBase = true;
+					}
+				}
+
+				if (isTopicBase) {
+					view.containerEl.addClass('esp-topic-base-view');
+				} else {
+					view.containerEl.removeClass('esp-topic-base-view');
+				}
 			}),
 		);
 
