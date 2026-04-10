@@ -687,7 +687,7 @@ impl GameDatabase {
     #[wasm_bindgen(js_name = "findIncidentalEdits")]
     pub fn find_incidental_edits(&self, files: JsValue) -> Result<JsValue, JsValue> {
         let files: Vec<(String, String)> = from_value(files)?;
-        let parsed = parse::parse_project_files(files.clone(), None)
+        let parsed = parse::parse_project_files(files.clone(), Some(default_header()))
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
         let compiled = compile::compile(parsed).map_err(|e| JsValue::from_str(&e.to_string()))?;
         let plugin_data = PluginData::from_plugin(compiled.into_plugin());
