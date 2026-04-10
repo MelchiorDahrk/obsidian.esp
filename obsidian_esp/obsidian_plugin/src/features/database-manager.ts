@@ -143,6 +143,12 @@ export class DatabaseManager {
 
 	/**
 	 * Cleans incidental dialogue edits from a folder based on current database.
+	 * 
+	 * "Incidental" edits are vault files that are functionally identical to the 
+	 * master database. This includes records that were only "modified" because 
+	 * their link pointers (prev/next) were updated during a merge to accommodate 
+	 * new neighboring records. Since the engine/merger derives these links 
+	 * automatically at runtime, unedited master records are redundant.
 	 */
 	async cleanIncidentalEdits(folder: TFolder): Promise<void> {
 		if (!this.db) {

@@ -702,7 +702,13 @@ impl GameDatabase {
                         // Does it exist in the master database?
                         if let Some(master_group) = self.data.dialogues.get(&topic.to_ascii_lowercase()) {
                             if let Some(master_info) = master_group.infos.iter().find(|i| i.id.eq_ignore_ascii_case(&diagid)) {
-                                // Ignore link fields (prev/next) when comparing content
+                                // Edits are considered "incidental" if they are functionally identical to the 
+                                // master. A key part of this is that the `prev_id` and `next_id` link 
+                                // pointers are managed automatically by our runtime list builder.
+                                // If a record was only modified because a new plugin-defined record was 
+                                // inserted next to it, the engine will reconcile those pointers 
+                                // automatically—meaning the master-defined record doesn't need to be 
+                                // included in our plugin at all. 
                                 let mut authored_clone = authored_info.clone();
                                 authored_clone.prev_id = master_info.prev_id.clone();
                                 authored_clone.next_id = master_info.next_id.clone();
