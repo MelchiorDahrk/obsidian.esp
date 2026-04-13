@@ -8,7 +8,7 @@ pub mod compile;
 pub mod export;
 pub mod parse;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -692,69 +692,121 @@ impl GameDatabase {
         }
 
         let files: Vec<(String, String)> = from_value(files)?;
-        let link_only: std::collections::HashSet<_> = self.link_only_changes.iter().collect();
+        let incidental_paths = self.collect_incidental_edit_paths(&files);
 
         let result = Array::new();
-
-        for (path, content) in files {
-            // First, try to parse it as a dialogue info file
-            if let Some((topic_name, diagid)) = self.parse_frontmatter_values(&content) {
-                let topic_key = topic_name.to_ascii_lowercase();
-
-                // 1. Does this record exist and is it incidental in the active database?
-                if let Some(group) = self.data.dialogues.get(&topic_key) {
-                    if let Some(db_info) = group
-                        .infos
-                        .iter()
-                        .find(|i| i.id.eq_ignore_ascii_case(&diagid))
-                    {
-                        // A record is "incidental" if:
-                        // - It is NOT modified (comes from a master and isn't in the plugin)
-                        // - OR it IS modified but only because of link pointers (link-only change)
-                        let is_incidental = !db_info.modified()
-                            || link_only.contains(&(topic_key.clone(), db_info.id.clone()));
-
-                        if is_incidental {
-                            // 2. Does the vault content match the database record semantically?
-                            // We use the individual file parser to avoid requiring a full compilable project.
-                            use winnow::Parser;
-                            if let Ok((frontmatter, text)) =
-                                parse::info::parse_info_file.parse(&content)
-                            {
-                                let parsed_info = crate::parse::ParsedInfo {
-                                    source_path: path.clone(),
-                                    topic: topic_name.clone(),
-                                    frontmatter,
-                                    text,
-                                };
-
-                                if is_parsed_info_matching(&parsed_info, db_info) {
-                                    result.push(&JsValue::from_str(&path));
-                                }
-                            }
-                        }
-                    }
-                }
-            } else if self.is_incidental_index_file(&content) {
-                // Topic index files are always incidental if they haven't been customized
-                result.push(&JsValue::from_str(&path));
-            }
+        for path in incidental_paths {
+            result.push(&JsValue::from_str(&path));
         }
 
         Ok(result.into())
     }
 
+    fn collect_incidental_edit_paths(&self, files: &[(String, String)]) -> Vec<String> {
+        if !self.merged {
+            return Vec::new();
+        }
+
+        let link_only: HashSet<_> = self.link_only_changes.iter().collect();
+        let mut folder_state = HashMap::<String, TopicFolderIncidentalState>::new();
+
+        for (path, content) in files {
+            let Some((topic_name, diagid)) = self.parse_frontmatter_values(content) else {
+                continue;
+            };
+
+            let folder_path = parent_relative_path(path);
+            let state = folder_state.entry(folder_path).or_default();
+
+            if !is_master_source_file(content) {
+                state.has_non_incidental_dialogue = true;
+                continue;
+            }
+
+            state.has_master_source_dialogue = true;
+            if !self.is_dialogue_file_incidental(path, content, &topic_name, &diagid, &link_only) {
+                state.has_non_incidental_dialogue = true;
+            }
+        }
+
+        let mut result = Vec::new();
+        for (path, content) in files {
+            let folder_path = parent_relative_path(path);
+            let Some(state) = folder_state.get(&folder_path) else {
+                continue;
+            };
+
+            if let Some((topic_name, diagid)) = self.parse_frontmatter_values(content) {
+                if is_master_source_file(content)
+                    && self.is_dialogue_file_incidental(path, content, &topic_name, &diagid, &link_only)
+                {
+                    result.push(path.clone());
+                }
+            } else if state.has_master_source_dialogue
+                && !state.has_non_incidental_dialogue
+                && self.is_incidental_index_file(content)
+            {
+                result.push(path.clone());
+            }
+        }
+
+        result
+    }
+
+    fn is_dialogue_file_incidental(
+        &self,
+        path: &str,
+        content: &str,
+        topic_name: &str,
+        diagid: &str,
+        link_only: &HashSet<&(String, String)>,
+    ) -> bool {
+        let topic_key = topic_name.to_ascii_lowercase();
+
+        let Some(group) = self.data.dialogues.get(&topic_key) else {
+            return false;
+        };
+        let Some(db_info) = group.infos.iter().find(|i| i.id.eq_ignore_ascii_case(diagid)) else {
+            return false;
+        };
+
+        let is_incidental = !db_info.modified() || link_only.contains(&(topic_key.clone(), db_info.id.clone()));
+        if !is_incidental {
+            return false;
+        }
+
+        use winnow::Parser;
+        let Ok((frontmatter, text)) = parse::info::parse_info_file.parse(content) else {
+            return false;
+        };
+
+        let parsed_info = crate::parse::ParsedInfo {
+            source_path: path.to_string(),
+            topic: topic_name.to_string(),
+            frontmatter,
+            text,
+        };
+
+        is_parsed_info_matching(&parsed_info, db_info)
+    }
+
     /// Determines if a file is an unedited topic index file generated by the LazyLoader.
     fn is_incidental_index_file(&self, content: &str) -> bool {
-        content.contains("esp-topic-base-view") && content.contains("#Topic View")
+        is_generated_topic_index_file(content)
     }
+}
+
+#[derive(Default)]
+struct TopicFolderIncidentalState {
+    has_master_source_dialogue: bool,
+    has_non_incidental_dialogue: bool,
 }
 
 /// Compares a parsed markdown record against a database record to see if they are
 /// functionally identical.
 fn is_parsed_info_matching(parsed: &crate::parse::ParsedInfo, db: &DialogueInfo) -> bool {
     // 1. Check basic properties
-    if parsed.text != db.text {
+    if parsed.text != db.text && normalize_incidental_body_text(&parsed.text) != db.text {
         return false;
     }
     if parsed.frontmatter.disposition.unwrap_or(0) != db.data.disposition {
@@ -881,4 +933,274 @@ fn is_parsed_info_matching(parsed: &crate::parse::ParsedInfo, db: &DialogueInfo)
     }
 
     true
+}
+
+fn normalize_incidental_body_text(text: &str) -> String {
+    let chars: Vec<char> = text.chars().collect();
+    let mut normalized = String::with_capacity(text.len());
+    let mut index = 0;
+
+    while index < chars.len() {
+        if chars[index] == '[' && chars.get(index + 1) == Some(&'[') {
+            index += 2;
+
+            let mut target = String::new();
+            let mut display = String::new();
+            let mut has_display = false;
+            let mut closed = false;
+
+            while index < chars.len() {
+                if chars[index] == ']' && chars.get(index + 1) == Some(&']') {
+                    closed = true;
+                    index += 2;
+                    break;
+                }
+
+                if chars[index] == '|' && !has_display {
+                    has_display = true;
+                    index += 1;
+                    continue;
+                }
+
+                if has_display {
+                    display.push(chars[index]);
+                } else {
+                    target.push(chars[index]);
+                }
+                index += 1;
+            }
+
+            if closed {
+                let replacement = if has_display {
+                    display
+                } else {
+                    target.split('#').next().unwrap_or(&target).to_string()
+                };
+                normalized.push_str(&replacement);
+                continue;
+            }
+
+            normalized.push_str("[[");
+            normalized.push_str(&target);
+            if has_display {
+                normalized.push('|');
+                normalized.push_str(&display);
+            }
+            break;
+        }
+
+        normalized.push(chars[index]);
+        index += 1;
+    }
+
+    normalized
+}
+
+fn parent_relative_path(path: &str) -> String {
+    path.rsplit_once('/')
+        .map(|(parent, _)| parent.to_string())
+        .unwrap_or_default()
+}
+
+fn is_master_source_file(content: &str) -> bool {
+    let normalized = content.replace("\r\n", "\n").replace('\r', "\n");
+    let mut lines = normalized.lines();
+
+    if lines.next().map(str::trim) != Some("---") {
+        return false;
+    }
+
+    for line in lines {
+        let trimmed = line.trim();
+        if trimmed == "---" {
+            break;
+        }
+
+        let Some((key, value)) = trimmed.split_once(':') else {
+            continue;
+        };
+        if key.trim().eq_ignore_ascii_case("Source")
+            && value.trim().eq_ignore_ascii_case("master")
+        {
+            return true;
+        }
+    }
+
+    false
+}
+
+fn is_generated_topic_index_file(content: &str) -> bool {
+    let normalized = content.replace("\r\n", "\n").replace('\r', "\n");
+    let trimmed = normalized.trim();
+    let embed = trimmed
+        .strip_prefix("---\ncssclasses:\n  - esp-topic-base-view\n---\n")
+        .map(str::trim)
+        .unwrap_or(trimmed);
+
+    embed.starts_with("![[")
+        && embed.ends_with("]]")
+        && !embed.contains('\n')
+        && embed.contains("base.base#")
+        && ["Topic View", "Greeting View", "Journal View", "Persuasion View", "Voice View"]
+            .iter()
+            .any(|view_name| embed.contains(&format!("#{view_name}")))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generated_topic_links_are_incidental() {
+        let parsed = crate::parse::ParsedInfo {
+            source_path: "Topic/sample/sample ~0.md".to_string(),
+            topic: "sample".to_string(),
+            frontmatter: crate::parse::ParsedInfoFrontmatter::default(),
+            text: "Ask about [[test topic]] today.".to_string(),
+        };
+
+        let db = DialogueInfo {
+            text: "Ask about test topic today.".to_string(),
+            data: tes3::esp::DialogueData {
+                dialogue_type: DialogueType::Topic,
+                disposition: 0,
+                speaker_rank: -1,
+                speaker_sex: Sex::Any,
+                player_rank: -1,
+            },
+            ..Default::default()
+        };
+
+        assert!(is_parsed_info_matching(&parsed, &db));
+    }
+
+    #[test]
+    fn generated_topic_index_variants_are_incidental() {
+        assert!(is_generated_topic_index_file(
+            "![[My Export/base.base#Topic View]]\n",
+        ));
+        assert!(is_generated_topic_index_file(
+            "---\ncssclasses:\n  - esp-topic-base-view\n---\n![[My Export/base.base#Topic View]]\n",
+        ));
+        assert!(!is_generated_topic_index_file(
+            "![[My Export/base.base#Topic View]]\nCustom notes here.\n",
+        ));
+    }
+
+    #[test]
+    fn fresh_unpacked_topics_are_not_cleaned() {
+        let db = build_test_database(true);
+        let files = vec![
+            (
+                "Topic/sample/sample ~0.md".to_string(),
+                "---\nType: Topic\nTopic: sample\nDiagID: 123456\n---\nAsk about test topic today.\n"
+                    .to_string(),
+            ),
+            (
+                "Topic/sample/sample.md".to_string(),
+                "![[My Export/base.base#Topic View]]\n".to_string(),
+            ),
+        ];
+
+        assert!(db.collect_incidental_edit_paths(&files).is_empty());
+    }
+
+    #[test]
+    fn fully_incidental_lazy_loaded_topic_is_cleaned_as_a_unit() {
+        let db = build_test_database(false);
+        let files = vec![
+            (
+                "Topic/sample/sample ~0.md".to_string(),
+                "---\nSource: master\nType: Topic\nTopic: sample\nDiagID: 123456\n---\nAsk about [[test topic]] today.\n"
+                    .to_string(),
+            ),
+            (
+                "Topic/sample/sample.md".to_string(),
+                "![[My Export/base.base#Topic View]]\n".to_string(),
+            ),
+        ];
+
+        let mut incidental = db.collect_incidental_edit_paths(&files);
+        incidental.sort();
+
+        assert_eq!(
+            incidental,
+            vec![
+                "Topic/sample/sample ~0.md".to_string(),
+                "Topic/sample/sample.md".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn partially_edited_lazy_loaded_topic_keeps_index_and_edited_files() {
+        let db = build_test_database(false);
+        let files = vec![
+            (
+                "Topic/sample/sample ~0.md".to_string(),
+                "---\nSource: master\nType: Topic\nTopic: sample\nDiagID: 123456\n---\nAsk about [[test topic]] today.\n"
+                    .to_string(),
+            ),
+            (
+                "Topic/sample/sample ~1.md".to_string(),
+                "---\nSource: master\nType: Topic\nTopic: sample\nDiagID: 654321\n---\nThis line was manually edited.\n"
+                    .to_string(),
+            ),
+            (
+                "Topic/sample/sample.md".to_string(),
+                "![[My Export/base.base#Topic View]]\n".to_string(),
+            ),
+        ];
+
+        let incidental = db.collect_incidental_edit_paths(&files);
+
+        assert_eq!(incidental, vec!["Topic/sample/sample ~0.md".to_string()]);
+    }
+
+    fn build_test_database(mark_modified: bool) -> GameDatabase {
+        let mut data = PluginData::default();
+        data.dialogues.insert(
+            "sample".to_string(),
+            merge_to_master::DialogueGroup {
+                dialogue: tes3::esp::Dialogue {
+                    flags: tes3::esp::ObjectFlags::empty(),
+                    id: "sample".to_string(),
+                    dialogue_type: tes3::esp::DialogueType2::Topic,
+                },
+                infos: std::collections::VecDeque::from([
+                    DialogueInfo {
+                        id: "123456".to_string(),
+                        text: "Ask about test topic today.".to_string(),
+                        data: tes3::esp::DialogueData {
+                            dialogue_type: DialogueType::Topic,
+                            disposition: 0,
+                            speaker_rank: -1,
+                            speaker_sex: Sex::Any,
+                            player_rank: -1,
+                        },
+                        ..Default::default()
+                    },
+                    DialogueInfo {
+                        id: "654321".to_string(),
+                        text: "Ask about something else.".to_string(),
+                        data: tes3::esp::DialogueData {
+                            dialogue_type: DialogueType::Topic,
+                            disposition: 0,
+                            speaker_rank: -1,
+                            speaker_sex: Sex::Any,
+                            player_rank: -1,
+                        },
+                        ..Default::default()
+                    },
+                ]),
+            },
+        );
+        data.set_all_modified(mark_modified);
+
+        GameDatabase {
+            data,
+            merged: true,
+            link_only_changes: Vec::new(),
+        }
+    }
 }

@@ -208,16 +208,31 @@ export class DatabaseManager {
 				}
 			}
 
-			// Clean up any folders that might now be empty
-			const cleanEmptyFolders = async (parent: TFolder) => {
-				// We must clone the array since we might modify it by trashing
-				if (parent.children.length === 0) {
-					const grandparent = parent.parent;
-					await this.app.vault.trash(parent, true);
-					if (grandparent instanceof TFolder) await cleanEmptyFolders(grandparent);
+			// Clean up any descendant folders that became empty after file removal.
+			// We preserve the project root itself, but topic folders selected directly
+			// should still be removed if they are now empty.
+			const cleanEmptyFolders = async (parent: TFolder): Promise<void> => {
+				const childFolders = [...parent.children].filter(
+					(child): child is TFolder => child instanceof TFolder,
+				);
+				for (const childFolder of childFolders) {
+					await cleanEmptyFolders(childFolder);
+				}
+
+				const refreshed = this.app.vault.getAbstractFileByPath(parent.path);
+				if (!(refreshed instanceof TFolder)) {
+					return;
+				}
+
+				if (refreshed.path === projectRoot.path) {
+					return;
+				}
+
+				if (refreshed.children.length === 0) {
+					await this.app.vault.trash(refreshed, true);
 				}
 			};
-			if (folder instanceof TFolder) await cleanEmptyFolders(folder);
+			await cleanEmptyFolders(folder);
 
 			new Notice(`Successfully removed ${removedCount} incidental dialogue edits.`);
 		} catch (error) {
