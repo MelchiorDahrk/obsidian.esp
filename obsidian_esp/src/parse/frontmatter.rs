@@ -15,13 +15,41 @@ pub fn eol_or_eof<'s>(input: &mut &'s str) -> Result<&'s str> {
     alt((line_ending, eof.value(""))).parse_next(input)
 }
 
-/// Parses a string that might be wrapped in double quotes. If wrapped, discards quotes.
-pub fn unquoted_string<'s>(input: &mut &'s str) -> Result<&'s str> {
-    alt((
-        delimited('"', take_till(0.., '"'), '"'),
-        take_till(0.., ['\r', '\n']),
-    ))
-    .parse_next(input)
+pub(crate) fn decode_inline_yaml_value(raw: &str) -> String {
+    let trimmed = raw.trim();
+    if !(trimmed.starts_with('"') && trimmed.ends_with('"') && trimmed.len() >= 2) {
+        return trimmed.to_string();
+    }
+
+    let inner = &trimmed[1..trimmed.len() - 1];
+    let mut decoded = String::with_capacity(inner.len());
+    let mut chars = inner.chars().peekable();
+
+    while let Some(ch) = chars.next() {
+        match ch {
+            '\\' => {
+                if let Some(next) = chars.next() {
+                    match next {
+                        '"' => decoded.push('"'),
+                        '\\' => decoded.push('\\'),
+                        _ => {
+                            decoded.push('\\');
+                            decoded.push(next);
+                        }
+                    }
+                } else {
+                    decoded.push('\\');
+                }
+            }
+            '"' if chars.peek() == Some(&'"') => {
+                let _ = chars.next();
+                decoded.push('"');
+            }
+            _ => decoded.push(ch),
+        }
+    }
+
+    decoded
 }
 
 /// Parses a boolean value case-insensitively ("true" or "false").
@@ -51,14 +79,20 @@ pub fn parse_yaml_key<'s>(input: &mut &'s str) -> Result<&'s str> {
     .parse_next(input)
 }
 
-/// Parses a YAML value. Supports inline strings, list items (using `-`), 
+/// Parses a YAML value. Supports inline strings, list items (using `-`),
 /// and indented multiline blocks (optionally prefixed with `|`).
 pub fn parse_yaml_value_or_list<'s>(input: &mut &'s str) -> Result<Option<String>> {
     let _ = space_or_tab.parse_next(input)?;
 
-    // Case 1: Empty line after colon or special YAML marker (like |)
-    let is_block = if let Ok(_) = winnow::Parser::<_, _, ()>::parse_peek(&mut "|", *input) {
-        let _ = "|".parse_next(input)?;
+    // Case 1: Empty line after colon or special YAML marker (like |, |-, or |+)
+    let is_block = if let Some(rest) = (*input).strip_prefix("|-") {
+        *input = rest;
+        true
+    } else if let Some(rest) = (*input).strip_prefix("|+") {
+        *input = rest;
+        true
+    } else if let Some(rest) = (*input).strip_prefix('|') {
+        *input = rest;
         true
     } else {
         false
@@ -68,15 +102,14 @@ pub fn parse_yaml_value_or_list<'s>(input: &mut &'s str) -> Result<Option<String
         // Case 1a: List item with -
         if !is_block && (peek((space_or_tab, "-", space1)).parse_peek(*input).is_ok()) {
             let _ = (space_or_tab, "-", space1).parse_next(input)?;
-            let val = unquoted_string.parse_next(input)?;
+            let val = take_till(0.., ['\r', '\n']).parse_next(input)?;
             let _ = eol_or_eof.parse_next(input)?;
-            return Ok(Some(val.trim().to_string()));
+            return Ok(Some(decode_inline_yaml_value(val)));
         }
 
         // Case 1b: Indented multiline block
         let mut lines = Vec::new();
-        // We look for lines that start with at least 2 spaces and are not empty lines
-        while let Ok(_) = peek(("  ", not(line_ending::<_, ()>))).parse_next(input) {
+        while (*input).starts_with("  ") {
             let _ = "  ".parse_next(input)?;
             let line = take_till(0.., ['\r', '\n']).parse_next(input)?;
             lines.push(line.trim_end().to_string());
@@ -91,14 +124,13 @@ pub fn parse_yaml_value_or_list<'s>(input: &mut &'s str) -> Result<Option<String
     }
 
     // Case 2: Inline value
-    let val = unquoted_string.parse_next(input)?;
+    let val = take_till(0.., ['\r', '\n']).parse_next(input)?;
     let _ = eol_or_eof.parse_next(input)?;
 
-    let trimmed = val.trim();
-    if trimmed.is_empty() {
+    if val.trim().is_empty() {
         Ok(None)
     } else {
-        Ok(Some(trimmed.to_string()))
+        Ok(Some(decode_inline_yaml_value(val)))
     }
 }
 

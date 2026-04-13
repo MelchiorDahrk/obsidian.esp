@@ -1,10 +1,10 @@
 use anyhow::Result;
 use merge_to_master::traits::MergeInto;
 use merge_to_master::{DialogueGroup, Exterior, Interior, PluginData, merge_load_order};
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::PathBuf;
-use tes3::esp::{DialogueType2, ObjectFlags, ObjectInfo, DialogueData, QuestState, Filter};
-use std::collections::HashMap;
+use tes3::esp::{DialogueData, DialogueType2, Filter, ObjectFlags, ObjectInfo, QuestState};
 
 #[derive(Clone, PartialEq)]
 struct InfoSnapshot {
@@ -45,11 +45,11 @@ impl From<&tes3::esp::DialogueInfo> for InfoSnapshot {
 
 type LinkSnapshots = HashMap<String, HashMap<String, (String, String, InfoSnapshot)>>;
 
-/// Captures the current link pointers (prev/next) and a semantic content snapshot for all 
+/// Captures the current link pointers (prev/next) and a semantic content snapshot for all
 /// dialogue infos in the provided dataset.
 ///
-/// This provides a baseline used to detect which records have changed during a merge 
-/// and specifically whether those changes are "semantic" (content changes) or merely 
+/// This provides a baseline used to detect which records have changed during a merge
+/// and specifically whether those changes are "semantic" (content changes) or merely
 /// "structural" (link-pointer updates due to list re-ordering).
 fn create_link_snapshots(data: &PluginData) -> LinkSnapshots {
     data.dialogues
@@ -74,7 +74,7 @@ fn create_link_snapshots(data: &PluginData) -> LinkSnapshots {
 
 /// A trait for removing records that haven't been modified from a container.
 ///
-/// This is used during the resolution pass to prune master records that were 
+/// This is used during the resolution pass to prune master records that were
 /// loaded only for context and haven't actually been changed by the plugin.
 pub trait RemoveUnmodified {
     fn remove_unmodified(&mut self);
@@ -133,12 +133,12 @@ impl RemoveUnmodified for PluginData {
 }
 
 /// Resolves an authored plugin against its master files.
-/// 
+///
 /// 1. Merges masters into a single baseline.
 /// 2. Merges the authored plugin into that baseline.
 /// 3. Detects semantic changes in dialogue (beyond simple link updates).
 /// 4. Prunes everything that wasn't modified.
-/// 
+///
 /// Returns a `PluginData` containing only the modified records, ready for saving as an ESP.
 pub fn resolve(
     mut plugin: PluginData,

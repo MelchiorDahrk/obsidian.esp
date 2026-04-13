@@ -71,8 +71,8 @@ pub enum FilterValue {
 }
 
 /// Returns the sort order index from a filename (e.g., `Topic ~5.md` -> 5).
-/// 
-/// This index is used to maintain evaluation order when `PrevID` links are not 
+///
+/// This index is used to maintain evaluation order when `PrevID` links are not
 /// explicitly provided.
 fn default_sort_order(file_name: &str) -> u64 {
     if let Some(idx) = file_name.rfind(" ~") {
@@ -116,8 +116,8 @@ fn parse_header_content(content: &str) -> Result<ParsedHeader> {
 }
 
 /// Parses a set of file contents into a `ParsedPlugin`.
-/// 
-/// `files` is a list of `(relative_path, content)` pairs. This handles normalizing 
+///
+/// `files` is a list of `(relative_path, content)` pairs. This handles normalizing
 /// paths and sorting files based on the project's directory structure conventions.
 pub fn parse_project_files(
     files: Vec<(String, String)>,
@@ -159,19 +159,17 @@ pub fn parse_project_files(
             .unwrap_or(file_name);
         let order = default_sort_order(file_stem);
 
-        info_entries.push((
-            dialogue_type,
-            topic_name,
-            order,
-            normalized_path,
-            content,
-        ));
+        info_entries.push((dialogue_type, topic_name, order, normalized_path, content));
     }
 
     info_entries.sort_by(|left, right| {
         dialogue_type_priority(left.0)
             .cmp(&dialogue_type_priority(right.0))
-            .then_with(|| left.1.to_ascii_lowercase().cmp(&right.1.to_ascii_lowercase()))
+            .then_with(|| {
+                left.1
+                    .to_ascii_lowercase()
+                    .cmp(&right.1.to_ascii_lowercase())
+            })
             .then_with(|| left.2.cmp(&right.2))
     });
 
@@ -216,9 +214,7 @@ pub fn parse_project_files(
         });
     }
 
-    let header = header
-        .or(default_header)
-        .context("Missing header.md")?;
+    let header = header.or(default_header).context("Missing header.md")?;
 
     Ok(ParsedPlugin { header, infos })
 }
@@ -231,7 +227,7 @@ pub fn parse_project_directory(path: &Path) -> Result<ParsedPlugin> {
 
 /// Discovers and reads all valid project Markdown files from the local filesystem.
 ///
-/// This includes the top-level `header.md` and all dialogue files within the 
+/// This includes the top-level `header.md` and all dialogue files within the
 /// expected directory hierarchy: `{TypeDir}/{TopicDir}/{File.md}`.
 fn collect_project_files_from_disk(path: &Path) -> Result<Vec<(String, String)>> {
     let mut files = Vec::new();
@@ -302,6 +298,6 @@ fn collect_project_files_from_disk(path: &Path) -> Result<Vec<(String, String)>>
             }
         }
     }
-    
+
     Ok(files)
 }

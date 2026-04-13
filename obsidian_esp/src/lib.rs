@@ -2,7 +2,7 @@
 
 pub mod logging;
 pub use logging::*;
-use tes3::esp::{Plugin, TES3Object};
+use tes3::esp::{DialogueInfo, DialogueType, ObjectInfo, Plugin, QuestState, Sex, TES3Object};
 
 pub mod compile;
 pub mod export;
@@ -535,9 +535,9 @@ impl GameDatabase {
         for (name, bytes) in master_entries {
             record_byte_ingress();
             let mut master_raw = Plugin::new();
-            master_raw.load_bytes(&bytes).map_err(|e| {
-                JsValue::from_str(&format!("Failed to load master '{name}': {e}"))
-            })?;
+            master_raw
+                .load_bytes(&bytes)
+                .map_err(|e| JsValue::from_str(&format!("Failed to load master '{name}': {e}")))?;
             master_datas.push(PluginData::from_plugin(master_raw));
         }
 
@@ -682,47 +682,203 @@ impl GameDatabase {
         }
     }
 
-    /// Evaluates a list of markdown file contents and returns the paths of those that 
+    /// Evaluates a list of markdown file contents and returns the paths of those that
     /// are "incidental" (i.e. functionally identical to the master database).
     #[wasm_bindgen(js_name = "findIncidentalEdits")]
     pub fn find_incidental_edits(&self, files: JsValue) -> Result<JsValue, JsValue> {
+        // Safety: If no master files are loaded, we never consider anything incidental.
+        if !self.merged {
+            return Ok(Array::new().into());
+        }
+
         let files: Vec<(String, String)> = from_value(files)?;
-        let parsed = parse::parse_project_files(files.clone(), Some(default_header()))
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let compiled = compile::compile(parsed).map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let plugin_data = PluginData::from_plugin(compiled.into_plugin());
+        let link_only: std::collections::HashSet<_> = self.link_only_changes.iter().collect();
 
         let result = Array::new();
-        
+
         for (path, content) in files {
-            if let Some((topic, diagid)) = self.parse_frontmatter_values(&content) {
-                // Does this vault topic exist in the compiled set?
-                if let Some(group) = plugin_data.dialogues.get(&topic.to_ascii_lowercase()) {
-                    if let Some(authored_info) = group.infos.iter().find(|i| i.id.eq_ignore_ascii_case(&diagid)) {
-                        // Does it exist in the master database?
-                        if let Some(master_group) = self.data.dialogues.get(&topic.to_ascii_lowercase()) {
-                            if let Some(master_info) = master_group.infos.iter().find(|i| i.id.eq_ignore_ascii_case(&diagid)) {
-                                // Edits are considered "incidental" if they are functionally identical to the 
-                                // master. A key part of this is that the `prev_id` and `next_id` link 
-                                // pointers are managed automatically by our runtime list builder.
-                                // If a record was only modified because a new plugin-defined record was 
-                                // inserted next to it, the engine will reconcile those pointers 
-                                // automatically—meaning the master-defined record doesn't need to be 
-                                // included in our plugin at all. 
-                                let mut authored_clone = authored_info.clone();
-                                authored_clone.prev_id = master_info.prev_id.clone();
-                                authored_clone.next_id = master_info.next_id.clone();
-                                
-                                if authored_clone == *master_info {
+            // First, try to parse it as a dialogue info file
+            if let Some((topic_name, diagid)) = self.parse_frontmatter_values(&content) {
+                let topic_key = topic_name.to_ascii_lowercase();
+
+                // 1. Does this record exist and is it incidental in the active database?
+                if let Some(group) = self.data.dialogues.get(&topic_key) {
+                    if let Some(db_info) = group
+                        .infos
+                        .iter()
+                        .find(|i| i.id.eq_ignore_ascii_case(&diagid))
+                    {
+                        // A record is "incidental" if:
+                        // - It is NOT modified (comes from a master and isn't in the plugin)
+                        // - OR it IS modified but only because of link pointers (link-only change)
+                        let is_incidental = !db_info.modified()
+                            || link_only.contains(&(topic_key.clone(), db_info.id.clone()));
+
+                        if is_incidental {
+                            // 2. Does the vault content match the database record semantically?
+                            // We use the individual file parser to avoid requiring a full compilable project.
+                            use winnow::Parser;
+                            if let Ok((frontmatter, text)) =
+                                parse::info::parse_info_file.parse(&content)
+                            {
+                                let parsed_info = crate::parse::ParsedInfo {
+                                    source_path: path.clone(),
+                                    topic: topic_name.clone(),
+                                    frontmatter,
+                                    text,
+                                };
+
+                                if is_parsed_info_matching(&parsed_info, db_info) {
                                     result.push(&JsValue::from_str(&path));
                                 }
                             }
                         }
                     }
                 }
+            } else if self.is_incidental_index_file(&content) {
+                // Topic index files are always incidental if they haven't been customized
+                result.push(&JsValue::from_str(&path));
             }
         }
 
         Ok(result.into())
     }
+
+    /// Determines if a file is an unedited topic index file generated by the LazyLoader.
+    fn is_incidental_index_file(&self, content: &str) -> bool {
+        content.contains("esp-topic-base-view") && content.contains("#Topic View")
+    }
+}
+
+/// Compares a parsed markdown record against a database record to see if they are
+/// functionally identical.
+fn is_parsed_info_matching(parsed: &crate::parse::ParsedInfo, db: &DialogueInfo) -> bool {
+    // 1. Check basic properties
+    if parsed.text != db.text {
+        return false;
+    }
+    if parsed.frontmatter.disposition.unwrap_or(0) != db.data.disposition {
+        return false;
+    }
+    if parsed.frontmatter.speaker_rank.unwrap_or(-1) != db.data.speaker_rank {
+        return false;
+    }
+    if parsed.frontmatter.player_rank.unwrap_or(-1) != db.data.player_rank {
+        return false;
+    }
+
+    let speaker_sex = match parsed.frontmatter.speaker_sex {
+        Some(0) => Sex::Male,
+        Some(1) => Sex::Female,
+        _ => Sex::Any,
+    };
+    if speaker_sex != db.data.speaker_sex {
+        return false;
+    }
+
+    if parsed.frontmatter.speaker_id.as_deref().unwrap_or_default() != db.speaker_id {
+        return false;
+    }
+    if parsed
+        .frontmatter
+        .speaker_race
+        .as_deref()
+        .unwrap_or_default()
+        != db.speaker_race
+    {
+        return false;
+    }
+    if parsed
+        .frontmatter
+        .speaker_class
+        .as_deref()
+        .unwrap_or_default()
+        != db.speaker_class
+    {
+        return false;
+    }
+    if parsed
+        .frontmatter
+        .speaker_faction
+        .as_deref()
+        .unwrap_or_default()
+        != db.speaker_faction
+    {
+        return false;
+    }
+    if parsed
+        .frontmatter
+        .speaker_cell
+        .as_deref()
+        .unwrap_or_default()
+        != db.speaker_cell
+    {
+        return false;
+    }
+    if parsed
+        .frontmatter
+        .player_faction
+        .as_deref()
+        .unwrap_or_default()
+        != db.player_faction
+    {
+        return false;
+    }
+    if parsed.frontmatter.sound_path.as_deref().unwrap_or_default() != db.sound_path {
+        return false;
+    }
+    if parsed
+        .frontmatter
+        .script_text
+        .as_deref()
+        .unwrap_or_default()
+        != db.script_text
+    {
+        return false;
+    }
+
+    // 2. Check Quest State
+    let quest_state = parsed
+        .frontmatter
+        .quest_state
+        .as_deref()
+        .and_then(|s| match s {
+            "Name" => Some(QuestState::Name),
+            "Finished" => Some(QuestState::Finished),
+            "Restart" => Some(QuestState::Restart),
+            _ => None,
+        });
+    if quest_state != db.quest_state {
+        return false;
+    }
+
+    // 3. Check Filters
+    if parsed.frontmatter.filters.len() != db.filters.len() {
+        return false;
+    }
+    for (i, pf) in parsed.frontmatter.filters.iter().enumerate() {
+        let dbf = &db.filters[i];
+        if pf.index != dbf.index {
+            return false;
+        }
+        if pf.filter_type != dbf.filter_type {
+            return false;
+        }
+        if pf.comparison != dbf.comparison {
+            return false;
+        }
+        if pf.id != dbf.id {
+            return false;
+        }
+
+        let pf_value = match pf.value {
+            crate::parse::FilterValue::Float(f) => tes3::esp::FilterValue::Float(f),
+            crate::parse::FilterValue::Integer(i) => tes3::esp::FilterValue::Integer(i),
+        };
+        if pf_value != dbf.value {
+            return false;
+        }
+    }
+
+    true
 }

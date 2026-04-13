@@ -1,6 +1,6 @@
-use std::collections::BTreeMap;
 use super::frontmatter::*;
 use super::{FilterValue, ParsedFilter, ParsedInfoFrontmatter};
+use std::collections::BTreeMap;
 use tes3::esp::{DialogueType2, FilterComparison, FilterType};
 use winnow::Result;
 use winnow::ascii::*;
@@ -40,7 +40,7 @@ fn parse_filter_value(input: &mut &str) -> Result<FilterValue> {
 }
 
 /// Parses a variable expression including an ID, comparison operator, and value.
-/// 
+///
 /// Example: `my_variable >= 10`
 pub fn parse_variable_expression<'s>(
     input: &mut &'s str,
@@ -61,7 +61,6 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
     let mut info = ParsedInfoFrontmatter::default();
 
     let mut filters_map: BTreeMap<u8, (Option<FilterType>, Option<String>)> = BTreeMap::new();
-
 
     while let Ok((_, peeked)) =
         take_till::<_, &'s str, ContextError>(1.., ['\n', '\r']).parse_peek(*input)
@@ -127,15 +126,20 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
         .replace('\r', "\n")
         .replace('\n', "\r\n");
 
-    // Un-escape \r\n in result
+    // Normalize escaped or inline-edited newlines in the result script.
     if let Some(script_text) = &mut info.script_text {
-        *script_text = script_text.replace("\\r\\n", "\r\n").replace("\\n", "\n");
+        *script_text = script_text
+            .replace("\\r\\n", "\n")
+            .replace("\\n", "\n")
+            .replace("\r\n", "\n")
+            .replace('\r', "\n")
+            .replace('\n', "\r\n");
     }
 
     Ok((info, text))
 }
 
-/// Dispatches a single YAML key-value pair to its corresponding field in the 
+/// Dispatches a single YAML key-value pair to its corresponding field in the
 /// `ParsedInfoFrontmatter` or adds it to the `filters_map`.
 ///
 /// This function handles the logic for various key aliases (e.g., `Disposition` vs `Index`)
@@ -213,7 +217,7 @@ fn dispatch_yaml_field(
         }
     } else if key.eq_ignore_ascii_case("Sound Path") || key.eq_ignore_ascii_case("SoundPath") {
         info.sound_path = val_opt;
-    } else if key.eq_ignore_ascii_case("Result") {
+    } else if key.eq_ignore_ascii_case("Result") || key.eq_ignore_ascii_case("Results") {
         info.script_text = val_opt;
     } else if key.eq_ignore_ascii_case("Quest Name") {
         if let Some(val) = val_opt {

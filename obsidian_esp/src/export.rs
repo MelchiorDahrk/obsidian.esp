@@ -10,7 +10,7 @@ use tes3::esp::{
 };
 use uncased::AsUncased;
 
-/// Sanitizes a string for use as a filename by replacing reserved characters and 
+/// Sanitizes a string for use as a filename by replacing reserved characters and
 /// control characters with underscores.
 fn sanitize_file_stem(input: &str) -> String {
     let mut sanitized = String::with_capacity(input.len());
@@ -197,7 +197,7 @@ fn render_info(topic: &str, info: &DialogueInfo) -> String {
     render_info_with_source(topic, info, None)
 }
 
-/// Renders an individual `DialogueInfo` record into Markdown, optionally including 
+/// Renders an individual `DialogueInfo` record into Markdown, optionally including
 /// a `Source` field in the frontmatter.
 fn render_info_with_source(topic: &str, info: &DialogueInfo, source: Option<&str>) -> String {
     let mut output = String::from("---\n");
@@ -326,7 +326,7 @@ fn render_info_with_source(topic: &str, info: &DialogueInfo, source: Option<&str
 }
 
 /// Returns the sort priority for a dialogue type. Lower values come first.
-/// 
+///
 /// The Morrowind engine requires journal entries to be defined before other types.
 fn dialogue_priority(dialogue_type: tes3::esp::DialogueType2) -> u8 {
     match dialogue_type {
@@ -338,7 +338,7 @@ fn dialogue_priority(dialogue_type: tes3::esp::DialogueType2) -> u8 {
     }
 }
 
-/// Returns the dialogue groups from the plugin sorted by type priority and then 
+/// Returns the dialogue groups from the plugin sorted by type priority and then
 /// case-insensitively by ID.
 fn sorted_dialogue_groups(plugin: &PluginData) -> Vec<&merge_to_master::DialogueGroup> {
     plugin
@@ -446,10 +446,7 @@ pub fn collect_all_topic_names(plugin: &PluginData) -> Vec<String> {
 
 /// Returns (path, content) pairs for a single topic, looked up case-insensitively.
 /// Each info is rendered with `Source: master` in its frontmatter.
-pub fn collect_single_topic_files(
-    plugin: &PluginData,
-    topic_name: &str,
-) -> Vec<(String, String)> {
+pub fn collect_single_topic_files(plugin: &PluginData, topic_name: &str) -> Vec<(String, String)> {
     let key = topic_name.to_ascii_lowercase();
     let Some(group) = plugin.dialogues.get(&key) else {
         return Vec::new();

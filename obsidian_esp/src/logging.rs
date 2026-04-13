@@ -8,8 +8,8 @@ use wasm_bindgen::prelude::*;
 // <https://docs.rs/tracing/latest/tracing/level_filters/index.html>
 
 /// Initializes the global tracing subscriber for native environments.
-/// 
-/// Logs are written to stdout in a non-blocking fashion. Returns a `WorkerGuard` 
+///
+/// Logs are written to stdout in a non-blocking fashion. Returns a `WorkerGuard`
 /// which must be held to ensure all logs are flushed before the program exits.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn init_logger() -> WorkerGuard {
@@ -35,7 +35,7 @@ pub fn init_logger() -> WorkerGuard {
 }
 
 /// Initializes the global tracing subscriber for WASM environments.
-/// 
+///
 /// Logs are redirected to the browser's JavaScript console. Returns a `WorkerGuard`.
 #[cfg(target_arch = "wasm32")]
 pub fn init_logger() -> WorkerGuard {

@@ -43,7 +43,7 @@ const VALID_VOICE_TOPICS: &[&str] = &[
 ];
 
 /// Generates a unique, numeric-only `DialogueInfo` ID within the given set of IDs.
-/// 
+///
 /// The Morrowind engine requires INFO IDs to be numeric strings (INAM subrecord).
 fn generate_info_id(existing_ids: &HashSet<String>) -> String {
     let mut id = String::new();
@@ -164,8 +164,8 @@ parse_filter_functions!(
 );
 
 /// Resolves a `FilterFunction` from a `FilterType` and an optional function name string.
-/// 
-/// Handles mapping generic type conditions (like `Journal`, `Item`) to their specific 
+///
+/// Handles mapping generic type conditions (like `Journal`, `Item`) to their specific
 /// internal enum variants and parsing function names for `FilterType::Function`.
 fn filter_function_from_parts(
     filter_type: FilterType,
@@ -202,9 +202,9 @@ fn filter_function_from_parts(
 }
 
 /// Repairs the `next_id` links in a `DialogueGroup` based on the current order of `infos`.
-/// 
-/// Unlike `group.repair_links()`, this function ONLY updates `next_id` and leaves 
-/// `prev_id` untouched. This is crucial for topics where the user has manually 
+///
+/// Unlike `group.repair_links()`, this function ONLY updates `next_id` and leaves
+/// `prev_id` untouched. This is crucial for topics where the user has manually
 /// specified a chain via `PrevID` fields.
 fn repair_next_links(group: &mut DialogueGroup) {
     let infos = group.infos.make_contiguous();
@@ -219,7 +219,7 @@ fn repair_next_links(group: &mut DialogueGroup) {
     }
 }
 
-/// Validates that a topic name is valid for its dialogue type (e.g. valid Greetings, 
+/// Validates that a topic name is valid for its dialogue type (e.g. valid Greetings,
 /// valid Voice commands).
 fn validate_dialogue_topic(dialogue_type: tes3::esp::DialogueType2, topic: &str) -> Result<()> {
     let valid_topics = match dialogue_type {
@@ -250,7 +250,7 @@ fn validate_dialogue_topic(dialogue_type: tes3::esp::DialogueType2, topic: &str)
     Ok(())
 }
 
-/// Compiles a `ParsedPlugin` (internal Markdown representation) into a `PluginData` 
+/// Compiles a `ParsedPlugin` (internal Markdown representation) into a `PluginData`
 /// (native TES3 record representation).
 pub fn compile(parsed: ParsedPlugin) -> Result<PluginData> {
     let mut plugin = PluginData::new();
@@ -294,12 +294,12 @@ pub fn compile(parsed: ParsedPlugin) -> Result<PluginData> {
     Ok(plugin)
 }
 
-/// Determines if a specific dialogue info file requires its topic topic to use 
-/// manual link ordering (preserving existing author linkage) rather than automatic 
+/// Determines if a specific dialogue info file requires its topic topic to use
+/// manual link ordering (preserving existing author linkage) rather than automatic
 /// alphabetical/temporal ordering.
 fn group_has_preserved_links(info: &DialogueInfo) -> bool {
     // If DiagID or PrevID were authored, we assume manual ordering.
-    // (Note: This is a bit of a heuristic since we're checking values not the presence 
+    // (Note: This is a bit of a heuristic since we're checking values not the presence
     // of the field in Markdown, but it matches the previous logic).
     !info.prev_id.is_empty()
 }
@@ -311,8 +311,8 @@ fn group_has_preserved_links(info: &DialogueInfo) -> bool {
 /// 2. Mapping human-readable types (Race, Class, etc.) to native formats.
 /// 3. Compiling filters and script text.
 /// 4. Resolving the `PrevID` link sequence.
-/// 
-/// The resulting record is inserted into the provided `PluginData` within the 
+///
+/// The resulting record is inserted into the provided `PluginData` within the
 /// appropriate `DialogueGroup`.
 fn compile_dialogue_info(
     parsed_info: ParsedInfo,

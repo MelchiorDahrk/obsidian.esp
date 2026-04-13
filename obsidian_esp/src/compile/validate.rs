@@ -18,18 +18,15 @@ struct ValidationDatabase {
 }
 
 /// Validates an authored project against a set of master plugins.
-/// 
+///
 /// It checks that:
 /// - All referenced record IDs (NPCs, Factions, Classes, etc.) exist in the masters.
 /// - Cell names are valid.
 /// - Local variables referenced in dialogue filters exist on the script attached to the speaker.
 /// - Journal topics exist.
-/// 
+///
 /// Returns a human-readable log of all warnings and informational messages.
-pub fn validate_project(
-    parsed: &ParsedPlugin,
-    masters: &[(String, Vec<u8>)],
-) -> Result<String> {
+pub fn validate_project(parsed: &ParsedPlugin, masters: &[(String, Vec<u8>)]) -> Result<String> {
     let authored_master_names = parsed.header.masters.clone();
     let provided_master_names: HashSet<_> = masters
         .iter()
@@ -62,7 +59,9 @@ pub fn validate_project(
 
     for info in &parsed.infos {
         if info.frontmatter.dialogue_type == Some(DialogueType2::Journal) {
-            database.journal_topics.insert(info.topic.to_ascii_lowercase());
+            database
+                .journal_topics
+                .insert(info.topic.to_ascii_lowercase());
         }
     }
 
@@ -73,7 +72,7 @@ pub fn validate_project(
     Ok(render_log(&warnings))
 }
 
-/// Populates the `ValidationDatabase` by indexing relevant IDs and script data 
+/// Populates the `ValidationDatabase` by indexing relevant IDs and script data
 /// from a master plugin.
 fn collect_master_ids(database: &mut ValidationDatabase, plugin: Plugin) {
     for object in plugin.objects {
@@ -98,18 +97,20 @@ fn collect_master_ids(database: &mut ValidationDatabase, plugin: Plugin) {
                 database.actor_ids.insert(record.id.to_ascii_lowercase());
                 database.object_ids.insert(record.id.to_ascii_lowercase());
                 if !record.script.is_empty() {
-                    database
-                        .actor_scripts
-                        .insert(record.id.to_ascii_lowercase(), record.script.to_ascii_lowercase());
+                    database.actor_scripts.insert(
+                        record.id.to_ascii_lowercase(),
+                        record.script.to_ascii_lowercase(),
+                    );
                 }
             }
             TES3Object::Creature(record) => {
                 database.actor_ids.insert(record.id.to_ascii_lowercase());
                 database.object_ids.insert(record.id.to_ascii_lowercase());
                 if !record.script.is_empty() {
-                    database
-                        .actor_scripts
-                        .insert(record.id.to_ascii_lowercase(), record.script.to_ascii_lowercase());
+                    database.actor_scripts.insert(
+                        record.id.to_ascii_lowercase(),
+                        record.script.to_ascii_lowercase(),
+                    );
                 }
             }
             TES3Object::Cell(record) => {
@@ -182,11 +183,7 @@ fn object_id(object: &TES3Object) -> Option<&str> {
 }
 
 /// Performs all validation checks for a single `DialogueInfo` entry.
-fn validate_info(
-    info: &ParsedInfo,
-    database: &ValidationDatabase,
-    warnings: &mut Vec<String>,
-) {
+fn validate_info(info: &ParsedInfo, database: &ValidationDatabase, warnings: &mut Vec<String>) {
     warn_if_missing(
         info,
         "ID",
@@ -263,7 +260,9 @@ fn validate_filter(
             &filter_label,
             Some(filter.id.as_str()),
             &database.journal_topics,
-            Some("The referenced journal topic was not found in the loaded masters or this project."),
+            Some(
+                "The referenced journal topic was not found in the loaded masters or this project.",
+            ),
             warnings,
         ),
         FilterType::Item => warn_if_missing(
@@ -316,7 +315,9 @@ fn validate_filter(
         ),
         FilterType::Local | FilterType::NotLocal => {
             if let Some(speaker_id) = info.frontmatter.speaker_id.as_deref() {
-                if let Some(script_id) = database.actor_scripts.get(&speaker_id.to_ascii_lowercase()) {
+                if let Some(script_id) =
+                    database.actor_scripts.get(&speaker_id.to_ascii_lowercase())
+                {
                     if let Some(variables) = database.script_variables.get(script_id) {
                         if !variables.contains(&filter.id.to_ascii_lowercase()) {
                             warnings.push(format!(

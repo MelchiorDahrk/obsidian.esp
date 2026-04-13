@@ -592,3 +592,44 @@ fn test_topic_index_is_ignored() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_compile_accepts_edited_results_with_inner_quotes_and_newlines() -> Result<()> {
+    let files = vec![
+        (
+            "header.md".to_string(),
+            "---\nAuthor: Example\nDescription: multiline result test\nFile Type: ESP\nMasters:\n  - Morrowind.esm\n---\n"
+                .to_string(),
+        ),
+        (
+            "Greeting/Greeting 1/Greeting 1 ~0.md".to_string(),
+            concat!(
+                "---\n",
+                "Type: Greeting\n",
+                "Topic: Greeting 1\n",
+                "Results: \"; LGNPC Tel Uvirith\\nClearInfoActor\\nChoice \\\"Continue\\\" 1\"\n",
+                "---\n",
+                "Edited greeting.\n",
+            )
+            .to_string(),
+        ),
+    ];
+
+    let parsed = obsidian_esp::parse::parse_project_files(files, None)?;
+    let compiled = obsidian_esp::compile::compile(parsed)?;
+    let group = compiled
+        .dialogues
+        .get("greeting 1")
+        .expect("compiled greeting group should exist");
+    let info = group
+        .infos
+        .front()
+        .expect("compiled greeting should contain one info");
+
+    assert_eq!(
+        info.script_text,
+        "; LGNPC Tel Uvirith\r\nClearInfoActor\r\nChoice \"Continue\" 1"
+    );
+
+    Ok(())
+}

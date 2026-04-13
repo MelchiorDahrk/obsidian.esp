@@ -1,4 +1,4 @@
-import { App, Notice, TFolder } from 'obsidian';
+import { App, Notice, TFile, TFolder } from 'obsidian';
 import { GameDatabase } from '../database/game-database';
 import { DatabaseLoader } from '../database/database-loader';
 import { LazyLoader } from './lazy-loader';
@@ -158,14 +158,24 @@ export class DatabaseManager {
 
 		const progress = new ProgressBar(`Cleaning incidental edits in ${folder.name}`);
 		try {
+			const projectRoot = PathManager.findPluginRoot(folder);
+			if (!projectRoot) {
+				new Notice('Could not find a valid obsidian.esp project root (missing header.md).');
+				return;
+			}
+
 			const files: [string, string][] = [];
+			const pathToVaultPath = new Map<string, string>();
+
 			const readVaultRecursive = async (parent: TFolder) => {
 				for (const child of parent.children) {
 					if (child instanceof TFolder) {
 						await readVaultRecursive(child);
-					} else if (child.name.endsWith('.md')) {
-						const content = await this.app.vault.read(child as any);
-						files.push([child.path, content]);
+					} else if (child instanceof TFile && child.extension === 'md') {
+						const content = await this.app.vault.read(child);
+						const relativePath = child.path.substring(projectRoot.path.length + 1);
+						files.push([relativePath, content]);
+						pathToVaultPath.set(relativePath, child.path);
 					}
 				}
 			};
@@ -177,18 +187,21 @@ export class DatabaseManager {
 			}
 
 			progress.update(50, 'Analyzing dialogue edits...');
-			const incidentalPaths = await this.db.findIncidentalEdits(files);
+			const incidentalRelativePaths = await this.db.findIncidentalEdits(files);
 
-			if (incidentalPaths.length === 0) {
+			if (incidentalRelativePaths.length === 0) {
 				new Notice('No incidental dialogue edits found.');
 				return;
 			}
 
-			progress.update(80, `Removing ${incidentalPaths.length} files...`);
+			progress.update(80, `Removing ${incidentalRelativePaths.length} files...`);
 			
 			let removedCount = 0;
-			for (const fp of incidentalPaths) {
-				const f = this.app.vault.getAbstractFileByPath(fp);
+			for (const relPath of incidentalRelativePaths) {
+				const vaultPath = pathToVaultPath.get(relPath);
+				if (!vaultPath) continue;
+
+				const f = this.app.vault.getAbstractFileByPath(vaultPath);
 				if (f) {
 					await this.app.vault.trash(f, true); // System trash
 					removedCount++;
@@ -198,17 +211,13 @@ export class DatabaseManager {
 			// Clean up any folders that might now be empty
 			const cleanEmptyFolders = async (parent: TFolder) => {
 				// We must clone the array since we might modify it by trashing
-				for (const child of [...parent.children]) {
-					if (child instanceof TFolder) {
-						await cleanEmptyFolders(child);
-					}
-				}
-				// Don't delete the root folder selected by the user, only subfolders
-				if (parent !== folder && parent.children.length === 0) {
+				if (parent.children.length === 0) {
+					const grandparent = parent.parent;
 					await this.app.vault.trash(parent, true);
+					if (grandparent instanceof TFolder) await cleanEmptyFolders(grandparent);
 				}
 			};
-			await cleanEmptyFolders(folder);
+			if (folder instanceof TFolder) await cleanEmptyFolders(folder);
 
 			new Notice(`Successfully removed ${removedCount} incidental dialogue edits.`);
 		} catch (error) {

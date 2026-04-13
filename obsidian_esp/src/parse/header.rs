@@ -15,9 +15,9 @@ fn parse_masters_list<'s>(input: &mut &'s str) -> Result<Vec<String>> {
     let mut masters = Vec::new();
     while let Ok(_) = peek((space_or_tab, "-", space1)).parse_next(input) {
         let _ = (space_or_tab, "-", space1).parse_next(input)?;
-        let val = unquoted_string.parse_next(input)?;
+        let val = take_till(0.., ['\r', '\n']).parse_next(input)?;
         let _ = eol_or_eof.parse_next(input)?;
-        masters.push(val.trim().to_string());
+        masters.push(decode_inline_yaml_value(val));
     }
 
     Ok(masters)
