@@ -1,0 +1,106 @@
+filters:
+  and:
+    - file.inFolder(this.file.folder)
+    - not:
+        - file.path == this.file.path
+properties:
+  file.name:
+    displayName: "File"
+  DiagID:
+    displayName: "Info ID"
+  Disposition:
+    displayName: "Disp"
+  ID:
+    displayName: "ID"
+  Faction:
+    displayName: "Faction"
+  Cell:
+    displayName: "Cell"
+  Variable0:
+    displayName: "Var 0"
+  Variable1:
+    displayName: "Var 1"
+  Variable2:
+    displayName: "Var 2"
+  Variable3:
+    displayName: "Var 3"
+  Variable4:
+    displayName: "Var 4"
+  Variable5:
+    displayName: "Var 5"
+views:
+  - type: table
+    name: "Topic View"
+    order:
+      - file.name
+      - DiagID
+      - Disposition
+      - ID
+      - Faction
+      - Cell
+      - Variable0
+      - Variable1
+      - Variable2
+      - Variable3
+      - Variable4
+      - Variable5
+  - type: table
+    name: "Greeting View"
+    order:
+      - file.name
+      - DiagID
+      - Disposition
+      - ID
+      - Faction
+      - Cell
+      - Variable0
+      - Variable1
+      - Variable2
+      - Variable3
+      - Variable4
+      - Variable5
+  - type: table
+    name: "Journal View"
+    order:
+      - file.name
+      - DiagID
+      - Disposition
+      - ID
+      - Faction
+      - Cell
+      - Variable0
+      - Variable1
+      - Variable2
+      - Variable3
+      - Variable4
+      - Variable5
+  - type: table
+    name: "Persuasion View"
+    order:
+      - file.name
+      - DiagID
+      - Disposition
+      - ID
+      - Faction
+      - Cell
+      - Variable0
+      - Variable1
+      - Variable2
+      - Variable3
+      - Variable4
+      - Variable5
+  - type: table
+    name: "Voice View"
+    order:
+      - file.name
+      - DiagID
+      - Disposition
+      - ID
+      - Faction
+      - Cell
+      - Variable0
+      - Variable1
+      - Variable2
+      - Variable3
+      - Variable4
+      - Variable5

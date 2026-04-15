@@ -1,0 +1,21 @@
+---
+Source:
+Type: Topic
+Topic: Flame Monarch
+DiagID: 14021212841106010209
+PrevID:
+Disposition: 0
+ID: aryon
+Race:
+Sex:
+Class:
+Faction:
+Rank:
+Cell:
+PC Faction:
+PC Rank:
+Function0: Journal
+Variable0: OAAB_TVos_Molaguradan = 100
+---
+
+Thank you for dealing with the [[Flame Monarch]] under [[Tel Vos]].

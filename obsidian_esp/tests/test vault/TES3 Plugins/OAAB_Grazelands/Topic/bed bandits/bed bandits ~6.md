@@ -1,0 +1,30 @@
+---
+Source:
+Type: Topic
+Topic: bed bandits
+DiagID: 2664223995139442921
+PrevID: 3134916070225617076
+Disposition: 0
+ID: menus felas
+Race:
+Sex:
+Class:
+Faction:
+Rank:
+Cell:
+PC Faction:
+PC Rank:
+Result: |
+  Set ABtv_NoticeBedBandits to -1
+  Player->AddItem AB_Misc_PurseCoin 1
+  ModDisposition -100
+  Goodbye
+Function0: Global
+Variable0: ABtv_NoticeBedBandits = 1
+Function1: Function
+Variable1: Choice = 3
+Function2: Function
+Variable2: PcStrength >= 75
+---
+
+What? Please don't hurt me! Here, take this and leave!
