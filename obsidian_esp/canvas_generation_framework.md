@@ -66,6 +66,25 @@ For a journal folder named `Journal/<QuestId>`:
 - journal notes = all markdown files in that folder whose filename ends in a numeric index
 - root journal note = `<QuestId>.md` if present, but do not place it on the canvas unless explicitly requested
 
+### Linked Journal Folders With Shared Quest Name
+
+Some quests are split into multiple journal folders but are grouped under one quest name in the in-game journal. The generator must treat these as one logical quest.
+
+Add a quest identity resolution pass before dialogue discovery:
+
+1. Parse journal notes in the selected folder.
+2. Extract a normalized `questNameKey` from available quest-name-bearing fields.
+3. Scan sibling `Journal/*` folders for notes with the same `questNameKey`.
+4. Merge matching folders into one quest scope.
+
+If no shared key is found, fall back to single-folder scope.
+
+When linked scope is active:
+
+- include milestones from all linked journal folders
+- include dialogue records that reference any linked journal id
+- emit one combined canvas
+
 Then scan the standard dialogue folders under the same project root:
 
 - `Greeting`
@@ -197,6 +216,13 @@ Define a phase as:
 - plus all branch families whose dominant quest condition points at that milestone or range
 - until a result advances the quest to a different milestone
 
+Non-dialogue journal updates must still advance phases. If no dialogue `Result` writes a discovered milestone index, treat that milestone as scripted/external and continue the phase backbone by placing it in progression order.
+
+Phase transition precedence:
+
+1. explicit dialogue result transition
+2. scripted/external milestone fallback
+
 In the sample, the practical phases are:
 
 1. Quest introduction leading to journal 20
@@ -292,6 +318,8 @@ Place journal milestones on the horizontal spine of the canvas.
 - each subsequent milestone at `previousPhaseX + phaseGapX`
 - y should be centered on the local cluster it anchors
 
+If a milestone is not targeted by any dialogue `Result`, still place it on the backbone as the next phase anchor.
+
 ### Step 3. Create section headers per topic group
 
 For each topic or greeting section inside a phase, place one header node to the left of its first gate column.
@@ -326,11 +354,21 @@ Each record variant gets its own gate node if its speaker conditions differ.
 Each gate node should contain the full normalized condition text in a stable order:
 
 1. disposition
-2. speaker filters such as class, faction, id
-3. quest journal predicates
-4. item predicates
-5. choice predicates
-6. any remaining conditions
+2. sex
+3. race
+4. class
+5. faction
+6. rank
+7. pc faction
+8. pc rank
+9. cell
+10. speaker id
+11. quest journal predicates
+12. item predicates
+13. choice predicates
+14. any remaining conditions
+
+Required filter coverage for parsing and display: disposition, sex, rank, pc rank, faction, pc faction, race, class, and cell.
 
 This ordering matches how a human reads relevance.
 
@@ -406,6 +444,8 @@ This reproduces the sample's strongest property: almost the entire graph can be 
 - Choice text remains explicit rather than being buried in result parsing.
 - Result scripts remain visible beneath the dialogue that fires them.
 
+Full-fidelity note preservation is mandatory. The generated canvas must preserve one file node per authored dialogue/journal note so note-to-canvas and canvas-to-note links remain exact.
+
 ## What To Improve Over The Sample
 
 ### 1. Snap To A Grid
@@ -437,27 +477,23 @@ Standard widths make scanning faster.
 
 Generic `# Jump` nodes are functional but vague. A procedural canvas can name them based on why the fan-out exists.
 
-### 5. Offer Two Render Modes
+### 5. Keep Full-Fidelity Output
 
-Support both modes from the same logical graph.
+Do not collapse authored records into merged summary nodes in generated output.
 
-- `full-fidelity`: preserve separate file nodes for each authored dialogue record
-- `merged-variants`: collapse speaker-only variants into one text-backed summary node with backlinks to the source files
-
-The sample should map to `full-fidelity` by default.
+- preserve separate file nodes for each authored dialogue record
+- preserve separate file nodes for each journal record
+- allow shared text consequence nodes only when consequence text is identical
 
 ## Minimal Implementation Contract
 
 This is the level of interface that would make the feature straightforward to build.
 
 ```ts
-type CanvasRenderMode = 'full-fidelity' | 'merged-variants';
-
 type QuestCanvasRequest = {
   projectRoot: string;
   journalFolderPath: string;
   outputCanvasPath?: string;
-  renderMode?: CanvasRenderMode;
 };
 
 type QuestCanvasPlan = {
@@ -510,12 +546,16 @@ The existing code already has the right primitives for this style of feature.
 The feature is ready when it can do all of the following from only a journal folder path:
 
 1. Find every quest-relevant journal note and dialogue note.
-2. Build a logical graph without depending on an existing canvas.
-3. Render a left-to-right flow with explicit gates, dialogue records, choices, results, and journal milestones.
-4. Regenerate deterministically with stable coordinates.
-5. Keep the main success path visually central and easy to follow.
-6. Preserve speaker-specific branches in full-fidelity mode.
-7. Avoid unnecessary edge crossings through jump nodes and shared consequence nodes.
+2. Merge linked journal folders when they share one quest name.
+3. Include scripted/non-dialogue journal milestones even without a dialogue writer.
+4. Build a logical graph without depending on an existing canvas.
+5. Render a left-to-right flow with explicit gates, dialogue records, choices, results, and journal milestones.
+6. Regenerate deterministically with stable coordinates.
+7. Keep the main success path visually central and easy to follow.
+8. Preserve speaker-specific branches in full-fidelity mode.
+9. Preserve note-backed file nodes for authored dialogue and journal records.
+10. Include explicit gate filters for disposition, sex, rank, pc rank, faction, pc faction, race, class, and cell.
+11. Avoid unnecessary edge crossings through jump nodes and shared consequence nodes.
 
 ## Recommended Next Implementation Slice
 
