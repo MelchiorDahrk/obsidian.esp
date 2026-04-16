@@ -1,5 +1,6 @@
 use std::fmt::Write as _;
 use std::path::Path;
+use std::collections::HashMap;
 
 use anyhow::{Context, Result};
 use itertools::Itertools;
@@ -338,6 +339,28 @@ fn dialogue_priority(dialogue_type: tes3::esp::DialogueType2) -> u8 {
     }
 }
 
+fn info_file_name(
+    dialogue_type: tes3::esp::DialogueType2,
+    stem: &str,
+    info: &DialogueInfo,
+    position: usize,
+    journal_index_counts: &mut HashMap<i32, usize>,
+) -> String {
+    match dialogue_type {
+        tes3::esp::DialogueType2::Journal => {
+            let duplicate_count = journal_index_counts.entry(info.data.disposition).or_insert(0);
+            let suffix = if *duplicate_count == 0 {
+                String::new()
+            } else {
+                format!(" ~{}", *duplicate_count)
+            };
+            *duplicate_count += 1;
+            format!("{stem} {}{suffix}.md", info.data.disposition)
+        }
+        _ => format!("{stem} ~{position}.md"),
+    }
+}
+
 /// Returns the dialogue groups from the plugin sorted by type priority and then
 /// case-insensitively by ID.
 fn sorted_dialogue_groups(plugin: &PluginData) -> Vec<&merge_to_master::DialogueGroup> {
@@ -366,9 +389,17 @@ pub fn collect_project_files(plugin: &PluginData) -> Vec<(String, String)> {
     for group in sorted_dialogue_groups(plugin) {
         let type_dir = format_type_directory(group.dialogue.dialogue_type);
         let stem = sanitize_file_stem(&group.dialogue.id);
+        let mut journal_index_counts = HashMap::new();
 
         for (index, info) in group.infos.iter().enumerate() {
-            let path = format!("{type_dir}/{stem}/{stem} ~{index}.md");
+            let file_name = info_file_name(
+                group.dialogue.dialogue_type,
+                &stem,
+                info,
+                index,
+                &mut journal_index_counts,
+            );
+            let path = format!("{type_dir}/{stem}/{file_name}");
             let content = render_info(&group.dialogue.id, info);
             files.push((path, content));
         }
@@ -418,12 +449,21 @@ pub fn collect_modified_project_files(plugin: &PluginData) -> Vec<(String, Strin
 
         let type_dir = format_type_directory(group.dialogue.dialogue_type);
         let stem = sanitize_file_stem(&group.dialogue.id);
+        let mut journal_index_counts = HashMap::new();
 
         for (index, info) in group.infos.iter().enumerate() {
+            let file_name = info_file_name(
+                group.dialogue.dialogue_type,
+                &stem,
+                info,
+                index,
+                &mut journal_index_counts,
+            );
+
             if !info.modified() {
                 continue;
             }
-            let path = format!("{type_dir}/{stem}/{stem} ~{index}.md");
+            let path = format!("{type_dir}/{stem}/{file_name}");
             let content = render_info(&group.dialogue.id, info);
             files.push((path, content));
         }
@@ -454,13 +494,21 @@ pub fn collect_single_topic_files(plugin: &PluginData, topic_name: &str) -> Vec<
 
     let type_dir = format_type_directory(group.dialogue.dialogue_type);
     let stem = sanitize_file_stem(&group.dialogue.id);
+    let mut journal_index_counts = HashMap::new();
 
     group
         .infos
         .iter()
         .enumerate()
         .map(|(index, info)| {
-            let path = format!("{type_dir}/{stem}/{stem} ~{index}.md");
+            let file_name = info_file_name(
+                group.dialogue.dialogue_type,
+                &stem,
+                info,
+                index,
+                &mut journal_index_counts,
+            );
+            let path = format!("{type_dir}/{stem}/{file_name}");
             let content = render_info_with_source(&group.dialogue.id, info, Some("master"));
             (path, content)
         })

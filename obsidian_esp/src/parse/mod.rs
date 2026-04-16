@@ -70,11 +70,28 @@ pub enum FilterValue {
     Integer(i32),
 }
 
-/// Returns the sort order index from a filename (e.g., `Topic ~5.md` -> 5).
+/// Returns the sort order index from a filename.
 ///
 /// This index is used to maintain evaluation order when `PrevID` links are not
 /// explicitly provided.
-fn default_sort_order(file_name: &str) -> u64 {
+fn default_sort_order(dialogue_type: DialogueType2, topic_name: &str, file_name: &str) -> u64 {
+    if dialogue_type == DialogueType2::Journal {
+        if let Some(rest) = file_name
+            .strip_prefix(topic_name)
+            .and_then(|rest| rest.strip_prefix(' '))
+        {
+            let (index, duplicate_order) = if let Some((index, duplicate_order)) = rest.split_once(" ~") {
+                (index, duplicate_order.parse::<u64>().unwrap_or(0))
+            } else {
+                (rest, 0)
+            };
+
+            if let Ok(index) = index.parse::<u64>() {
+                return (index << 32) | duplicate_order;
+            }
+        }
+    }
+
     if let Some(idx) = file_name.rfind(" ~") {
         file_name[idx + 2..].parse().unwrap_or(u64::MAX)
     } else {
@@ -157,7 +174,7 @@ pub fn parse_project_files(
             .file_stem()
             .and_then(|stem| stem.to_str())
             .unwrap_or(file_name);
-        let order = default_sort_order(file_stem);
+        let order = default_sort_order(dialogue_type, &topic_name, file_stem);
 
         info_entries.push((dialogue_type, topic_name, order, normalized_path, content));
     }

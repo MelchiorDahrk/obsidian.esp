@@ -233,7 +233,7 @@ fn test_export_round_trip() -> Result<()> {
         export_path
             .join("Journal")
             .join("11111 test journal")
-            .join("11111 test journal ~0.md")
+            .join("11111 test journal 10.md")
             .exists()
     );
     assert!(
@@ -589,6 +589,37 @@ fn test_topic_index_is_ignored() -> Result<()> {
     // Should only contain the 1 valid dialogue info, not the index file
     assert_eq!(parsed.infos.len(), 1);
     assert_eq!(parsed.infos[0].source_path, "Topic/sample/sample ~0.md");
+
+    Ok(())
+}
+
+#[test]
+fn test_journal_file_name_uses_index_order() -> Result<()> {
+    let files = vec![
+        (
+            "header.md".to_string(),
+            "---\nAuthor: Example\nDescription: journal filename test\nFile Type: ESP\nMasters:\n  - Morrowind.esm\n---\n"
+                .to_string(),
+        ),
+        (
+            "Journal/sample quest/sample quest 20.md".to_string(),
+            "---\nType: Journal\nTopic: sample quest\nIndex: 20\n---\nSecond journal entry.\n"
+                .to_string(),
+        ),
+        (
+            "Journal/sample quest/sample quest 10.md".to_string(),
+            "---\nType: Journal\nTopic: sample quest\nIndex: 10\n---\nFirst journal entry.\n"
+                .to_string(),
+        ),
+    ];
+
+    let parsed = obsidian_esp::parse::parse_project_files(files, None)?;
+
+    assert_eq!(parsed.infos.len(), 2);
+    assert_eq!(parsed.infos[0].frontmatter.disposition, Some(10));
+    assert_eq!(parsed.infos[0].source_path, "Journal/sample quest/sample quest 10.md");
+    assert_eq!(parsed.infos[1].frontmatter.disposition, Some(20));
+    assert_eq!(parsed.infos[1].source_path, "Journal/sample quest/sample quest 20.md");
 
     Ok(())
 }
