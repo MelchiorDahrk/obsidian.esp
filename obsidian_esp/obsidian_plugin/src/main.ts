@@ -4,6 +4,11 @@ import {
 	compileFolderSelection,
 	compileVaultFolder,
 } from './features/compile-folder';
+import {
+	canGenerateQuestCanvasFromFolder,
+	generateQuestCanvasForFolder,
+	generateQuestCanvasFromVaultFolder,
+} from './features/generate-quest-canvas';
 import { generatePropertyFilesForFolder } from './features/generate-properties';
 import {
 	DEFAULT_SETTINGS,
@@ -67,6 +72,14 @@ export default class ObsidianEsp extends Plugin {
 			},
 		});
 
+		this.addCommand({
+			id: 'generate-quest-canvas',
+			name: 'Generate quest canvas',
+			callback: () => {
+				void this.generateQuestCanvas();
+			},
+		});
+
 		// Vault Context Menu Integration
 		this.registerEvent(
 			this.app.workspace.on('file-menu', (menu, file) => {
@@ -86,6 +99,17 @@ export default class ObsidianEsp extends Plugin {
 								void this.compileSelectedFolder(file);
 							});
 					});
+
+					if (canGenerateQuestCanvasFromFolder(file)) {
+						submenu.addItem((subItem) => {
+							subItem
+								.setTitle('Generate quest canvas')
+								.setIcon('layout-dashboard')
+								.onClick(() => {
+									void this.generateQuestCanvasForSelectedFolder(file);
+								});
+						});
+					}
 
 					submenu.addItem((subItem) => {
 						subItem
@@ -308,6 +332,20 @@ export default class ObsidianEsp extends Plugin {
 		}
 
 		await compileFolderSelection(this.app, folder);
+	}
+
+	/**
+	 * Prompts the user to select a journal folder and generates a quest canvas.
+	 */
+	async generateQuestCanvas() {
+		await generateQuestCanvasFromVaultFolder(this.app);
+	}
+
+	/**
+	 * Generates a quest canvas for the selected journal folder.
+	 */
+	async generateQuestCanvasForSelectedFolder(folder: TFolder) {
+		await generateQuestCanvasForFolder(this.app, folder);
 	}
 
 	/**

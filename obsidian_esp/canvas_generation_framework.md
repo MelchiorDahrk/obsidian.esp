@@ -525,6 +525,23 @@ writeCanvasFile()
 updateCanvasBacklinks()
 ```
 
+## Implemented Notes
+
+The shipped plugin feature follows the framework, with a few pragmatic deviations to keep the first version deterministic and vault-driven.
+
+- Quest identity resolution uses the journal note whose frontmatter has `Quest Name: true` as the primary source of the human quest title.
+- The normalized first body line of that note is used as the `questNameKey` for linked-folder detection.
+- Output canvas path defaults to `Quests/<Quest Title>.canvas` under the project root.
+- Dialogue relevance is resolved from frontmatter conditions and `Result`, then expanded backward through `Choice` prompts and one `PrevID` / `DiagID` hop for adjacent branch context.
+- Phase anchoring is driven by discovered journal milestones and journal-setting results, with numeric journal order used as the stable fallback.
+- Within a topic segment, dialogue families are grouped into separate columns by incoming `Choice = N` conditions when those conditions exist.
+- Topic header nodes are emitted only when the left-to-right layout transitions into a different topic segment, rather than repeating once per family or once per phase.
+- Result text nodes use color `5` for non-journal consequences and color `6` when the rendered text includes a journal transition.
+- Jump routing is inserted as a post-layout pass only when a single source fans out to many vertically distant targets.
+- Each jump uses a numbered pair such as `Jump #1` and `Jump #1`, with no direct edge between the pair; the first marks the departure point and the second marks where the reader should resume.
+
+These choices should be treated as the current implementation contract unless a later revision proves that a different heuristic produces cleaner canvases on real vault data.
+
 ## Repo Integration Points
 
 If this is implemented in the plugin, the cleanest home is a dedicated feature module.
@@ -566,3 +583,12 @@ Build this in three small slices instead of one large feature.
 3. Swap placeholders for file-backed dialogue and journal nodes, then write the final `.canvas` file.
 
 That sequence will validate the hard part first, which is graph extraction and layout, before dealing with canvas polish.
+
+## Current Plugin Entry Points
+
+The implemented feature is wired into the Obsidian plugin in two places.
+
+- Command palette: `Generate quest canvas`
+- Folder context menu: `Generate quest canvas` for folders directly under `Journal/`
+
+The feature expects the selected folder to be a quest journal folder, not the `Journal/` root and not a dialogue topic folder.
