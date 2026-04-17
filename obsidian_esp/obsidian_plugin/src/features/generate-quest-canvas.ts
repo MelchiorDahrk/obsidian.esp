@@ -31,6 +31,7 @@ const VARIANT_GAP_Y = 420;
 const RESULT_GAP_Y = 30;
 const CHOICE_COLUMN_GAP_X = 1320;
 const TOPIC_SEGMENT_GAP_X = 1920;
+const FOLLOWUP_GROUP_GAP_X = 700;
 const CLUSTER_GAP_Y = 140;
 const JUMP_FANOUT_THRESHOLD = 4;
 const JUMP_SPAN_THRESHOLD_Y = 900;
@@ -145,6 +146,24 @@ interface BranchFamily {
 	bodyText: string;
 	priority: number;
 	progressionTarget: number | null;
+}
+
+interface ChoiceGroup {
+	choiceValue: number | null;
+	families: BranchFamily[];
+}
+
+interface ChoiceAnchor {
+	choiceValue: number;
+	nodeId: string;
+	x: number;
+	y: number;
+}
+
+interface TopicLayoutResult {
+	rootEntryIds: string[];
+	topY: number;
+	bottomY: number;
 }
 
 interface CanvasNode {
@@ -371,57 +390,32 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 		let topicSegmentIndex = 0;
 		for (const [topic, topicFamilies] of phaseTopics) {
 			const topicBaseX = phaseX + GATE_GAP_X + topicSegmentIndex * TOPIC_SEGMENT_GAP_X;
-			const choiceColumns = groupFamiliesByPrimaryChoice(topicFamilies);
-			let firstTopicEntryId: string | null = null;
-			let firstColumnTopY = 0;
+			const topicLayout = layoutTopicFamilies(
+				canvasContext,
+				topicFamilies,
+				phaseValue,
+				topicBaseX,
+				scope.journalMilestones,
+			);
 
-			for (let columnIndex = 0; columnIndex < choiceColumns.length; columnIndex += 1) {
-				const column = choiceColumns[columnIndex];
-				if (!column) {
-					continue;
-				}
-
-				const gateX = topicBaseX + columnIndex * CHOICE_COLUMN_GAP_X;
-				const dialogueX = gateX + (DIALOGUE_GAP_X - GATE_GAP_X);
-				const choiceX = dialogueX + (CHOICE_GAP_X - DIALOGUE_GAP_X);
-				const columnHeight = estimateChoiceColumnHeight(column.families);
-				let currentY = -Math.round(columnHeight / 2);
-				if (columnIndex === 0) {
-					firstColumnTopY = currentY;
-				}
-
-				for (const family of column.families) {
-					const familyLayout = layoutBranchFamily(
-						canvasContext,
-						family,
-						phaseValue,
-						gateX,
-						dialogueX,
-						choiceX,
-						currentY,
-						scope.journalMilestones,
-					);
-					if (firstTopicEntryId === null) {
-						firstTopicEntryId = familyLayout.firstEntryId;
-					}
-					currentY = familyLayout.nextY;
-				}
-			}
-
-			if (firstTopicEntryId) {
+			if (topicLayout.rootEntryIds.length > 0) {
 				if (previousRenderedTopic !== topic) {
 					const headerId = addTopicHeader(
 						canvasContext,
 						`${phaseValue}:${topicSegmentIndex}:${topic}`,
 						topic,
 						topicBaseX - 340,
-						firstColumnTopY - HEADER_Y_OFFSET,
+						topicLayout.topY - HEADER_Y_OFFSET,
 					);
 					addEdge(canvasContext, `${milestoneNodeId}:${headerId}`, milestoneNodeId, 'right', headerId, 'left');
-					addEdge(canvasContext, `${headerId}:${firstTopicEntryId}`, headerId, 'right', firstTopicEntryId, 'left');
+					for (const entryId of topicLayout.rootEntryIds) {
+						addEdge(canvasContext, `${headerId}:${entryId}`, headerId, 'right', entryId, 'left');
+					}
 					previousRenderedTopic = topic;
 				} else {
-					addEdge(canvasContext, `${milestoneNodeId}:${firstTopicEntryId}`, milestoneNodeId, 'right', firstTopicEntryId, 'left');
+					for (const entryId of topicLayout.rootEntryIds) {
+						addEdge(canvasContext, `${milestoneNodeId}:${entryId}`, milestoneNodeId, 'right', entryId, 'left');
+					}
 				}
 			}
 
@@ -533,10 +527,11 @@ function layoutBranchFamily(
 	choiceX: number,
 	startY: number,
 	allMilestones: JournalMilestone[],
-): { firstEntryId: string; nextY: number } {
+): { firstEntryId: string; nextY: number; choiceAnchors: ChoiceAnchor[] } {
 	const familyRecords = [...family.records].sort(compareDialogueRecords);
 	const familyChoiceActions = family.results.filter((action) => action.kind === 'choice-set');
 	const choiceNodeIds = new Map<number, string>();
+	const choiceAnchors: ChoiceAnchor[] = [];
 	let currentY = startY;
 	let firstEntryId = '';
 	let choiceCursorY = startY;
@@ -643,6 +638,12 @@ function layoutBranchFamily(
 					choiceValue: choiceAction.choiceValue,
 					nodeId: choiceNodeId,
 				});
+				choiceAnchors.push({
+					choiceValue: choiceAction.choiceValue,
+					nodeId: choiceNodeId,
+					x: choiceX,
+					y: choiceCursorY,
+				});
 				choiceCursorY += measureTextHeight(choiceAction.displayText) + 24;
 			}
 
@@ -655,6 +656,132 @@ function layoutBranchFamily(
 	return {
 		firstEntryId,
 		nextY: currentY,
+		choiceAnchors,
+	};
+}
+
+function layoutTopicFamilies(
+	context: CanvasLayoutContext,
+	families: BranchFamily[],
+	phaseValue: number,
+	topicBaseX: number,
+	allMilestones: JournalMilestone[],
+): TopicLayoutResult {
+	const choiceGroups = groupFamiliesByPrimaryChoice(families);
+	if (choiceGroups.length === 0) {
+		return { rootEntryIds: [], topY: 0, bottomY: 0 };
+	}
+
+	const groupsByChoice = new Map<string, ChoiceGroup>();
+	for (const group of choiceGroups) {
+		groupsByChoice.set(choiceGroupKey(group.choiceValue), group);
+	}
+
+	const emittedChoices = new Set<number>();
+	for (const family of families) {
+		for (const action of family.results) {
+			if (action.kind === 'choice-set' && action.choiceValue !== undefined) {
+				emittedChoices.add(action.choiceValue);
+			}
+		}
+	}
+
+	let rootGroups = choiceGroups.filter(
+		(group) => group.choiceValue === null || !emittedChoices.has(group.choiceValue),
+	);
+	if (rootGroups.length === 0) {
+		rootGroups = [...choiceGroups];
+	}
+	rootGroups.sort(compareChoiceGroups);
+
+	const renderedGroups = new Set<string>();
+	const rootEntryIds: string[] = [];
+	let topicTopY = Number.POSITIVE_INFINITY;
+	let topicBottomY = Number.NEGATIVE_INFINITY;
+	let nextRootStartY = -Math.round(estimateRootGroupHeight(rootGroups) / 2);
+
+	const renderChoiceGroup = (group: ChoiceGroup, gateX: number, startY: number): TopicLayoutResult => {
+		const groupKey = choiceGroupKey(group.choiceValue);
+		if (renderedGroups.has(groupKey)) {
+			return { rootEntryIds: [], topY: startY, bottomY: startY };
+		}
+		renderedGroups.add(groupKey);
+
+		const dialogueX = gateX + (DIALOGUE_GAP_X - GATE_GAP_X);
+		const choiceX = dialogueX + (CHOICE_GAP_X - DIALOGUE_GAP_X);
+		let currentY = startY;
+		let localTopY = startY;
+		let localBottomY = startY;
+		const localEntryIds: string[] = [];
+		const emittedAnchors: ChoiceAnchor[] = [];
+
+		for (const family of [...group.families].sort(compareBranchFamilies)) {
+			const familyLayout = layoutBranchFamily(
+				context,
+				family,
+				phaseValue,
+				gateX,
+				dialogueX,
+				choiceX,
+				currentY,
+				allMilestones,
+			);
+			localEntryIds.push(familyLayout.firstEntryId);
+			emittedAnchors.push(...familyLayout.choiceAnchors);
+			localBottomY = Math.max(localBottomY, familyLayout.nextY);
+			currentY = familyLayout.nextY;
+		}
+
+		for (const anchor of collapseChoiceAnchors(emittedAnchors)) {
+			const childGroup = groupsByChoice.get(choiceGroupKey(anchor.choiceValue));
+			if (!childGroup || renderedGroups.has(choiceGroupKey(childGroup.choiceValue))) {
+				continue;
+			}
+
+			const childHeight = estimateChoiceColumnHeight(childGroup.families);
+			const childStartY = Math.round(anchor.y - childHeight / 2);
+			const childLayout = renderChoiceGroup(
+				childGroup,
+				anchor.x + FOLLOWUP_GROUP_GAP_X,
+				childStartY,
+			);
+			localTopY = Math.min(localTopY, childLayout.topY);
+			localBottomY = Math.max(localBottomY, childLayout.bottomY);
+		}
+
+		topicTopY = Math.min(topicTopY, localTopY);
+		topicBottomY = Math.max(topicBottomY, localBottomY);
+
+		return {
+			rootEntryIds: localEntryIds,
+			topY: localTopY,
+			bottomY: localBottomY,
+		};
+	};
+
+	for (const rootGroup of rootGroups) {
+		const rootLayout = renderChoiceGroup(rootGroup, topicBaseX, nextRootStartY);
+		rootEntryIds.push(...rootLayout.rootEntryIds);
+		nextRootStartY = Math.max(
+			nextRootStartY + estimateChoiceColumnHeight(rootGroup.families) + LANE_GAP_Y,
+			rootLayout.bottomY + LANE_GAP_Y,
+		);
+	}
+
+	for (const group of choiceGroups.sort(compareChoiceGroups)) {
+		if (renderedGroups.has(choiceGroupKey(group.choiceValue))) {
+			continue;
+		}
+
+		const fallbackLayout = renderChoiceGroup(group, topicBaseX, nextRootStartY);
+		rootEntryIds.push(...fallbackLayout.rootEntryIds);
+		nextRootStartY = fallbackLayout.bottomY + LANE_GAP_Y;
+	}
+
+	return {
+		rootEntryIds: uniqueValues(rootEntryIds),
+		topY: Number.isFinite(topicTopY) ? topicTopY : 0,
+		bottomY: Number.isFinite(topicBottomY) ? topicBottomY : 0,
 	};
 }
 
@@ -694,10 +821,8 @@ function groupFamiliesByTopic(families: BranchFamily[]): Map<string, BranchFamil
 	return grouped;
 }
 
-function groupFamiliesByPrimaryChoice(
-	families: BranchFamily[],
-): Array<{ choiceValue: number | null; families: BranchFamily[] }> {
-	const grouped = new Map<string, { choiceValue: number | null; families: BranchFamily[] }>();
+function groupFamiliesByPrimaryChoice(families: BranchFamily[]): ChoiceGroup[] {
+	const grouped = new Map<string, ChoiceGroup>();
 	for (const family of families) {
 		const choiceValues = family.records
 			.map((record) => record.primaryChoiceValue)
@@ -712,7 +837,7 @@ function groupFamiliesByPrimaryChoice(
 		grouped.set(key, { choiceValue, families: [family] });
 	}
 
-	return [...grouped.values()].sort((left, right) => compareNullableNumbers(left.choiceValue, right.choiceValue));
+	return [...grouped.values()].sort(compareChoiceGroups);
 }
 
 function computePhasePositions(
@@ -746,10 +871,9 @@ function estimatePhaseWidth(topics: Map<string, BranchFamily[]>): number {
 	let furthestRight = JOURNAL_WIDTH;
 	let topicIndex = 0;
 	for (const [, families] of topics) {
-		const columns = groupFamiliesByPrimaryChoice(families);
-		const columnCount = Math.max(1, columns.length);
+		const depth = estimateTopicDepth(families);
 		const topicBaseX = GATE_GAP_X + topicIndex * TOPIC_SEGMENT_GAP_X;
-		const lastGateX = topicBaseX + (columnCount - 1) * CHOICE_COLUMN_GAP_X;
+		const lastGateX = topicBaseX + (depth - 1) * sourceGroupStepX();
 		const lastChoiceX = lastGateX + (CHOICE_GAP_X - GATE_GAP_X);
 		furthestRight = Math.max(furthestRight, lastChoiceX + CHOICE_WIDTH);
 		topicIndex += 1;
@@ -777,6 +901,117 @@ function estimateFamilyHeight(family: BranchFamily): number {
 		total += Math.max(gateHeight, DIALOGUE_HEIGHT) + resultHeight + CLUSTER_GAP_Y;
 	}
 	return Math.max(total, DIALOGUE_HEIGHT + CLUSTER_GAP_Y);
+}
+
+function estimateRootGroupHeight(groups: ChoiceGroup[]): number {
+	if (groups.length === 0) {
+		return DIALOGUE_HEIGHT + CLUSTER_GAP_Y;
+	}
+
+	return groups.reduce((total, group, index) => {
+		const spacing = index === 0 ? 0 : LANE_GAP_Y;
+		return total + spacing + estimateChoiceColumnHeight(group.families);
+	}, 0);
+}
+
+function estimateTopicDepth(families: BranchFamily[]): number {
+	const choiceGroups = groupFamiliesByPrimaryChoice(families);
+	if (choiceGroups.length === 0) {
+		return 1;
+	}
+
+	const groupsByChoice = new Map<string, ChoiceGroup>();
+	for (const group of choiceGroups) {
+		groupsByChoice.set(choiceGroupKey(group.choiceValue), group);
+	}
+
+	const emittedChoices = new Set<number>();
+	for (const family of families) {
+		for (const action of family.results) {
+			if (action.kind === 'choice-set' && action.choiceValue !== undefined) {
+				emittedChoices.add(action.choiceValue);
+			}
+		}
+	}
+
+	let roots = choiceGroups.filter(
+		(group) => group.choiceValue === null || !emittedChoices.has(group.choiceValue),
+	);
+	if (roots.length === 0) {
+		roots = [...choiceGroups];
+	}
+
+	const visiting = new Set<string>();
+	const memo = new Map<string, number>();
+	const depthForGroup = (group: ChoiceGroup): number => {
+		const key = choiceGroupKey(group.choiceValue);
+		const cached = memo.get(key);
+		if (cached !== undefined) {
+			return cached;
+		}
+		if (visiting.has(key)) {
+			return 1;
+		}
+
+		visiting.add(key);
+		let maxChildDepth = 0;
+		for (const family of group.families) {
+			for (const action of family.results) {
+				if (action.kind !== 'choice-set' || action.choiceValue === undefined) {
+					continue;
+				}
+
+				const childGroup = groupsByChoice.get(choiceGroupKey(action.choiceValue));
+				if (!childGroup) {
+					continue;
+				}
+				maxChildDepth = Math.max(maxChildDepth, depthForGroup(childGroup));
+			}
+		}
+		visiting.delete(key);
+
+		const depth = 1 + maxChildDepth;
+		memo.set(key, depth);
+		return depth;
+	};
+
+	return Math.max(...roots.map((group) => depthForGroup(group)), 1);
+}
+
+function collapseChoiceAnchors(anchors: ChoiceAnchor[]): ChoiceAnchor[] {
+	const grouped = new Map<number, ChoiceAnchor[]>();
+	for (const anchor of anchors) {
+		const existing = grouped.get(anchor.choiceValue) ?? [];
+		existing.push(anchor);
+		grouped.set(anchor.choiceValue, existing);
+	}
+
+	return [...grouped.entries()]
+		.sort((left, right) => left[0] - right[0])
+		.map(([, valueAnchors]) => {
+			const y = Math.round(
+				valueAnchors.reduce((sum, anchor) => sum + anchor.y, 0) / valueAnchors.length,
+			);
+			const x = Math.max(...valueAnchors.map((anchor) => anchor.x));
+			return {
+				choiceValue: valueAnchors[0]?.choiceValue ?? 0,
+				nodeId: valueAnchors[0]?.nodeId ?? '',
+				x,
+				y,
+			};
+		});
+}
+
+function compareChoiceGroups(left: ChoiceGroup, right: ChoiceGroup): number {
+	return compareNullableNumbers(left.choiceValue, right.choiceValue);
+}
+
+function choiceGroupKey(choiceValue: number | null): string {
+	return choiceValue === null ? 'root' : String(choiceValue);
+}
+
+function sourceGroupStepX(): number {
+	return (CHOICE_GAP_X - GATE_GAP_X) + FOLLOWUP_GROUP_GAP_X;
 }
 
 function connectScriptedMilestones(context: CanvasLayoutContext, phaseIndices: number[]): void {
