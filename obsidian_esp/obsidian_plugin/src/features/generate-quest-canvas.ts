@@ -5,6 +5,8 @@ import { ProgressBar } from '../ui/progress-bar';
 import { splitFrontmatter } from '../utils/obsidian-utils';
 
 const DIALOGUE_TYPES = ['Greeting', 'Topic', 'Persuasion', 'Voice'] as const;
+const CANVAS_BODY_BLOCK_TYPES = new Set(['Journal', 'Greeting', 'Topic']);
+const CANVAS_BODY_BLOCK_PREFIX = 'obsidian-esp-canvas';
 const QUEST_NAME_FIELD = 'Quest Name';
 const JOURNAL_FOLDER_NAME = 'Journal';
 const QUESTS_FOLDER_NAME = 'Quests';
@@ -66,6 +68,7 @@ interface MarkdownDocument {
 	file: TFile;
 	frontmatter: Record<string, FrontmatterValue>;
 	body: string;
+	canvasBodySubpath: string | null;
 }
 
 interface QuestScope {
@@ -88,6 +91,7 @@ interface JournalMilestone {
 	index: number;
 	file: TFile;
 	summary: string;
+	canvasSubpath: string | null;
 }
 
 interface Condition {
@@ -119,6 +123,7 @@ interface DialogueRecord {
 	type: DialogueType;
 	topic: string;
 	file: TFile;
+	canvasSubpath: string | null;
 	diagId: string;
 	prevId: string;
 	bodyText: string;
@@ -238,6 +243,7 @@ interface CanvasNode {
 	id: string;
 	type: 'file' | 'text';
 	file?: string;
+	subpath?: string;
 	text?: string;
 	x: number;
 	y: number;
@@ -258,8 +264,14 @@ interface CanvasBuildResult {
 	nodes: CanvasNode[];
 	edges: CanvasEdge[];
 	relatedFiles: TFile[];
+	fileNodeTargets: FileNodeTarget[];
 	warnings: string[];
 	phaseGraphSummary: PhaseGraphDebugSummary;
+}
+
+interface FileNodeTarget {
+	file: TFile;
+	subpath: string;
 }
 
 interface QuestCanvasGenerationOptions {
@@ -317,7 +329,12 @@ export async function generateQuestCanvasForFolder(
 		}
 		progress.update(80, 'Writing canvas and backlinks');
 		await writeCanvasPlan(app, scope.outputCanvasPath, buildResult.nodes, buildResult.edges);
-		await updateCanvasBacklinks(app, buildResult.relatedFiles, scope.outputCanvasPath);
+		await updateCanvasLinksAndBodyBlocks(
+			app,
+			buildResult.relatedFiles,
+			buildResult.fileNodeTargets,
+			scope.outputCanvasPath,
+		);
 
 		const warningSuffix =
 			buildResult.warnings.length > 0
@@ -522,17 +539,39 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 	insertJumpNodes(canvasContext);
 
 	const relatedFiles = new Map<string, TFile>();
+	const fileNodeTargets = new Map<string, FileNodeTarget>();
 	for (const milestone of scope.journalDocuments) {
 		relatedFiles.set(milestone.file.path, milestone.file);
 	}
 	for (const record of relevantRecords) {
 		relatedFiles.set(record.file.path, record.file);
 	}
+	for (const milestone of scope.journalMilestones) {
+		if (!milestone.canvasSubpath) {
+			continue;
+		}
+
+		fileNodeTargets.set(milestone.file.path, {
+			file: milestone.file,
+			subpath: milestone.canvasSubpath,
+		});
+	}
+	for (const record of relevantRecords) {
+		if (!record.canvasSubpath) {
+			continue;
+		}
+
+		fileNodeTargets.set(record.file.path, {
+			file: record.file,
+			subpath: record.canvasSubpath,
+		});
+	}
 
 	return {
 		nodes: canvasContext.nodes,
 		edges: canvasContext.edges,
 		relatedFiles: [...relatedFiles.values()].sort((left, right) => left.path.localeCompare(right.path)),
+		fileNodeTargets: [...fileNodeTargets.values()].sort((left, right) => left.file.path.localeCompare(right.file.path)),
 		warnings,
 		phaseGraphSummary: buildPhaseGraphDebugSummary(
 			scope.questTitle,
@@ -575,6 +614,7 @@ function addPhaseMilestone(
 			id: nodeId,
 			type: 'file',
 			file: milestone.file.path,
+			subpath: milestone.canvasSubpath ?? undefined,
 			x: phaseX,
 			y: 0,
 			width: JOURNAL_WIDTH,
@@ -672,6 +712,7 @@ function layoutBranchFamily(
 			DIALOGUE_WIDTH,
 			DIALOGUE_HEIGHT,
 			DIALOGUE_COLOR,
+			record.canvasSubpath,
 		);
 		const gateId = gateText.length > 0
 			? addTextNode(
@@ -1555,15 +1596,40 @@ async function writeCanvasPlan(
 	await app.vault.create(outputPath, canvasJson);
 }
 
-async function updateCanvasBacklinks(app: App, files: TFile[], outputCanvasPath: string): Promise<void> {
+async function updateCanvasLinksAndBodyBlocks(
+	app: App,
+	files: TFile[],
+	fileNodeTargets: FileNodeTarget[],
+	outputCanvasPath: string,
+): Promise<void> {
 	const canvasFileName = outputCanvasPath.split('/').pop();
 	if (!canvasFileName) {
 		return;
 	}
+	const targetsByPath = new Map(fileNodeTargets.map((target) => [target.file.path, target.subpath]));
 
 	for (const file of files) {
-		await app.vault.process(file, (content) => ensureCanvasFrontmatterLink(content, canvasFileName));
+		await app.vault.process(file, (content) => {
+			const subpath = targetsByPath.get(file.path);
+			const nextContent = subpath ? ensureCanvasBodyBlockLink(content, subpath) : content;
+			return ensureCanvasFrontmatterLink(nextContent, canvasFileName);
+		});
 	}
+}
+
+function ensureCanvasBodyBlockLink(content: string, subpath: string): string {
+	const blockId = blockIdFromSubpath(subpath);
+	if (!blockId) {
+		return content;
+	}
+
+	const { frontmatter, body } = splitFrontmatter(content);
+	const nextBody = ensureTrailingBodyBlockId(body, blockId);
+	if (nextBody === body) {
+		return content;
+	}
+
+	return `${frontmatter}${nextBody}`;
 }
 
 function ensureCanvasFrontmatterLink(content: string, canvasFileName: string): string {
@@ -1649,10 +1715,13 @@ function collectMarkdownFiles(folder: TFolder): TFile[] {
 async function readMarkdownDocument(app: App, file: TFile): Promise<MarkdownDocument> {
 	const content = await app.vault.read(file);
 	const { frontmatter, body } = splitFrontmatter(content);
+	const parsedFrontmatter = parseStructuredFrontmatter(frontmatter);
+	const trimmedBody = body.trim();
 	return {
 		file,
-		frontmatter: parseStructuredFrontmatter(frontmatter),
-		body: body.trim(),
+		frontmatter: parsedFrontmatter,
+		body: trimmedBody,
+		canvasBodySubpath: resolveCanvasBodySubpath(file.path, parsedFrontmatter, trimmedBody),
 	};
 }
 
@@ -1779,6 +1848,7 @@ function toJournalMilestone(document: MarkdownDocument): JournalMilestone | null
 		index,
 		file: document.file,
 		summary: firstSentence(document.body),
+		canvasSubpath: document.canvasBodySubpath,
 	};
 }
 
@@ -1805,6 +1875,7 @@ function toDialogueRecord(
 		type,
 		topic,
 		file: document.file,
+		canvasSubpath: document.canvasBodySubpath,
 		diagId: getStringValue(document.frontmatter, 'DiagID') ?? '',
 		prevId: getStringValue(document.frontmatter, 'PrevID') ?? '',
 		bodyText,
@@ -2192,6 +2263,7 @@ function addFileNode(
 	width: number,
 	height: number,
 	color: string,
+	subpath?: string | null,
 ): string {
 	const nodeId = createNodeId(seed);
 	if (!context.nodeIds.has(nodeId)) {
@@ -2199,6 +2271,7 @@ function addFileNode(
 			id: nodeId,
 			type: 'file',
 			file: filePath,
+			subpath: subpath ?? undefined,
 			x,
 			y,
 			width,
@@ -2206,6 +2279,11 @@ function addFileNode(
 			color,
 		});
 		context.nodeIds.add(nodeId);
+	} else if (subpath) {
+		const node = context.nodes.find((candidate) => candidate.id === nodeId);
+		if (node?.type === 'file' && !node.subpath) {
+			node.subpath = subpath;
+		}
 	}
 	return nodeId;
 }
@@ -2369,6 +2447,86 @@ function firstNonEmptyLine(text: string): string | null {
 
 function stripBlockId(text: string): string {
 	return text.replace(/\s+\^[A-Za-z0-9_-]+$/, '').trim();
+}
+
+function resolveCanvasBodySubpath(
+	filePath: string,
+	frontmatter: Record<string, FrontmatterValue>,
+	body: string,
+): string | null {
+	if (body.length === 0) {
+		return null;
+	}
+
+	const type = getStringValue(frontmatter, 'Type');
+	if (!type || !CANVAS_BODY_BLOCK_TYPES.has(type)) {
+		return null;
+	}
+
+	const existingBlockId = trailingBodyBlockId(body);
+	return `#^${existingBlockId ?? createCanvasBodyBlockId(filePath)}`;
+}
+
+function createCanvasBodyBlockId(filePath: string): string {
+	return `${CANVAS_BODY_BLOCK_PREFIX}-${stableHash(filePath).slice(0, 10)}`;
+}
+
+function blockIdFromSubpath(subpath: string): string | null {
+	const match = subpath.match(/^#\^([A-Za-z0-9_-]+)$/);
+	return match?.[1] ?? null;
+}
+
+function ensureTrailingBodyBlockId(body: string, blockId: string): string {
+	if (body.length === 0) {
+		return body;
+	}
+
+	const lines = body.split('\n');
+	let lastContentLine = -1;
+	for (let index = lines.length - 1; index >= 0; index -= 1) {
+		if ((lines[index] ?? '').trim().length > 0) {
+			lastContentLine = index;
+			break;
+		}
+	}
+
+	if (lastContentLine === -1) {
+		return body;
+	}
+
+	const currentBlockId = trailingBlockId(lines[lastContentLine] ?? '');
+	if (currentBlockId) {
+		return body;
+	}
+
+	lines[lastContentLine] = `${(lines[lastContentLine] ?? '').trimEnd()} ^${blockId}`;
+	return lines.join('\n');
+}
+
+function trailingBodyBlockId(body: string): string | null {
+	const line = firstNonEmptyLineFromEnd(body);
+	if (!line) {
+		return null;
+	}
+
+	return trailingBlockId(line);
+}
+
+function firstNonEmptyLineFromEnd(text: string): string | null {
+	const lines = text.split('\n');
+	for (let index = lines.length - 1; index >= 0; index -= 1) {
+		const trimmed = (lines[index] ?? '').trim();
+		if (trimmed.length > 0) {
+			return trimmed;
+		}
+	}
+
+	return null;
+}
+
+function trailingBlockId(text: string): string | null {
+	const match = text.match(/\s+\^([A-Za-z0-9_-]+)\s*$/);
+	return match?.[1] ?? null;
 }
 
 function normalizeQuestNameKey(text: string | null): string | null {

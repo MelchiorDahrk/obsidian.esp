@@ -125,6 +125,7 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
         .replace("\r\n", "\n")
         .replace('\r', "\n")
         .replace('\n', "\r\n");
+    let text = strip_trailing_obsidian_block_id(&text);
 
     // Normalize escaped or inline-edited newlines in the result script.
     if let Some(script_text) = &mut info.script_text {
@@ -137,6 +138,44 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
     }
 
     Ok((info, text))
+}
+
+fn strip_trailing_obsidian_block_id(text: &str) -> String {
+    let Some((prefix, last_line)) = text.rsplit_once("\r\n") else {
+        return strip_block_id_suffix(last_line_or_text(text)).to_string();
+    };
+
+    let stripped_last_line = strip_block_id_suffix(last_line);
+    if stripped_last_line == last_line {
+        return text.to_string();
+    }
+
+    if stripped_last_line.is_empty() {
+        return prefix.to_string();
+    }
+
+    format!("{prefix}\r\n{stripped_last_line}")
+}
+
+fn last_line_or_text(text: &str) -> &str {
+    text
+}
+
+fn strip_block_id_suffix(line: &str) -> &str {
+    let Some(separator_index) = line.rfind(" ^") else {
+        return line;
+    };
+
+    let suffix = &line[separator_index + 2..];
+    if suffix.is_empty()
+        || !suffix
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || character == '_' || character == '-')
+    {
+        return line;
+    }
+
+    &line[..separator_index]
 }
 
 /// Dispatches a single YAML key-value pair to its corresponding field in the
@@ -279,5 +318,28 @@ fn dispatch_yaml_field(
                 filters_map.entry(idx).or_insert((None, None)).1 = Some(val);
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_info_file;
+
+    #[test]
+    fn parse_info_file_strips_trailing_obsidian_block_id() {
+        let mut input = "---\nType: Topic\nTopic: Test Topic\n---\n\nFirst line\nSecond line ^obsidian-esp-canvas-abc123\n";
+
+        let (_, text) = parse_info_file(&mut input).expect("parser should succeed");
+
+        assert_eq!(text, "First line\r\nSecond line");
+    }
+
+    #[test]
+    fn parse_info_file_preserves_non_block_id_caret_text() {
+        let mut input = "---\nType: Topic\nTopic: Test Topic\n---\n\nValue ^ not a block id\n";
+
+        let (_, text) = parse_info_file(&mut input).expect("parser should succeed");
+
+        assert_eq!(text, "Value ^ not a block id");
     }
 }
