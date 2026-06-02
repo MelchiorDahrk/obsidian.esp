@@ -19,9 +19,11 @@ const SECTION_HEADER_WIDTH = 240;
 const GATE_WIDTH = 385;
 const CHOICE_WIDTH = 320;
 const DIALOGUE_WIDTH = 440;
-const DIALOGUE_HEIGHT = 320;
 const JOURNAL_WIDTH = 440;
-const JOURNAL_HEIGHT = 220;
+const FILE_NODE_MIN_HEIGHT = 96;
+const FILE_NODE_PADDING_Y = 40;
+const TEXT_NODE_HORIZONTAL_PADDING = 48;
+const APPROX_TEXT_CHAR_WIDTH = 8;
 const PHASE_GAP_X = 1320;
 const HEADER_GAP_X = 180;
 const GATE_GAP_X = 520;
@@ -35,6 +37,7 @@ const CHOICE_COLUMN_GAP_X = 1320;
 const TOPIC_SEGMENT_GAP_X = 1920;
 const FOLLOWUP_GROUP_GAP_X = 700;
 const CLUSTER_GAP_Y = 140;
+const FINAL_NODE_GAP_Y = 24;
 const JUMP_FANOUT_THRESHOLD = 4;
 const JUMP_SPAN_THRESHOLD_Y = 900;
 const KNOWN_FRONTMATTER_KEYS = new Set([
@@ -177,6 +180,7 @@ interface TopicLayoutResult {
 	topY: number;
 	bottomY: number;
 	mainLaneCenterY: number;
+	nodeIds: string[];
 }
 
 interface PhaseTopicSegment {
@@ -282,6 +286,7 @@ interface CanvasLayoutContext {
 	nodes: CanvasNode[];
 	edges: CanvasEdge[];
 	relatedFiles: Map<string, TFile>;
+	fileBodyTextByPath: Map<string, string>;
 	phaseNodeIds: Map<number, string>;
 	topicHeaderIds: Map<string, string>;
 	nodeIds: Set<string>;
@@ -440,6 +445,12 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 	const families = groupBranchFamilies(relevantRecords);
 	const warnings: string[] = [];
 	const canvasContext = createCanvasLayoutContext();
+	for (const document of scope.journalDocuments) {
+		canvasContext.fileBodyTextByPath.set(document.file.path, document.body);
+	}
+	for (const document of dialogueDocuments) {
+		canvasContext.fileBodyTextByPath.set(document.file.path, document.body);
+	}
 	const milestoneIndices = uniqueNumbers(scope.journalMilestones.map((milestone) => milestone.index).filter((index) => index > 0));
 	const phaseIndices = milestoneIndices.length > 0 ? milestoneIndices : uniqueNumbers(scope.journalMilestones.map((milestone) => milestone.index));
 	const phaseGraph = buildPhaseGraph(phaseIndices, families);
@@ -537,6 +548,7 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 
 	connectScriptedMilestones(canvasContext, phaseGraph.orderedPhases);
 	insertJumpNodes(canvasContext);
+	resolveCanvasNodeOverlaps(canvasContext);
 
 	const relatedFiles = new Map<string, TFile>();
 	const fileNodeTargets = new Map<string, FileNodeTarget>();
@@ -589,6 +601,7 @@ function createCanvasLayoutContext(): CanvasLayoutContext {
 		nodes: [],
 		edges: [],
 		relatedFiles: new Map<string, TFile>(),
+		fileBodyTextByPath: new Map<string, string>(),
 		phaseNodeIds: new Map<number, string>(),
 		topicHeaderIds: new Map<string, string>(),
 		nodeIds: new Set<string>(),
@@ -610,6 +623,7 @@ function addPhaseMilestone(
 ): string {
 	const nodeId = createNodeId(`journal:${milestone.file.path}`);
 	if (!context.nodeIds.has(nodeId)) {
+		const height = measureFileNodeHeight(context, milestone.file.path, JOURNAL_WIDTH);
 		context.nodes.push({
 			id: nodeId,
 			type: 'file',
@@ -618,7 +632,7 @@ function addPhaseMilestone(
 			x: phaseX,
 			y: 0,
 			width: JOURNAL_WIDTH,
-			height: JOURNAL_HEIGHT,
+			height,
 			color: JOURNAL_COLOR,
 		});
 		context.nodeIds.add(nodeId);
@@ -640,7 +654,7 @@ function centerPhaseMilestone(context: CanvasLayoutContext, phaseValue: number, 
 		return;
 	}
 
-	node.y = Math.round(centerY - JOURNAL_HEIGHT / 2);
+	node.y = Math.round(centerY - node.height / 2);
 }
 
 function addTopicHeader(
@@ -696,12 +710,13 @@ function layoutBranchFamily(
 		}
 
 		const gateText = renderConditionBlock(record.conditions);
-		const gateHeight = gateText.length > 0 ? measureTextHeight(gateText) : 0;
+		const gateHeight = gateText.length > 0 ? measureTextHeight(gateText, GATE_WIDTH) : 0;
+		const dialogueHeight = measureCanvasBodyHeight(record.bodyText, DIALOGUE_WIDTH);
 		const localResultLines = record.resultActions
 			.filter((action) => action.kind !== 'choice-set')
 			.map((action) => action.displayText);
-		const localResultHeight = localResultLines.length > 0 ? measureTextHeight(localResultLines.join('\n')) + RESULT_GAP_Y : 0;
-		const clusterHeight = Math.max(gateHeight, DIALOGUE_HEIGHT) + localResultHeight + CLUSTER_GAP_Y;
+		const localResultHeight = localResultLines.length > 0 ? measureTextHeight(localResultLines.join('\n'), DIALOGUE_WIDTH) + RESULT_GAP_Y : 0;
+		const clusterHeight = Math.max(gateHeight, dialogueHeight) + localResultHeight + CLUSTER_GAP_Y;
 		const recordY = currentY;
 		const dialogueId = addFileNode(
 			context,
@@ -710,7 +725,7 @@ function layoutBranchFamily(
 			dialogueX,
 			recordY,
 			DIALOGUE_WIDTH,
-			DIALOGUE_HEIGHT,
+			dialogueHeight,
 			DIALOGUE_COLOR,
 			record.canvasSubpath,
 		);
@@ -741,7 +756,7 @@ function layoutBranchFamily(
 				`result:${record.file.path}`,
 				resultText,
 				dialogueX,
-				recordY + DIALOGUE_HEIGHT + RESULT_GAP_Y,
+				recordY + dialogueHeight + RESULT_GAP_Y,
 				DIALOGUE_WIDTH,
 				containsJournalLine(localResultLines) ? JOURNAL_COLOR : RESULT_COLOR,
 			);
@@ -775,6 +790,7 @@ function layoutBranchFamily(
 
 			let choiceNodeId = choiceNodeIds.get(choiceAction.choiceValue);
 			if (!choiceNodeId) {
+				const choiceHeight = measureTextHeight(choiceAction.displayText, CHOICE_WIDTH);
 				choiceNodeId = addTextNode(
 					context,
 					`choice:${family.id}:${choiceAction.choiceValue}`,
@@ -789,9 +805,9 @@ function layoutBranchFamily(
 					choiceValue: choiceAction.choiceValue,
 					nodeId: choiceNodeId,
 					x: choiceX,
-					y: choiceCursorY,
+					y: Math.round(choiceCursorY + choiceHeight / 2),
 				});
-				choiceCursorY += measureTextHeight(choiceAction.displayText) + 24;
+				choiceCursorY += choiceHeight + 24;
 			}
 
 			addEdge(context, `${dialogueId}:${choiceNodeId}`, dialogueId, 'right', choiceNodeId, 'left');
@@ -816,7 +832,7 @@ function layoutTopicFamilies(
 ): TopicLayoutResult {
 	const choiceGroups = groupFamiliesByPrimaryChoice(families);
 	if (choiceGroups.length === 0) {
-		return { rootEntryIds: [], topY: 0, bottomY: 0, mainLaneCenterY: 0 };
+		return { rootEntryIds: [], topY: 0, bottomY: 0, mainLaneCenterY: 0, nodeIds: [] };
 	}
 
 	const groupsByChoice = mapChoiceGroupsByChoice(choiceGroups);
@@ -839,9 +855,10 @@ function layoutTopicFamilies(
 			return cachedLayout;
 		}
 		if (renderingGroups.has(groupKey)) {
-			return { rootEntryIds: [], topY: startY, bottomY: startY, mainLaneCenterY: startY };
+			return { rootEntryIds: [], topY: startY, bottomY: startY, mainLaneCenterY: startY, nodeIds: [] };
 		}
 		renderingGroups.add(groupKey);
+		const renderedNodeCount = context.nodes.length;
 
 		const dialogueX = gateX + (DIALOGUE_GAP_X - GATE_GAP_X);
 		const choiceX = dialogueX + (CHOICE_GAP_X - DIALOGUE_GAP_X);
@@ -852,6 +869,7 @@ function layoutTopicFamilies(
 		let localBottomY = startY;
 		const localEntryIds: string[] = [];
 		const emittedAnchors: ChoiceAnchor[] = [];
+		const childLayouts: TopicLayoutResult[] = [];
 
 		for (const family of [...group.families].sort(compareBranchFamilies)) {
 			const familyLayout = layoutBranchFamily(
@@ -873,7 +891,9 @@ function layoutTopicFamilies(
 
 		const mainLaneBottomY = Math.max(groupTopY, groupBottomY - CLUSTER_GAP_Y);
 		const mainLaneCenterY = Math.round((groupTopY + mainLaneBottomY) / 2);
-		for (const anchor of collapseChoiceAnchors(emittedAnchors)) {
+		const mainColumnTopY = localTopY;
+		const mainColumnBottomY = localBottomY;
+		for (const anchor of collapseChoiceAnchors(emittedAnchors).sort((left, right) => left.y - right.y || left.choiceValue - right.choiceValue)) {
 			const childGroup = groupsByChoice.get(choiceGroupKey(anchor.choiceValue));
 			if (!childGroup) {
 				continue;
@@ -898,6 +918,13 @@ function layoutTopicFamilies(
 					);
 				}
 			}
+			childLayouts.push(childLayout);
+		}
+
+		pushDownOverlappingLayouts(context, childLayouts, LANE_GAP_Y);
+		localTopY = mainColumnTopY;
+		localBottomY = mainColumnBottomY;
+		for (const childLayout of childLayouts) {
 			localTopY = Math.min(localTopY, childLayout.topY);
 			localBottomY = Math.max(localBottomY, childLayout.bottomY);
 		}
@@ -910,6 +937,7 @@ function layoutTopicFamilies(
 			topY: localTopY,
 			bottomY: localBottomY,
 			mainLaneCenterY,
+			nodeIds: context.nodes.slice(renderedNodeCount).map((node) => node.id),
 		};
 		renderedGroupLayouts.set(groupKey, layout);
 		renderingGroups.delete(groupKey);
@@ -926,6 +954,13 @@ function layoutTopicFamilies(
 		const rootLayout = renderChoiceGroup(rootGroup, topicBaseX, rootStartYs[rootIndex] ?? 0);
 		rootEntryIds.push(...rootLayout.rootEntryIds);
 		rootLayouts.push(rootLayout);
+	}
+	pushDownOverlappingLayouts(context, rootLayouts, LANE_GAP_Y);
+	topicTopY = Number.POSITIVE_INFINITY;
+	topicBottomY = Number.NEGATIVE_INFINITY;
+	for (const rootLayout of rootLayouts) {
+		topicTopY = Math.min(topicTopY, rootLayout.topY);
+		topicBottomY = Math.max(topicBottomY, rootLayout.bottomY);
 	}
 
 	let nextFallbackY = Number.isFinite(topicBottomY) ? topicBottomY + LANE_GAP_Y : 0;
@@ -946,7 +981,51 @@ function layoutTopicFamilies(
 		topY: Number.isFinite(topicTopY) ? topicTopY : 0,
 		bottomY: Number.isFinite(topicBottomY) ? topicBottomY : 0,
 		mainLaneCenterY,
+		nodeIds: [],
 	};
+}
+
+function pushDownOverlappingLayouts(
+	context: CanvasLayoutContext,
+	layouts: TopicLayoutResult[],
+	gapY: number,
+): void {
+	const sortedLayouts = [...layouts]
+		.filter((layout) => layout.nodeIds.length > 0)
+		.sort((left, right) => left.topY - right.topY || left.bottomY - right.bottomY);
+
+	let previousBottomY: number | null = null;
+	for (const layout of sortedLayouts) {
+		if (previousBottomY !== null) {
+			const minimumTopY = previousBottomY + gapY;
+			if (layout.topY < minimumTopY) {
+				shiftTopicLayout(context, layout, minimumTopY - layout.topY);
+			}
+		}
+
+		previousBottomY = layout.bottomY;
+	}
+}
+
+function shiftTopicLayout(
+	context: CanvasLayoutContext,
+	layout: TopicLayoutResult,
+	deltaY: number,
+): void {
+	if (deltaY === 0) {
+		return;
+	}
+
+	const nodeIds = new Set(layout.nodeIds);
+	for (const node of context.nodes) {
+		if (nodeIds.has(node.id)) {
+			node.y += deltaY;
+		}
+	}
+
+	layout.topY += deltaY;
+	layout.bottomY += deltaY;
+	layout.mainLaneCenterY += deltaY;
 }
 
 function groupFamiliesByTopic(families: BranchFamily[]): Map<string, BranchFamily[]> {
@@ -1207,7 +1286,7 @@ function estimatePhaseWidth(segments: PhaseTopicSegment[]): number {
 
 function estimateChoiceColumnHeight(families: BranchFamily[]): number {
 	if (families.length === 0) {
-		return DIALOGUE_HEIGHT + CLUSTER_GAP_Y;
+		return FILE_NODE_MIN_HEIGHT + CLUSTER_GAP_Y;
 	}
 
 	return families.reduce((total, family) => total + estimateFamilyHeight(family), 0);
@@ -1216,19 +1295,20 @@ function estimateChoiceColumnHeight(families: BranchFamily[]): number {
 function estimateFamilyHeight(family: BranchFamily): number {
 	let total = 0;
 	for (const record of family.records) {
-		const gateHeight = measureTextHeight(renderConditionBlock(record.conditions));
+		const gateHeight = measureTextHeight(renderConditionBlock(record.conditions), GATE_WIDTH);
+		const dialogueHeight = measureCanvasBodyHeight(record.bodyText, DIALOGUE_WIDTH);
 		const localResultLines = record.resultActions
 			.filter((action) => action.kind !== 'choice-set')
 			.map((action) => action.displayText);
-		const resultHeight = localResultLines.length > 0 ? measureTextHeight(localResultLines.join('\n')) + RESULT_GAP_Y : 0;
-		total += Math.max(gateHeight, DIALOGUE_HEIGHT) + resultHeight + CLUSTER_GAP_Y;
+		const resultHeight = localResultLines.length > 0 ? measureTextHeight(localResultLines.join('\n'), DIALOGUE_WIDTH) + RESULT_GAP_Y : 0;
+		total += Math.max(gateHeight, dialogueHeight) + resultHeight + CLUSTER_GAP_Y;
 	}
-	return Math.max(total, DIALOGUE_HEIGHT + CLUSTER_GAP_Y);
+	return Math.max(total, FILE_NODE_MIN_HEIGHT + CLUSTER_GAP_Y);
 }
 
 function estimateRootGroupHeight(groups: ChoiceGroup[]): number {
 	if (groups.length === 0) {
-		return DIALOGUE_HEIGHT + CLUSTER_GAP_Y;
+		return FILE_NODE_MIN_HEIGHT + CLUSTER_GAP_Y;
 	}
 
 	return groups.reduce((total, group, index) => {
@@ -1541,6 +1621,135 @@ function insertJumpNodes(context: CanvasLayoutContext): void {
 
 	context.nodes = [...context.nodes, ...nextNodes];
 	context.edges = [...context.edges.filter((edge) => !removedEdgeIds.has(edge.id)), ...nextEdges];
+}
+
+function resolveCanvasNodeOverlaps(context: CanvasLayoutContext): void {
+	const lockedGroups = buildLockedVerticalGroups(context);
+	const maxPasses = Math.max(1, context.nodes.length * context.nodes.length);
+	for (let pass = 0; pass < maxPasses; pass += 1) {
+		let changed = false;
+		const orderedGroups = [...lockedGroups.values()].sort(compareLockedGroupsByPosition);
+
+		for (let upperIndex = 0; upperIndex < orderedGroups.length; upperIndex += 1) {
+			const upperGroup = orderedGroups[upperIndex];
+			if (!upperGroup) {
+				continue;
+			}
+
+			for (let lowerIndex = upperIndex + 1; lowerIndex < orderedGroups.length; lowerIndex += 1) {
+				const lowerGroup = orderedGroups[lowerIndex];
+				if (!lowerGroup) {
+					continue;
+				}
+
+				const minimumLowerY = upperGroup.bottomY + FINAL_NODE_GAP_Y;
+				if (lowerGroup.topY >= minimumLowerY) {
+					break;
+				}
+				if (!lockedGroupsOverlapHorizontally(upperGroup, lowerGroup)) {
+					continue;
+				}
+
+				shiftLockedGroup(lowerGroup, minimumLowerY - lowerGroup.topY);
+				changed = true;
+			}
+		}
+
+		if (!changed) {
+			return;
+		}
+	}
+}
+
+interface LockedVerticalGroup {
+	id: string;
+	nodes: CanvasNode[];
+	topY: number;
+	bottomY: number;
+	leftX: number;
+	rightX: number;
+}
+
+function buildLockedVerticalGroups(context: CanvasLayoutContext): Map<string, LockedVerticalGroup> {
+	const parentByNodeId = new Map<string, string>();
+
+	const find = (nodeId: string): string => {
+		const parent = parentByNodeId.get(nodeId);
+		if (!parent || parent === nodeId) {
+			parentByNodeId.set(nodeId, nodeId);
+			return nodeId;
+		}
+
+		const root = find(parent);
+		parentByNodeId.set(nodeId, root);
+		return root;
+	};
+
+	const union = (leftId: string, rightId: string): void => {
+		const leftRoot = find(leftId);
+		const rightRoot = find(rightId);
+		if (leftRoot === rightRoot) {
+			return;
+		}
+
+		parentByNodeId.set(rightRoot, leftRoot);
+	};
+
+	for (const node of context.nodes) {
+		parentByNodeId.set(node.id, node.id);
+	}
+
+	for (const edge of context.edges) {
+		if (edge.fromSide === 'bottom' && edge.toSide === 'top') {
+			union(edge.fromNode, edge.toNode);
+		}
+	}
+
+	const groups = new Map<string, LockedVerticalGroup>();
+	for (const node of context.nodes) {
+		const rootId = find(node.id);
+		const existing = groups.get(rootId);
+		if (existing) {
+			existing.nodes.push(node);
+			existing.topY = Math.min(existing.topY, node.y);
+			existing.bottomY = Math.max(existing.bottomY, node.y + node.height);
+			existing.leftX = Math.min(existing.leftX, node.x);
+			existing.rightX = Math.max(existing.rightX, node.x + node.width);
+			continue;
+		}
+
+		groups.set(rootId, {
+			id: rootId,
+			nodes: [node],
+			topY: node.y,
+			bottomY: node.y + node.height,
+			leftX: node.x,
+			rightX: node.x + node.width,
+		});
+	}
+
+	return groups;
+}
+
+function compareLockedGroupsByPosition(left: LockedVerticalGroup, right: LockedVerticalGroup): number {
+	return left.topY - right.topY || left.leftX - right.leftX || left.id.localeCompare(right.id);
+}
+
+function lockedGroupsOverlapHorizontally(left: LockedVerticalGroup, right: LockedVerticalGroup): boolean {
+	return left.leftX < right.rightX && right.leftX < left.rightX;
+}
+
+function shiftLockedGroup(group: LockedVerticalGroup, deltaY: number): void {
+	if (deltaY === 0) {
+		return;
+	}
+
+	for (const node of group.nodes) {
+		node.y += deltaY;
+	}
+
+	group.topY += deltaY;
+	group.bottomY += deltaY;
 }
 
 async function writePhaseGraphSummary(
@@ -2267,6 +2476,7 @@ function addFileNode(
 ): string {
 	const nodeId = createNodeId(seed);
 	if (!context.nodeIds.has(nodeId)) {
+		const measuredHeight = measureFileNodeHeight(context, filePath, width);
 		context.nodes.push({
 			id: nodeId,
 			type: 'file',
@@ -2275,7 +2485,7 @@ function addFileNode(
 			x,
 			y,
 			width,
-			height,
+			height: measuredHeight,
 			color,
 		});
 		context.nodeIds.add(nodeId);
@@ -2286,6 +2496,24 @@ function addFileNode(
 		}
 	}
 	return nodeId;
+}
+
+function measureFileNodeHeight(context: CanvasLayoutContext, filePath: string, width: number): number {
+	const bodyText = context.fileBodyTextByPath.get(filePath);
+	if (!bodyText) {
+		return FILE_NODE_MIN_HEIGHT;
+	}
+
+	return measureCanvasBodyHeight(bodyText, width);
+}
+
+function measureCanvasBodyHeight(bodyText: string, width: number): number {
+	const visibleText = normalizeCanvasBodyText(bodyText);
+	if (visibleText.length === 0) {
+		return FILE_NODE_MIN_HEIGHT;
+	}
+
+	return Math.max(FILE_NODE_MIN_HEIGHT, measureTextHeight(visibleText, width) + FILE_NODE_PADDING_Y);
 }
 
 function addTextNode(
@@ -2306,7 +2534,7 @@ function addTextNode(
 			x,
 			y,
 			width,
-			height: measureTextHeight(text),
+			height: measureTextHeight(text, width),
 			color,
 		});
 		context.nodeIds.add(nodeId);
@@ -2609,9 +2837,46 @@ function compareNullableNumbers(left: number | null, right: number | null): numb
 	return left - right;
 }
 
-function measureTextHeight(text: string): number {
-	const lineCount = Math.max(1, text.split('\n').length);
+function measureTextHeight(text: string, width?: number): number {
+	const lineCount = width ? estimateWrappedLineCount(text, width) : Math.max(1, text.split('\n').length);
 	return Math.max(50, 26 + lineCount * 24);
+}
+
+function estimateWrappedLineCount(text: string, width: number): number {
+	const availableWidth = Math.max(80, width - TEXT_NODE_HORIZONTAL_PADDING);
+	const maxCharsPerLine = Math.max(10, Math.floor(availableWidth / APPROX_TEXT_CHAR_WIDTH));
+	let lineCount = 0;
+
+	for (const rawLine of text.split('\n')) {
+		const normalizedLine = rawLine.trim().replace(/\s+/g, ' ');
+		if (normalizedLine.length === 0) {
+			lineCount += 1;
+			continue;
+		}
+
+		lineCount += Math.max(1, Math.ceil(normalizedLine.length / maxCharsPerLine));
+	}
+
+	return Math.max(1, lineCount);
+}
+
+function normalizeCanvasBodyText(text: string): string {
+	let lastNonEmptyLine = -1;
+	const lines = text.split('\n');
+	for (let index = lines.length - 1; index >= 0; index -= 1) {
+		if ((lines[index] ?? '').trim().length > 0) {
+			lastNonEmptyLine = index;
+			break;
+		}
+	}
+
+	return text
+		.split('\n')
+		.map((line, index) => {
+			return index === lastNonEmptyLine ? stripBlockId(line).trimEnd() : line.trimEnd();
+		})
+		.join('\n')
+		.trim();
 }
 
 function createNodeId(seed: string): string {
