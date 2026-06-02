@@ -6,6 +6,7 @@ import {
 } from './features/compile-folder';
 import {
 	canGenerateQuestCanvasFromFolder,
+	generateQuestCanvasDebugFromVaultFolder,
 	generateQuestCanvasForFolder,
 	generateQuestCanvasFromVaultFolder,
 } from './features/generate-quest-canvas';
@@ -80,6 +81,14 @@ export default class ObsidianEsp extends Plugin {
 			},
 		});
 
+		this.addCommand({
+			id: 'generate-quest-canvas-debug',
+			name: 'Generate quest canvas with debug summary',
+			callback: () => {
+				void this.generateQuestCanvasDebug();
+			},
+		});
+
 		// Vault Context Menu Integration
 		this.registerEvent(
 			this.app.workspace.on('file-menu', (menu, file) => {
@@ -107,6 +116,15 @@ export default class ObsidianEsp extends Plugin {
 								.setIcon('layout-dashboard')
 								.onClick(() => {
 									void this.generateQuestCanvasForSelectedFolder(file);
+								});
+						});
+
+						submenu.addItem((subItem) => {
+							subItem
+								.setTitle('Generate quest canvas with debug summary')
+								.setIcon('bug')
+								.onClick(() => {
+									void this.generateQuestCanvasDebugForSelectedFolder(file);
 								});
 						});
 					}
@@ -342,10 +360,24 @@ export default class ObsidianEsp extends Plugin {
 	}
 
 	/**
+	 * Prompts the user to select a journal folder and generates a quest canvas with a phase graph summary.
+	 */
+	async generateQuestCanvasDebug() {
+		await generateQuestCanvasDebugFromVaultFolder(this.app);
+	}
+
+	/**
 	 * Generates a quest canvas for the selected journal folder.
 	 */
 	async generateQuestCanvasForSelectedFolder(folder: TFolder) {
 		await generateQuestCanvasForFolder(this.app, folder);
+	}
+
+	/**
+	 * Generates a quest canvas and phase graph summary for the selected journal folder.
+	 */
+	async generateQuestCanvasDebugForSelectedFolder(folder: TFolder) {
+		await generateQuestCanvasForFolder(this.app, folder, { writePhaseGraphDebug: true });
 	}
 
 	/**

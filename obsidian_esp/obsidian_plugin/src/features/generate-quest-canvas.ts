@@ -160,10 +160,78 @@ interface ChoiceAnchor {
 	y: number;
 }
 
+interface ChoiceAnchorGroup {
+	choiceValue: number;
+	nodeIds: string[];
+	x: number;
+	y: number;
+}
+
 interface TopicLayoutResult {
 	rootEntryIds: string[];
 	topY: number;
 	bottomY: number;
+	mainLaneCenterY: number;
+}
+
+interface PhaseTopicSegment {
+	topic: string;
+	families: BranchFamily[];
+}
+
+interface PhaseGraph {
+	orderedPhases: number[];
+	familiesByPhase: Map<number, BranchFamily[]>;
+	segmentsByPhase: Map<number, PhaseTopicSegment[]>;
+	incomingTransitions: Map<number, Set<number>>;
+	outgoingTransitions: Map<number, Set<number>>;
+	mainTargets: Map<number, number | null>;
+}
+
+interface PhasePlacement {
+	topY: number;
+	bottomY: number;
+	mainLaneCenterY: number;
+}
+
+interface TopicChoiceResolutionSummary {
+	choiceValue: number;
+	sourceRecordPaths: string[];
+	entryRecordPaths: string[];
+}
+
+interface TopicDebugSummary {
+	segmentIndex: number;
+	topic: string;
+	mainLaneCenterY: number | null;
+	familyOrder: Array<{
+		priority: number;
+		progressionTarget: number | null;
+		primaryChoiceValue: number | null;
+		choiceTargets: number[];
+		recordPaths: string[];
+	}>;
+	rootChoices: Array<number | null>;
+	choiceResolutions: TopicChoiceResolutionSummary[];
+}
+
+interface PhaseDebugSummary {
+	phaseValue: number;
+	orderIndex: number;
+	x: number;
+	milestoneY: number | null;
+	incoming: number[];
+	outgoing: number[];
+	mainTarget: number | null;
+	phaseTopY: number | null;
+	phaseBottomY: number | null;
+	mainLaneCenterY: number | null;
+	topics: TopicDebugSummary[];
+}
+
+interface PhaseGraphDebugSummary {
+	questTitle: string;
+	phases: PhaseDebugSummary[];
 }
 
 interface CanvasNode {
@@ -191,6 +259,11 @@ interface CanvasBuildResult {
 	edges: CanvasEdge[];
 	relatedFiles: TFile[];
 	warnings: string[];
+	phaseGraphSummary: PhaseGraphDebugSummary;
+}
+
+interface QuestCanvasGenerationOptions {
+	writePhaseGraphDebug?: boolean;
 }
 
 interface CanvasLayoutContext {
@@ -198,9 +271,7 @@ interface CanvasLayoutContext {
 	edges: CanvasEdge[];
 	relatedFiles: Map<string, TFile>;
 	phaseNodeIds: Map<number, string>;
-	recordEntryIds: Map<string, string>;
 	topicHeaderIds: Map<string, string>;
-	choiceNodes: Array<{ phaseValue: number; topic: string; choiceValue: number; nodeId: string }>;
 	nodeIds: Set<string>;
 	edgeIds: Set<string>;
 	phaseIncomingCounts: Map<number, number>;
@@ -216,17 +287,34 @@ export async function generateQuestCanvasFromVaultFolder(app: App): Promise<void
 	await generateQuestCanvasForFolder(app, folder);
 }
 
+export async function generateQuestCanvasDebugFromVaultFolder(app: App): Promise<void> {
+	const folder = await selectVaultFolder(app);
+	if (!folder) {
+		return;
+	}
+
+	await generateQuestCanvasForFolder(app, folder, { writePhaseGraphDebug: true });
+}
+
 export function canGenerateQuestCanvasFromFolder(folder: TFolder): boolean {
 	return folder.parent?.name === JOURNAL_FOLDER_NAME;
 }
 
-export async function generateQuestCanvasForFolder(app: App, folder: TFolder): Promise<void> {
+export async function generateQuestCanvasForFolder(
+	app: App,
+	folder: TFolder,
+	options: QuestCanvasGenerationOptions = {},
+): Promise<void> {
 	const progress = new ProgressBar('Generating quest canvas');
 	try {
 		progress.update(5, 'Checking the selected folder');
 		const scope = await discoverQuestScope(app, folder);
 		progress.update(25, `Resolving dialogue for ${scope.questTitle}`);
 		const buildResult = await buildQuestCanvas(app, scope);
+		if (options.writePhaseGraphDebug) {
+			progress.update(70, 'Writing phase graph summary');
+			await writePhaseGraphSummary(app, scope.outputCanvasPath, buildResult.phaseGraphSummary);
+		}
 		progress.update(80, 'Writing canvas and backlinks');
 		await writeCanvasPlan(app, scope.outputCanvasPath, buildResult.nodes, buildResult.edges);
 		await updateCanvasBacklinks(app, buildResult.relatedFiles, scope.outputCanvasPath);
@@ -235,7 +323,8 @@ export async function generateQuestCanvasForFolder(app: App, folder: TFolder): P
 			buildResult.warnings.length > 0
 				? ` ${buildResult.warnings[0]}`
 				: '';
-		new Notice(`Generated ${scope.questTitle}.canvas.${warningSuffix}`);
+		const debugSuffix = options.writePhaseGraphDebug ? ' Wrote a phase graph summary JSON alongside the canvas.' : '';
+		new Notice(`Generated ${scope.questTitle}.canvas.${warningSuffix}${debugSuffix}`);
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
 		new Notice(`Failed to generate quest canvas: ${message}`, 10000);
@@ -336,15 +425,10 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 	const canvasContext = createCanvasLayoutContext();
 	const milestoneIndices = uniqueNumbers(scope.journalMilestones.map((milestone) => milestone.index).filter((index) => index > 0));
 	const phaseIndices = milestoneIndices.length > 0 ? milestoneIndices : uniqueNumbers(scope.journalMilestones.map((milestone) => milestone.index));
-	const familiesByPhase = new Map<number, BranchFamily[]>();
+	const phaseGraph = buildPhaseGraph(phaseIndices, families);
 	const phaseXPositions = new Map<number, number>();
-	let previousRenderedTopic: string | null = null;
-
-	for (const family of families) {
-		const phaseFamilies = familiesByPhase.get(family.phaseAnchor) ?? [];
-		phaseFamilies.push(family);
-		familiesByPhase.set(family.phaseAnchor, phaseFamilies);
-	}
+	const phasePlacements = new Map<number, PhasePlacement>();
+	const topicPlacements = new Map<string, TopicLayoutResult>();
 
 	const milestonesByPhase = new Map<number, JournalMilestone[]>();
 	for (const milestone of scope.journalMilestones) {
@@ -356,7 +440,7 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 		milestonesByPhase.set(milestone.index, phaseMilestones);
 	}
 
-	const computedPhasePositions = computePhasePositions(phaseIndices, familiesByPhase);
+	const computedPhasePositions = computePhasePositions(phaseGraph.orderedPhases, phaseGraph.segmentsByPhase);
 	for (const [phaseValue, phaseX] of computedPhasePositions) {
 		phaseXPositions.set(phaseValue, phaseX);
 		const phaseMilestones = milestonesByPhase.get(phaseValue) ?? [];
@@ -367,8 +451,8 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 		addPhaseMilestone(canvasContext, phaseValue, phaseMilestone, phaseX);
 	}
 
-	for (let phaseIndex = 0; phaseIndex < phaseIndices.length; phaseIndex += 1) {
-		const phaseValue = phaseIndices[phaseIndex] ?? 0;
+	for (let phaseIndex = 0; phaseIndex < phaseGraph.orderedPhases.length; phaseIndex += 1) {
+		const phaseValue = phaseGraph.orderedPhases[phaseIndex] ?? 0;
 		const phaseX = phaseXPositions.get(phaseValue) ?? 0;
 		const phaseMilestones = milestonesByPhase.get(phaseValue) ?? [];
 		if (phaseMilestones.length === 0) {
@@ -385,47 +469,56 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 		if (!milestoneNodeId) {
 			continue;
 		}
-		const phaseFamilies = (familiesByPhase.get(phaseValue) ?? []).sort(compareBranchFamilies);
-		const phaseTopics = groupFamiliesByTopic(phaseFamilies);
+		const phaseSegments = phaseGraph.segmentsByPhase.get(phaseValue) ?? [];
 		let topicSegmentIndex = 0;
-		for (const [topic, topicFamilies] of phaseTopics) {
+		let phaseTopY = Number.POSITIVE_INFINITY;
+		let phaseBottomY = Number.NEGATIVE_INFINITY;
+		const phaseCenters: number[] = [];
+		for (const segment of phaseSegments) {
 			const topicBaseX = phaseX + GATE_GAP_X + topicSegmentIndex * TOPIC_SEGMENT_GAP_X;
 			const topicLayout = layoutTopicFamilies(
 				canvasContext,
-				topicFamilies,
+				segment.families,
 				phaseValue,
 				topicBaseX,
 				scope.journalMilestones,
 			);
+			const segmentKey = phaseTopicSegmentKey(phaseValue, topicSegmentIndex, segment.topic);
+			topicPlacements.set(segmentKey, topicLayout);
 
 			if (topicLayout.rootEntryIds.length > 0) {
-				if (previousRenderedTopic !== topic) {
-					const headerId = addTopicHeader(
-						canvasContext,
-						`${phaseValue}:${topicSegmentIndex}:${topic}`,
-						topic,
-						topicBaseX - 340,
-						topicLayout.topY - HEADER_Y_OFFSET,
-					);
-					addEdge(canvasContext, `${milestoneNodeId}:${headerId}`, milestoneNodeId, 'right', headerId, 'left');
-					for (const entryId of topicLayout.rootEntryIds) {
-						addEdge(canvasContext, `${headerId}:${entryId}`, headerId, 'right', entryId, 'left');
-					}
-					previousRenderedTopic = topic;
-				} else {
-					for (const entryId of topicLayout.rootEntryIds) {
-						addEdge(canvasContext, `${milestoneNodeId}:${entryId}`, milestoneNodeId, 'right', entryId, 'left');
-					}
+				const headerId = addTopicHeader(
+					canvasContext,
+					segmentKey,
+					segment.topic,
+					topicBaseX - 340,
+					topicLayout.topY - HEADER_Y_OFFSET,
+				);
+				addEdge(canvasContext, `${milestoneNodeId}:${headerId}`, milestoneNodeId, 'right', headerId, 'left');
+				for (const entryId of topicLayout.rootEntryIds) {
+					addEdge(canvasContext, `${headerId}:${entryId}`, headerId, 'right', entryId, 'left');
 				}
+			}
+			if (Number.isFinite(topicLayout.topY) && Number.isFinite(topicLayout.bottomY)) {
+				phaseTopY = Math.min(phaseTopY, topicLayout.topY);
+				phaseBottomY = Math.max(phaseBottomY, topicLayout.bottomY);
+				phaseCenters.push(topicLayout.mainLaneCenterY);
 			}
 
 			topicSegmentIndex += 1;
 		}
+		const phaseCenterY = phaseCenters.length > 0
+			? Math.round(phaseCenters.reduce((sum, value) => sum + value, 0) / phaseCenters.length)
+			: 0;
+		centerPhaseMilestone(canvasContext, phaseValue, phaseCenterY);
+		phasePlacements.set(phaseValue, {
+			topY: Number.isFinite(phaseTopY) ? phaseTopY : phaseCenterY,
+			bottomY: Number.isFinite(phaseBottomY) ? phaseBottomY : phaseCenterY,
+			mainLaneCenterY: phaseCenterY,
+		});
 	}
 
-	connectChoiceBranches(canvasContext, relevantRecords);
-
-	connectScriptedMilestones(canvasContext, phaseIndices);
+	connectScriptedMilestones(canvasContext, phaseGraph.orderedPhases);
 	insertJumpNodes(canvasContext);
 
 	const relatedFiles = new Map<string, TFile>();
@@ -441,6 +534,14 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 		edges: canvasContext.edges,
 		relatedFiles: [...relatedFiles.values()].sort((left, right) => left.path.localeCompare(right.path)),
 		warnings,
+		phaseGraphSummary: buildPhaseGraphDebugSummary(
+			scope.questTitle,
+			phaseGraph,
+			phaseXPositions,
+			canvasContext,
+			phasePlacements,
+			topicPlacements,
+		),
 	};
 }
 
@@ -450,9 +551,7 @@ function createCanvasLayoutContext(): CanvasLayoutContext {
 		edges: [],
 		relatedFiles: new Map<string, TFile>(),
 		phaseNodeIds: new Map<number, string>(),
-		recordEntryIds: new Map<string, string>(),
 		topicHeaderIds: new Map<string, string>(),
-		choiceNodes: [],
 		nodeIds: new Set<string>(),
 		edgeIds: new Set<string>(),
 		phaseIncomingCounts: new Map<number, number>(),
@@ -488,6 +587,20 @@ function addPhaseMilestone(
 	context.phaseNodeIds.set(phaseValue, nodeId);
 	context.relatedFiles.set(milestone.file.path, milestone.file);
 	return nodeId;
+}
+
+function centerPhaseMilestone(context: CanvasLayoutContext, phaseValue: number, centerY: number): void {
+	const nodeId = context.phaseNodeIds.get(phaseValue);
+	if (!nodeId) {
+		return;
+	}
+
+	const node = context.nodes.find((candidate) => candidate.id === nodeId);
+	if (!node) {
+		return;
+	}
+
+	node.y = Math.round(centerY - JOURNAL_HEIGHT / 2);
 }
 
 function addTopicHeader(
@@ -571,7 +684,6 @@ function layoutBranchFamily(
 				GATE_COLOR,
 			)
 			: dialogueId;
-		context.recordEntryIds.set(record.id, gateId);
 		context.relatedFiles.set(record.file.path, record.file);
 		if (firstEntryId.length === 0) {
 			firstEntryId = gateId;
@@ -632,12 +744,6 @@ function layoutBranchFamily(
 					GATE_COLOR,
 				);
 				choiceNodeIds.set(choiceAction.choiceValue, choiceNodeId);
-				context.choiceNodes.push({
-					phaseValue,
-					topic: family.topic,
-					choiceValue: choiceAction.choiceValue,
-					nodeId: choiceNodeId,
-				});
 				choiceAnchors.push({
 					choiceValue: choiceAction.choiceValue,
 					nodeId: choiceNodeId,
@@ -669,47 +775,38 @@ function layoutTopicFamilies(
 ): TopicLayoutResult {
 	const choiceGroups = groupFamiliesByPrimaryChoice(families);
 	if (choiceGroups.length === 0) {
-		return { rootEntryIds: [], topY: 0, bottomY: 0 };
+		return { rootEntryIds: [], topY: 0, bottomY: 0, mainLaneCenterY: 0 };
 	}
 
-	const groupsByChoice = new Map<string, ChoiceGroup>();
-	for (const group of choiceGroups) {
-		groupsByChoice.set(choiceGroupKey(group.choiceValue), group);
-	}
-
-	const emittedChoices = new Set<number>();
-	for (const family of families) {
-		for (const action of family.results) {
-			if (action.kind === 'choice-set' && action.choiceValue !== undefined) {
-				emittedChoices.add(action.choiceValue);
-			}
-		}
-	}
-
-	let rootGroups = choiceGroups.filter(
-		(group) => group.choiceValue === null || !emittedChoices.has(group.choiceValue),
-	);
+	const groupsByChoice = mapChoiceGroupsByChoice(choiceGroups);
+	let rootGroups = resolveRootChoiceGroups(choiceGroups);
 	if (rootGroups.length === 0) {
 		rootGroups = [...choiceGroups];
 	}
-	rootGroups.sort(compareChoiceGroups);
+	rootGroups = orderChoiceGroupsForLanes(rootGroups, phaseValue);
 
-	const renderedGroups = new Set<string>();
+	const renderedGroupLayouts = new Map<string, TopicLayoutResult>();
+	const renderingGroups = new Set<string>();
 	const rootEntryIds: string[] = [];
 	let topicTopY = Number.POSITIVE_INFINITY;
 	let topicBottomY = Number.NEGATIVE_INFINITY;
-	let nextRootStartY = -Math.round(estimateRootGroupHeight(rootGroups) / 2);
 
 	const renderChoiceGroup = (group: ChoiceGroup, gateX: number, startY: number): TopicLayoutResult => {
 		const groupKey = choiceGroupKey(group.choiceValue);
-		if (renderedGroups.has(groupKey)) {
-			return { rootEntryIds: [], topY: startY, bottomY: startY };
+		const cachedLayout = renderedGroupLayouts.get(groupKey);
+		if (cachedLayout) {
+			return cachedLayout;
 		}
-		renderedGroups.add(groupKey);
+		if (renderingGroups.has(groupKey)) {
+			return { rootEntryIds: [], topY: startY, bottomY: startY, mainLaneCenterY: startY };
+		}
+		renderingGroups.add(groupKey);
 
 		const dialogueX = gateX + (DIALOGUE_GAP_X - GATE_GAP_X);
 		const choiceX = dialogueX + (CHOICE_GAP_X - DIALOGUE_GAP_X);
 		let currentY = startY;
+		let groupTopY = startY;
+		let groupBottomY = startY;
 		let localTopY = startY;
 		let localBottomY = startY;
 		const localEntryIds: string[] = [];
@@ -728,13 +825,16 @@ function layoutTopicFamilies(
 			);
 			localEntryIds.push(familyLayout.firstEntryId);
 			emittedAnchors.push(...familyLayout.choiceAnchors);
+			groupBottomY = Math.max(groupBottomY, familyLayout.nextY);
 			localBottomY = Math.max(localBottomY, familyLayout.nextY);
 			currentY = familyLayout.nextY;
 		}
 
+		const mainLaneBottomY = Math.max(groupTopY, groupBottomY - CLUSTER_GAP_Y);
+		const mainLaneCenterY = Math.round((groupTopY + mainLaneBottomY) / 2);
 		for (const anchor of collapseChoiceAnchors(emittedAnchors)) {
 			const childGroup = groupsByChoice.get(choiceGroupKey(anchor.choiceValue));
-			if (!childGroup || renderedGroups.has(choiceGroupKey(childGroup.choiceValue))) {
+			if (!childGroup) {
 				continue;
 			}
 
@@ -745,6 +845,18 @@ function layoutTopicFamilies(
 				anchor.x + FOLLOWUP_GROUP_GAP_X,
 				childStartY,
 			);
+			for (const anchorNodeId of anchor.nodeIds) {
+				for (const entryId of childLayout.rootEntryIds) {
+					addEdge(
+						context,
+						`${anchorNodeId}:${entryId}:${anchor.choiceValue}`,
+						anchorNodeId,
+						'right',
+						entryId,
+						'left',
+					);
+				}
+			}
 			localTopY = Math.min(localTopY, childLayout.topY);
 			localBottomY = Math.max(localBottomY, childLayout.bottomY);
 		}
@@ -752,63 +864,48 @@ function layoutTopicFamilies(
 		topicTopY = Math.min(topicTopY, localTopY);
 		topicBottomY = Math.max(topicBottomY, localBottomY);
 
-		return {
+		const layout = {
 			rootEntryIds: localEntryIds,
 			topY: localTopY,
 			bottomY: localBottomY,
+			mainLaneCenterY,
 		};
+		renderedGroupLayouts.set(groupKey, layout);
+		renderingGroups.delete(groupKey);
+		return layout;
 	};
 
-	for (const rootGroup of rootGroups) {
-		const rootLayout = renderChoiceGroup(rootGroup, topicBaseX, nextRootStartY);
+	const rootStartYs = buildCenteredGroupStartYs(rootGroups);
+	const rootLayouts: TopicLayoutResult[] = [];
+	for (let rootIndex = 0; rootIndex < rootGroups.length; rootIndex += 1) {
+		const rootGroup = rootGroups[rootIndex];
+		if (!rootGroup) {
+			continue;
+		}
+		const rootLayout = renderChoiceGroup(rootGroup, topicBaseX, rootStartYs[rootIndex] ?? 0);
 		rootEntryIds.push(...rootLayout.rootEntryIds);
-		nextRootStartY = Math.max(
-			nextRootStartY + estimateChoiceColumnHeight(rootGroup.families) + LANE_GAP_Y,
-			rootLayout.bottomY + LANE_GAP_Y,
-		);
+		rootLayouts.push(rootLayout);
 	}
 
-	for (const group of choiceGroups.sort(compareChoiceGroups)) {
-		if (renderedGroups.has(choiceGroupKey(group.choiceValue))) {
+	let nextFallbackY = Number.isFinite(topicBottomY) ? topicBottomY + LANE_GAP_Y : 0;
+	for (const group of orderChoiceGroupsForLanes(choiceGroups, phaseValue)) {
+		if (renderedGroupLayouts.has(choiceGroupKey(group.choiceValue))) {
 			continue;
 		}
 
-		const fallbackLayout = renderChoiceGroup(group, topicBaseX, nextRootStartY);
+		const fallbackLayout = renderChoiceGroup(group, topicBaseX, nextFallbackY);
 		rootEntryIds.push(...fallbackLayout.rootEntryIds);
-		nextRootStartY = fallbackLayout.bottomY + LANE_GAP_Y;
+		rootLayouts.push(fallbackLayout);
+		nextFallbackY = fallbackLayout.bottomY + LANE_GAP_Y;
 	}
 
+	const mainLaneCenterY = rootLayouts[0]?.mainLaneCenterY ?? 0;
 	return {
 		rootEntryIds: uniqueValues(rootEntryIds),
 		topY: Number.isFinite(topicTopY) ? topicTopY : 0,
 		bottomY: Number.isFinite(topicBottomY) ? topicBottomY : 0,
+		mainLaneCenterY,
 	};
-}
-
-function connectChoiceBranches(context: CanvasLayoutContext, records: DialogueRecord[]): void {
-	for (const choiceNode of context.choiceNodes) {
-		const matchingRecords = records.filter(
-			(record) =>
-				record.phaseAnchor === choiceNode.phaseValue
-				&& record.topic === choiceNode.topic
-				&& record.choiceValues.includes(choiceNode.choiceValue),
-		);
-		for (const record of matchingRecords) {
-			const entryNodeId = context.recordEntryIds.get(record.id);
-			if (!entryNodeId) {
-				continue;
-			}
-
-			addEdge(
-				context,
-				`${choiceNode.nodeId}:${entryNodeId}:${choiceNode.choiceValue}`,
-				choiceNode.nodeId,
-				'right',
-				entryNodeId,
-				'left',
-			);
-		}
-	}
 }
 
 function groupFamiliesByTopic(families: BranchFamily[]): Map<string, BranchFamily[]> {
@@ -840,9 +937,194 @@ function groupFamiliesByPrimaryChoice(families: BranchFamily[]): ChoiceGroup[] {
 	return [...grouped.values()].sort(compareChoiceGroups);
 }
 
+function buildPhaseGraph(phaseIndices: number[], families: BranchFamily[]): PhaseGraph {
+	const phaseSet = new Set(phaseIndices);
+	for (const family of families) {
+		phaseSet.add(family.phaseAnchor);
+	}
+
+	const orderedPhaseValues = uniqueNumbers([...phaseSet]);
+	const familiesByPhase = new Map<number, BranchFamily[]>();
+	const segmentsByPhase = new Map<number, PhaseTopicSegment[]>();
+	const incomingTransitions = new Map<number, Set<number>>();
+	const outgoingTransitions = new Map<number, Set<number>>();
+	const mainTargets = new Map<number, number | null>();
+
+	for (const phaseValue of orderedPhaseValues) {
+		familiesByPhase.set(phaseValue, []);
+		segmentsByPhase.set(phaseValue, []);
+		incomingTransitions.set(phaseValue, new Set<number>());
+		outgoingTransitions.set(phaseValue, new Set<number>());
+	}
+
+	for (const family of families) {
+		const phaseFamilies = familiesByPhase.get(family.phaseAnchor) ?? [];
+		phaseFamilies.push(family);
+		familiesByPhase.set(family.phaseAnchor, phaseFamilies);
+
+		if (
+			family.progressionTarget !== null
+			&& family.progressionTarget > family.phaseAnchor
+			&& phaseSet.has(family.progressionTarget)
+		) {
+			outgoingTransitions.get(family.phaseAnchor)?.add(family.progressionTarget);
+			incomingTransitions.get(family.progressionTarget)?.add(family.phaseAnchor);
+		}
+	}
+
+	for (const [phaseValue, phaseFamilies] of familiesByPhase) {
+		const sortedFamilies = [...phaseFamilies].sort(compareBranchFamilies);
+		familiesByPhase.set(phaseValue, sortedFamilies);
+		segmentsByPhase.set(
+			phaseValue,
+			[...groupFamiliesByTopic(sortedFamilies).entries()].map(([topic, topicFamilies]) => ({
+				topic,
+				families: topicFamilies,
+			})),
+		);
+		mainTargets.set(
+			phaseValue,
+			sortedFamilies
+				.map((family) => family.progressionTarget)
+				.find((target): target is number => target !== null && target > phaseValue)
+				?? null,
+		);
+	}
+
+	return {
+		orderedPhases: topologicallyOrderPhases(orderedPhaseValues, outgoingTransitions, incomingTransitions),
+		familiesByPhase,
+		segmentsByPhase,
+		incomingTransitions,
+		outgoingTransitions,
+		mainTargets,
+	};
+}
+
+function topologicallyOrderPhases(
+	phaseValues: number[],
+	outgoingTransitions: Map<number, Set<number>>,
+	incomingTransitions: Map<number, Set<number>>,
+): number[] {
+	const remainingIncoming = new Map<number, number>();
+	const available = [...phaseValues].sort((left, right) => left - right);
+	const ordered: number[] = [];
+
+	for (const phaseValue of phaseValues) {
+		remainingIncoming.set(phaseValue, incomingTransitions.get(phaseValue)?.size ?? 0);
+	}
+
+	const ready: number[] = available.filter((phaseValue) => (remainingIncoming.get(phaseValue) ?? 0) === 0);
+	const queued = new Set<number>(ready);
+
+	while (ready.length > 0) {
+		ready.sort((left, right) => left - right);
+		const phaseValue = ready.shift();
+		if (phaseValue === undefined) {
+			break;
+		}
+
+		ordered.push(phaseValue);
+		queued.delete(phaseValue);
+		for (const target of [...(outgoingTransitions.get(phaseValue) ?? [])].sort((left, right) => left - right)) {
+			const nextIncoming = Math.max(0, (remainingIncoming.get(target) ?? 0) - 1);
+			remainingIncoming.set(target, nextIncoming);
+			if (nextIncoming === 0 && !queued.has(target) && !ordered.includes(target)) {
+				ready.push(target);
+				queued.add(target);
+			}
+		}
+	}
+
+	for (const phaseValue of available) {
+		if (!ordered.includes(phaseValue)) {
+			ordered.push(phaseValue);
+		}
+	}
+
+	return ordered;
+}
+
+function mapChoiceGroupsByChoice(choiceGroups: ChoiceGroup[]): Map<string, ChoiceGroup> {
+	const groupsByChoice = new Map<string, ChoiceGroup>();
+	for (const group of choiceGroups) {
+		groupsByChoice.set(choiceGroupKey(group.choiceValue), group);
+	}
+	return groupsByChoice;
+}
+
+function collectEmittedChoices(families: BranchFamily[]): Set<number> {
+	const emittedChoices = new Set<number>();
+	for (const family of families) {
+		for (const action of family.results) {
+			if (action.kind === 'choice-set' && action.choiceValue !== undefined) {
+				emittedChoices.add(action.choiceValue);
+			}
+		}
+	}
+	return emittedChoices;
+}
+
+function resolveRootChoiceGroups(choiceGroups: ChoiceGroup[]): ChoiceGroup[] {
+	const emittedChoices = collectEmittedChoices(choiceGroups.flatMap((group) => group.families));
+	return choiceGroups.filter(
+		(group) => group.choiceValue === null || !emittedChoices.has(group.choiceValue),
+	);
+}
+
+function orderChoiceGroupsForLanes(choiceGroups: ChoiceGroup[], phaseValue: number): ChoiceGroup[] {
+	return [...choiceGroups].sort((left, right) => {
+		const leftPriority = Math.min(...left.families.map((family) => family.priority), Number.MAX_SAFE_INTEGER);
+		const rightPriority = Math.min(...right.families.map((family) => family.priority), Number.MAX_SAFE_INTEGER);
+		if (leftPriority !== rightPriority) {
+			return leftPriority - rightPriority;
+		}
+
+		const leftTarget = left.families
+			.map((family) => family.progressionTarget)
+			.find((target): target is number => target !== null && target > phaseValue)
+			?? null;
+		const rightTarget = right.families
+			.map((family) => family.progressionTarget)
+			.find((target): target is number => target !== null && target > phaseValue)
+			?? null;
+		return compareNullableNumbers(leftTarget, rightTarget)
+			|| compareChoiceGroups(left, right);
+	});
+}
+
+function buildCenteredGroupStartYs(groups: ChoiceGroup[]): number[] {
+	if (groups.length === 0) {
+		return [];
+	}
+
+	const heights = groups.map((group) => estimateChoiceColumnHeight(group.families));
+	const startYs = new Array<number>(groups.length);
+	startYs[0] = -Math.round((heights[0] ?? 0) / 2);
+	let upperEdge = startYs[0];
+	let lowerEdge = startYs[0] + (heights[0] ?? 0);
+
+	for (let index = 1; index < groups.length; index += 1) {
+		const height = heights[index] ?? 0;
+		if (index % 2 === 1) {
+			const nextBottom = upperEdge - LANE_GAP_Y;
+			const nextStart = nextBottom - height;
+			startYs[index] = nextStart;
+			upperEdge = nextStart;
+			continue;
+		}
+
+		const nextStart = lowerEdge + LANE_GAP_Y;
+		startYs[index] = nextStart;
+		lowerEdge = nextStart + height;
+	}
+
+	return startYs;
+}
+
 function computePhasePositions(
 	phaseIndices: number[],
-	familiesByPhase: Map<number, BranchFamily[]>,
+	segmentsByPhase: Map<number, PhaseTopicSegment[]>,
 ): Map<number, number> {
 	const positions = new Map<number, number>();
 	let currentX = 0;
@@ -854,29 +1136,29 @@ function computePhasePositions(
 		}
 
 		positions.set(phaseValue, currentX);
-		const families = (familiesByPhase.get(phaseValue) ?? []).sort(compareBranchFamilies);
-		const topics = groupFamiliesByTopic(families);
-		const phaseWidth = estimatePhaseWidth(topics);
+		const phaseWidth = estimatePhaseWidth(segmentsByPhase.get(phaseValue) ?? []);
 		currentX += Math.max(PHASE_GAP_X, phaseWidth + 420);
 	}
 
 	return positions;
 }
 
-function estimatePhaseWidth(topics: Map<string, BranchFamily[]>): number {
-	if (topics.size === 0) {
+function estimatePhaseWidth(segments: PhaseTopicSegment[]): number {
+	if (segments.length === 0) {
 		return JOURNAL_WIDTH;
 	}
 
 	let furthestRight = JOURNAL_WIDTH;
-	let topicIndex = 0;
-	for (const [, families] of topics) {
-		const depth = estimateTopicDepth(families);
+	for (let topicIndex = 0; topicIndex < segments.length; topicIndex += 1) {
+		const segment = segments[topicIndex];
+		if (!segment) {
+			continue;
+		}
+		const depth = estimateTopicDepth(segment.families);
 		const topicBaseX = GATE_GAP_X + topicIndex * TOPIC_SEGMENT_GAP_X;
 		const lastGateX = topicBaseX + (depth - 1) * sourceGroupStepX();
 		const lastChoiceX = lastGateX + (CHOICE_GAP_X - GATE_GAP_X);
 		furthestRight = Math.max(furthestRight, lastChoiceX + CHOICE_WIDTH);
-		topicIndex += 1;
 	}
 
 	return furthestRight;
@@ -920,23 +1202,8 @@ function estimateTopicDepth(families: BranchFamily[]): number {
 		return 1;
 	}
 
-	const groupsByChoice = new Map<string, ChoiceGroup>();
-	for (const group of choiceGroups) {
-		groupsByChoice.set(choiceGroupKey(group.choiceValue), group);
-	}
-
-	const emittedChoices = new Set<number>();
-	for (const family of families) {
-		for (const action of family.results) {
-			if (action.kind === 'choice-set' && action.choiceValue !== undefined) {
-				emittedChoices.add(action.choiceValue);
-			}
-		}
-	}
-
-	let roots = choiceGroups.filter(
-		(group) => group.choiceValue === null || !emittedChoices.has(group.choiceValue),
-	);
+	const groupsByChoice = mapChoiceGroupsByChoice(choiceGroups);
+	let roots = resolveRootChoiceGroups(choiceGroups);
 	if (roots.length === 0) {
 		roots = [...choiceGroups];
 	}
@@ -978,7 +1245,7 @@ function estimateTopicDepth(families: BranchFamily[]): number {
 	return Math.max(...roots.map((group) => depthForGroup(group)), 1);
 }
 
-function collapseChoiceAnchors(anchors: ChoiceAnchor[]): ChoiceAnchor[] {
+function collapseChoiceAnchors(anchors: ChoiceAnchor[]): ChoiceAnchorGroup[] {
 	const grouped = new Map<number, ChoiceAnchor[]>();
 	for (const anchor of anchors) {
 		const existing = grouped.get(anchor.choiceValue) ?? [];
@@ -995,7 +1262,7 @@ function collapseChoiceAnchors(anchors: ChoiceAnchor[]): ChoiceAnchor[] {
 			const x = Math.max(...valueAnchors.map((anchor) => anchor.x));
 			return {
 				choiceValue: valueAnchors[0]?.choiceValue ?? 0,
-				nodeId: valueAnchors[0]?.nodeId ?? '',
+				nodeIds: uniqueValues(valueAnchors.map((anchor) => anchor.nodeId)),
 				x,
 				y,
 			};
@@ -1012,6 +1279,115 @@ function choiceGroupKey(choiceValue: number | null): string {
 
 function sourceGroupStepX(): number {
 	return (CHOICE_GAP_X - GATE_GAP_X) + FOLLOWUP_GROUP_GAP_X;
+}
+
+function phaseTopicSegmentKey(phaseValue: number, segmentIndex: number, topic: string): string {
+	return `${phaseValue}:${segmentIndex}:${topic}`;
+}
+
+function buildPhaseGraphDebugSummary(
+	questTitle: string,
+	phaseGraph: PhaseGraph,
+	phaseXPositions: Map<number, number>,
+	context: CanvasLayoutContext,
+	phasePlacements: Map<number, PhasePlacement>,
+	topicPlacements: Map<string, TopicLayoutResult>,
+): PhaseGraphDebugSummary {
+	return {
+		questTitle,
+		phases: phaseGraph.orderedPhases.map((phaseValue, orderIndex) => {
+			const milestoneNodeId = context.phaseNodeIds.get(phaseValue);
+			const milestoneNode = context.nodes.find((node) => node.id === milestoneNodeId);
+			const segments = phaseGraph.segmentsByPhase.get(phaseValue) ?? [];
+			return {
+				phaseValue,
+				orderIndex,
+				x: phaseXPositions.get(phaseValue) ?? 0,
+				milestoneY: milestoneNode?.y ?? null,
+				incoming: [...(phaseGraph.incomingTransitions.get(phaseValue) ?? [])].sort((left, right) => left - right),
+				outgoing: [...(phaseGraph.outgoingTransitions.get(phaseValue) ?? [])].sort((left, right) => left - right),
+				mainTarget: phaseGraph.mainTargets.get(phaseValue) ?? null,
+				phaseTopY: phasePlacements.get(phaseValue)?.topY ?? null,
+				phaseBottomY: phasePlacements.get(phaseValue)?.bottomY ?? null,
+				mainLaneCenterY: phasePlacements.get(phaseValue)?.mainLaneCenterY ?? null,
+				topics: segments.map((segment, segmentIndex) => {
+					const segmentKey = phaseTopicSegmentKey(phaseValue, segmentIndex, segment.topic);
+					const topicPlacement = topicPlacements.get(segmentKey);
+					const choiceGroups = groupFamiliesByPrimaryChoice(segment.families);
+					const rootChoiceGroups = resolveRootChoiceGroups(choiceGroups);
+					return {
+						segmentIndex,
+						topic: segment.topic,
+						mainLaneCenterY: topicPlacement?.mainLaneCenterY ?? null,
+						familyOrder: [...segment.families].sort(compareBranchFamilies).map((family) => ({
+							priority: family.priority,
+							progressionTarget: family.progressionTarget,
+							primaryChoiceValue: familyPrimaryChoiceValue(family),
+							choiceTargets: uniqueNumbers(
+								family.results
+									.filter((action) => action.kind === 'choice-set' && action.choiceValue !== undefined)
+									.map((action) => action.choiceValue as number),
+							),
+							recordPaths: family.records
+								.map((record) => record.file.path)
+								.sort((left, right) => left.localeCompare(right)),
+						})),
+						rootChoices: orderChoiceGroupsForLanes(rootChoiceGroups.length > 0 ? rootChoiceGroups : choiceGroups, phaseValue)
+							.map((group) => group.choiceValue),
+						choiceResolutions: summarizeChoiceResolutions(segment.families),
+					};
+				}),
+			};
+		}),
+	};
+}
+
+function summarizeChoiceResolutions(families: BranchFamily[]): TopicChoiceResolutionSummary[] {
+	const sourceRecordPathsByChoice = new Map<number, string[]>();
+	const childGroupsByChoice = mapChoiceGroupsByChoice(groupFamiliesByPrimaryChoice(families));
+
+	for (const family of families) {
+		const familyRecordPaths = family.records.map((record) => record.file.path);
+		for (const action of family.results) {
+			if (action.kind !== 'choice-set' || action.choiceValue === undefined) {
+				continue;
+			}
+
+			const existing = sourceRecordPathsByChoice.get(action.choiceValue) ?? [];
+			existing.push(...familyRecordPaths);
+			sourceRecordPathsByChoice.set(action.choiceValue, existing);
+		}
+	}
+
+	return [...sourceRecordPathsByChoice.entries()]
+		.sort((left, right) => left[0] - right[0])
+		.map(([choiceValue, sourceRecordPaths]) => {
+			const childGroup = childGroupsByChoice.get(choiceGroupKey(choiceValue));
+			return {
+				choiceValue,
+				sourceRecordPaths: uniqueValues(sourceRecordPaths).sort((left, right) => left.localeCompare(right)),
+				entryRecordPaths: childGroup
+					? [...childGroup.families]
+						.sort(compareBranchFamilies)
+						.map((family) => firstFamilyRecordPath(family))
+						.filter((path): path is string => path !== null)
+					: [],
+			};
+		});
+}
+
+function familyPrimaryChoiceValue(family: BranchFamily): number | null {
+	const choiceValues = family.records
+		.map((record) => record.primaryChoiceValue)
+		.filter((value): value is number => value !== null);
+	if (choiceValues.length === 0) {
+		return null;
+	}
+	return Math.min(...choiceValues);
+}
+
+function firstFamilyRecordPath(family: BranchFamily): string | null {
+	return [...family.records].sort(compareDialogueRecords)[0]?.file.path ?? null;
 }
 
 function connectScriptedMilestones(context: CanvasLayoutContext, phaseIndices: number[]): void {
@@ -1124,6 +1500,28 @@ function insertJumpNodes(context: CanvasLayoutContext): void {
 
 	context.nodes = [...context.nodes, ...nextNodes];
 	context.edges = [...context.edges.filter((edge) => !removedEdgeIds.has(edge.id)), ...nextEdges];
+}
+
+async function writePhaseGraphSummary(
+	app: App,
+	outputCanvasPath: string,
+	summary: PhaseGraphDebugSummary,
+): Promise<void> {
+	const summaryPath = phaseGraphSummaryPath(outputCanvasPath);
+	const parentFolderPath = summaryPath.substring(0, summaryPath.lastIndexOf('/'));
+	await ensureFolder(app, parentFolderPath);
+	const summaryJson = JSON.stringify(summary, null, '\t');
+	const existing = app.vault.getAbstractFileByPath(summaryPath);
+	if (existing instanceof TFile) {
+		await app.vault.process(existing, () => summaryJson);
+		return;
+	}
+
+	await app.vault.create(summaryPath, summaryJson);
+}
+
+function phaseGraphSummaryPath(outputCanvasPath: string): string {
+	return outputCanvasPath.replace(/\.canvas$/i, '.phase-graph.json');
 }
 
 async function writeCanvasPlan(
