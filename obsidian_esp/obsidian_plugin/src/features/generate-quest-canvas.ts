@@ -40,6 +40,7 @@ const CLUSTER_GAP_Y = 140;
 const FINAL_NODE_GAP_Y = 24;
 const JUMP_FANOUT_THRESHOLD = 4;
 const JUMP_SPAN_THRESHOLD_Y = 900;
+const PRE_JOURNAL_PHASE = 0;
 const KNOWN_FRONTMATTER_KEYS = new Set([
 	'Source',
 	'Type',
@@ -137,6 +138,9 @@ interface DialogueRecord {
 	resultLines: string[];
 	phaseAnchor: number;
 	directlyRelevant: boolean;
+	conditionQuestReferences: string[];
+	resultQuestReferences: string[];
+	ownedQuestReferences: string[];
 	questReferences: string[];
 	primaryChoiceValue: number | null;
 	choiceValues: number[];
@@ -432,17 +436,30 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 		.map((document) => toDialogueRecord(document, scope.questIds, scope.journalMilestones.map((milestone) => milestone.index)))
 		.filter((record): record is DialogueRecord => record !== null);
 
-	const directRelevant = new Set(allRecords.filter((record) => record.directlyRelevant).map((record) => record.id));
-	const choiceRelevant = resolveChoiceRelevantRecords(allRecords, directRelevant);
-	const neighborRelevant = resolveImmediateNeighborRecords(allRecords, directRelevant);
-	const relevantRecordIds = new Set<string>([...directRelevant, ...choiceRelevant, ...neighborRelevant]);
-	const relevantRecords = allRecords.filter((record) => relevantRecordIds.has(record.id));
+	const effectiveOwnership = resolveEffectiveQuestOwnership(allRecords);
+	const directRelevant = new Set(
+		allRecords
+			.filter((record) => (effectiveOwnership.get(record.id) ?? []).some((questId) => scope.questIds.includes(questId)))
+			.map((record) => record.id),
+	);
+	const relevantRecordIds = resolvePropagatedRelevantRecords(allRecords, directRelevant, scope.questIds);
+	const relevantRecords = allRecords.filter(
+		(record) => relevantRecordIds.has(record.id)
+			&& (effectiveOwnership.get(record.id) ?? []).some((questId) => scope.questIds.includes(questId))
+			&& !hasJournalResultsForOtherQuests(record, scope.questIds),
+	);
 
 	if (relevantRecords.length === 0) {
 		throw new Error('No quest-relevant dialogue notes were found for the selected journal folder.');
 	}
 
-	const families = groupBranchFamilies(relevantRecords);
+	const milestoneIndices = uniqueNumbers(scope.journalMilestones.map((milestone) => milestone.index).filter((index) => index > 0));
+	const phaseIndices = milestoneIndices.length > 0 ? milestoneIndices : uniqueNumbers(scope.journalMilestones.map((milestone) => milestone.index));
+	const scopedRelevantRecords = relevantRecords.map((record) => ({
+		...record,
+		phaseAnchor: determinePhaseAnchor(record.conditions, record.resultActions, phaseIndices, scope.questIds),
+	}));
+	const families = groupBranchFamilies(scopedRelevantRecords, scope.questIds);
 	const warnings: string[] = [];
 	const canvasContext = createCanvasLayoutContext();
 	for (const document of scope.journalDocuments) {
@@ -451,8 +468,6 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 	for (const document of dialogueDocuments) {
 		canvasContext.fileBodyTextByPath.set(document.file.path, document.body);
 	}
-	const milestoneIndices = uniqueNumbers(scope.journalMilestones.map((milestone) => milestone.index).filter((index) => index > 0));
-	const phaseIndices = milestoneIndices.length > 0 ? milestoneIndices : uniqueNumbers(scope.journalMilestones.map((milestone) => milestone.index));
 	const phaseGraph = buildPhaseGraph(phaseIndices, families);
 	const phaseXPositions = new Map<number, number>();
 	const phasePlacements = new Map<number, PhasePlacement>();
@@ -483,20 +498,10 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 		const phaseValue = phaseGraph.orderedPhases[phaseIndex] ?? 0;
 		const phaseX = phaseXPositions.get(phaseValue) ?? 0;
 		const phaseMilestones = milestonesByPhase.get(phaseValue) ?? [];
-		if (phaseMilestones.length === 0) {
-			warnings.push(`No journal note exists for phase ${phaseValue}; the canvas will skip the milestone file node.`);
-			continue;
-		}
-
 		const phaseMilestone = phaseMilestones[0];
-		if (!phaseMilestone) {
-			continue;
-		}
-
-		const milestoneNodeId = contextPhaseNodeId(canvasContext, phaseValue);
-		if (!milestoneNodeId) {
-			continue;
-		}
+		const milestoneNodeId = phaseMilestone
+			? contextPhaseNodeId(canvasContext, phaseValue)
+			: undefined;
 		const phaseSegments = phaseGraph.segmentsByPhase.get(phaseValue) ?? [];
 		let topicSegmentIndex = 0;
 		let phaseTopY = Number.POSITIVE_INFINITY;
@@ -522,7 +527,9 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 					topicBaseX - 340,
 					topicLayout.topY - HEADER_Y_OFFSET,
 				);
-				addEdge(canvasContext, `${milestoneNodeId}:${headerId}`, milestoneNodeId, 'right', headerId, 'left');
+				if (milestoneNodeId) {
+					addEdge(canvasContext, `${milestoneNodeId}:${headerId}`, milestoneNodeId, 'right', headerId, 'left');
+				}
 				for (const entryId of topicLayout.rootEntryIds) {
 					addEdge(canvasContext, `${headerId}:${entryId}`, headerId, 'right', entryId, 'left');
 				}
@@ -538,7 +545,9 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 		const phaseCenterY = phaseCenters.length > 0
 			? Math.round(phaseCenters.reduce((sum, value) => sum + value, 0) / phaseCenters.length)
 			: 0;
-		centerPhaseMilestone(canvasContext, phaseValue, phaseCenterY);
+		if (milestoneNodeId) {
+			centerPhaseMilestone(canvasContext, phaseValue, phaseCenterY);
+		}
 		phasePlacements.set(phaseValue, {
 			topY: Number.isFinite(phaseTopY) ? phaseTopY : phaseCenterY,
 			bottomY: Number.isFinite(phaseBottomY) ? phaseBottomY : phaseCenterY,
@@ -555,7 +564,7 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 	for (const milestone of scope.journalDocuments) {
 		relatedFiles.set(milestone.file.path, milestone.file);
 	}
-	for (const record of relevantRecords) {
+	for (const record of scopedRelevantRecords) {
 		relatedFiles.set(record.file.path, record.file);
 	}
 	for (const milestone of scope.journalMilestones) {
@@ -568,7 +577,7 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 			subpath: milestone.canvasSubpath,
 		});
 	}
-	for (const record of relevantRecords) {
+	for (const record of scopedRelevantRecords) {
 		if (!record.canvasSubpath) {
 			continue;
 		}
@@ -2075,9 +2084,18 @@ function toDialogueRecord(
 	const conditionEntries = parseConditions(document.frontmatter, questIds);
 	const resultActions = parseResultActions(getStringValue(document.frontmatter, 'Result') ?? '', questIds);
 	const bodyText = document.body.trim();
-	const directRelevance =
-		conditionEntries.some((condition) => condition.kind === 'journal' && condition.questId && questIds.includes(condition.questId))
-			|| resultActions.some((action) => action.kind === 'journal-set' && action.targetQuestId && questIds.includes(action.targetQuestId));
+	const conditionQuestReferences = uniqueValues(
+		conditionEntries
+			.filter((condition) => condition.kind === 'journal' && condition.questId)
+			.map((condition) => condition.questId as string),
+	);
+	const resultQuestReferences = uniqueValues(
+		resultActions
+			.filter((action) => action.kind === 'journal-set' && action.targetQuestId)
+			.map((action) => action.targetQuestId as string),
+	);
+	const ownedQuestReferences = resultQuestReferences.length > 0 ? resultQuestReferences : conditionQuestReferences;
+	const directRelevance = ownedQuestReferences.some((questId) => questIds.includes(questId));
 
 	return {
 		id: createNodeId(`record:${document.file.path}`),
@@ -2093,16 +2111,12 @@ function toDialogueRecord(
 		nonSpeakerConditions: conditionEntries.filter((condition) => condition.kind !== 'speaker'),
 		resultActions,
 		resultLines: resultActions.map((action) => action.displayText),
-		phaseAnchor: determinePhaseAnchor(conditionEntries, resultActions, phaseIndices),
+		phaseAnchor: determinePhaseAnchor(conditionEntries, resultActions, phaseIndices, questIds),
 		directlyRelevant: directRelevance,
-		questReferences: uniqueValues([
-			...conditionEntries
-				.filter((condition) => condition.kind === 'journal' && condition.questId)
-				.map((condition) => condition.questId as string),
-			...resultActions
-				.filter((action) => action.kind === 'journal-set' && action.targetQuestId)
-				.map((action) => action.targetQuestId as string),
-		]),
+		conditionQuestReferences,
+		resultQuestReferences,
+		ownedQuestReferences,
+		questReferences: uniqueValues([...conditionQuestReferences, ...resultQuestReferences]),
 		primaryChoiceValue: firstChoiceValue(conditionEntries),
 		choiceValues: conditionEntries
 			.filter((condition) => condition.kind === 'choice' && condition.choiceValue !== undefined)
@@ -2296,40 +2310,13 @@ function parseChoiceResults(line: string): ResultAction[] {
 	return actions;
 }
 
-function resolveChoiceRelevantRecords(allRecords: DialogueRecord[], directRelevant: Set<string>): Set<string> {
-	const relevant = new Set<string>();
+function resolvePropagatedRelevantRecords(
+	allRecords: DialogueRecord[],
+	directRelevant: Set<string>,
+	questIds: string[],
+): Set<string> {
+	const relevant = new Set<string>(directRelevant);
 	const recordsByTopic = groupRecordsByTopic(allRecords);
-	let changed = true;
-
-	while (changed) {
-		changed = false;
-		for (const record of allRecords) {
-			if (directRelevant.has(record.id) || relevant.has(record.id)) {
-				continue;
-			}
-
-			if (record.choiceTargets.length === 0) {
-				continue;
-			}
-
-			const topicRecords = recordsByTopic.get(record.topic) ?? [];
-			const leadsToRelevant = topicRecords.some(
-				(candidate) => record.choiceTargets.some((value) => candidate.choiceValues.includes(value))
-					&& (directRelevant.has(candidate.id) || relevant.has(candidate.id)),
-			);
-
-			if (leadsToRelevant) {
-				relevant.add(record.id);
-				changed = true;
-			}
-		}
-	}
-
-	return relevant;
-}
-
-function resolveImmediateNeighborRecords(allRecords: DialogueRecord[], directRelevant: Set<string>): Set<string> {
-	const relevant = new Set<string>();
 	const diagMap = new Map<string, DialogueRecord>();
 	const nextByPrev = new Map<string, DialogueRecord[]>();
 
@@ -2344,20 +2331,46 @@ function resolveImmediateNeighborRecords(allRecords: DialogueRecord[], directRel
 		}
 	}
 
-	for (const record of allRecords) {
-		if (!directRelevant.has(record.id)) {
-			continue;
-		}
+	let changed = true;
+	while (changed) {
+		changed = false;
 
-		const previous = record.prevId ? diagMap.get(record.prevId) : undefined;
-		if (previous && !hasForeignQuestReferences(previous)) {
-			relevant.add(previous.id);
-		}
+		for (const record of allRecords) {
+			if (!relevant.has(record.id)) {
+				continue;
+			}
 
-		const nextRecords = record.diagId ? nextByPrev.get(record.diagId) ?? [] : [];
-		for (const nextRecord of nextRecords) {
-			if (!hasForeignQuestReferences(nextRecord)) {
+			const previous = record.prevId ? diagMap.get(record.prevId) : undefined;
+			if (previous && !relevant.has(previous.id) && !hasJournalResultsForOtherQuests(previous, questIds)) {
+				relevant.add(previous.id);
+				changed = true;
+			}
+
+			const nextRecords = record.diagId ? nextByPrev.get(record.diagId) ?? [] : [];
+			for (const nextRecord of nextRecords) {
+				if (relevant.has(nextRecord.id) || hasJournalResultsForOtherQuests(nextRecord, questIds)) {
+					continue;
+				}
+
 				relevant.add(nextRecord.id);
+				changed = true;
+			}
+		}
+
+		for (const record of allRecords) {
+			if (relevant.has(record.id) || record.choiceTargets.length === 0 || hasJournalResultsForOtherQuests(record, questIds)) {
+				continue;
+			}
+
+			const topicRecords = recordsByTopic.get(record.topic) ?? [];
+			const leadsToRelevant = topicRecords.some(
+				(candidate) => relevant.has(candidate.id)
+					&& record.choiceTargets.some((value) => candidate.choiceValues.includes(value)),
+			);
+
+			if (leadsToRelevant) {
+				relevant.add(record.id);
+				changed = true;
 			}
 		}
 	}
@@ -2365,7 +2378,105 @@ function resolveImmediateNeighborRecords(allRecords: DialogueRecord[], directRel
 	return relevant;
 }
 
-function groupBranchFamilies(records: DialogueRecord[]): BranchFamily[] {
+function resolveEffectiveQuestOwnership(allRecords: DialogueRecord[]): Map<string, string[]> {
+	const ancestorsByRecordId = buildAncestorRecordMap(allRecords);
+	const resultOwnership = new Map<string, Set<string>>();
+	const conditionOwnership = new Map<string, Set<string>>();
+
+	for (const record of allRecords) {
+		resultOwnership.set(record.id, new Set(record.resultQuestReferences));
+		conditionOwnership.set(record.id, new Set(record.conditionQuestReferences));
+	}
+
+	let changed = true;
+	while (changed) {
+		changed = false;
+		for (const record of allRecords) {
+			const ancestorIds = ancestorsByRecordId.get(record.id) ?? [];
+			const descendantResultOwnership = resultOwnership.get(record.id) ?? new Set<string>();
+			const descendantConditionOwnership = conditionOwnership.get(record.id) ?? new Set<string>();
+			for (const ancestorId of ancestorIds) {
+				const ancestorResultOwnership = resultOwnership.get(ancestorId) ?? new Set<string>();
+				const ancestorConditionOwnership = conditionOwnership.get(ancestorId) ?? new Set<string>();
+				if (mergeQuestReferences(ancestorResultOwnership, descendantResultOwnership)) {
+					resultOwnership.set(ancestorId, ancestorResultOwnership);
+					changed = true;
+				}
+				if (mergeQuestReferences(ancestorConditionOwnership, descendantConditionOwnership)) {
+					conditionOwnership.set(ancestorId, ancestorConditionOwnership);
+					changed = true;
+				}
+			}
+		}
+	}
+
+	const effectiveOwnership = new Map<string, string[]>();
+	for (const record of allRecords) {
+		const recordResultOwnership = [...(resultOwnership.get(record.id) ?? new Set<string>())];
+		const recordConditionOwnership = [...(conditionOwnership.get(record.id) ?? new Set<string>())];
+		effectiveOwnership.set(
+			record.id,
+			recordResultOwnership.length > 0 ? uniqueValues(recordResultOwnership) : uniqueValues(recordConditionOwnership),
+		);
+	}
+
+	return effectiveOwnership;
+}
+
+function buildAncestorRecordMap(allRecords: DialogueRecord[]): Map<string, string[]> {
+	const ancestorsByRecordId = new Map<string, Set<string>>();
+	const recordsByDiagId = new Map<string, DialogueRecord>();
+	const recordsByTopic = groupRecordsByTopic(allRecords);
+
+	for (const record of allRecords) {
+		if (record.diagId.length > 0) {
+			recordsByDiagId.set(record.diagId, record);
+		}
+		ancestorsByRecordId.set(record.id, new Set<string>());
+	}
+
+	for (const record of allRecords) {
+		const recordAncestors = ancestorsByRecordId.get(record.id);
+		if (!recordAncestors) {
+			continue;
+		}
+
+		const previous = record.prevId ? recordsByDiagId.get(record.prevId) : undefined;
+		if (previous) {
+			recordAncestors.add(previous.id);
+		}
+
+		const topicRecords = recordsByTopic.get(record.topic) ?? [];
+		for (const candidate of topicRecords) {
+			if (candidate.id === record.id || candidate.choiceTargets.length === 0) {
+				continue;
+			}
+
+			if (candidate.choiceTargets.some((value) => record.choiceValues.includes(value))) {
+				recordAncestors.add(candidate.id);
+			}
+		}
+	}
+
+	return new Map(
+		[...ancestorsByRecordId.entries()].map(([recordId, ancestorIds]) => [recordId, [...ancestorIds]]),
+	);
+}
+
+function mergeQuestReferences(target: Set<string>, source: Set<string>): boolean {
+	let changed = false;
+	for (const questId of source) {
+		if (target.has(questId)) {
+			continue;
+		}
+
+		target.add(questId);
+		changed = true;
+	}
+	return changed;
+}
+
+function groupBranchFamilies(records: DialogueRecord[], questIds: string[]): BranchFamily[] {
 	const familyMap = new Map<string, BranchFamily>();
 	for (const record of records) {
 		const nonSpeakerKey = normalizeConditionKey(record.nonSpeakerConditions);
@@ -2378,7 +2489,7 @@ function groupBranchFamilies(records: DialogueRecord[]): BranchFamily[] {
 			continue;
 		}
 
-		const progressionTarget = firstJournalResult(record.resultActions);
+		const progressionTarget = firstJournalResult(record.resultActions, questIds);
 		familyMap.set(familyKey, {
 			id: createNodeId(`family:${familyKey}`),
 			type: record.type,
@@ -2409,17 +2520,27 @@ function compareDialogueRecords(left: DialogueRecord, right: DialogueRecord): nu
 		|| left.file.path.localeCompare(right.file.path);
 }
 
-function determinePhaseAnchor(conditions: Condition[], resultActions: ResultAction[], phaseIndices: number[]): number {
-	const journalConditions = conditions.filter((condition) => condition.kind === 'journal' && condition.value !== undefined);
+function determinePhaseAnchor(
+	conditions: Condition[],
+	resultActions: ResultAction[],
+	phaseIndices: number[],
+	questIds: string[],
+): number {
+	const journalResult = firstJournalResult(resultActions, questIds);
+	if (journalResult !== null) {
+		return previousPhaseBefore(journalResult, phaseIndices);
+	}
+
+	const journalConditions = conditions.filter(
+		(condition) => condition.kind === 'journal'
+			&& condition.value !== undefined
+			&& condition.questId !== undefined
+			&& questIds.includes(condition.questId),
+	);
 	for (const condition of journalConditions) {
 		if (condition.operator === '=' || condition.operator === '>=' || condition.operator === '>') {
 			return nearestPhaseAtOrBelow(condition.value as number, phaseIndices);
 		}
-	}
-
-	const journalResult = firstJournalResult(resultActions);
-	if (journalResult !== null) {
-		return previousPhaseBefore(journalResult, phaseIndices);
 	}
 
 	return phaseIndices[0] ?? 0;
@@ -2438,7 +2559,7 @@ function previousPhaseBefore(value: number, phaseIndices: number[]): number {
 	if (lower.length > 0) {
 		return lower[lower.length - 1] ?? phaseIndices[0] ?? value;
 	}
-	return phaseIndices[0] ?? value;
+	return Math.min(PRE_JOURNAL_PHASE, value);
 }
 
 function computeFamilyPriority(phaseAnchor: number, progressionTarget: number | null, resultActions: ResultAction[]): number {
@@ -2454,13 +2575,21 @@ function computeFamilyPriority(phaseAnchor: number, progressionTarget: number | 
 	return 2;
 }
 
-function firstJournalResult(resultActions: ResultAction[]): number | null {
+function firstJournalResult(resultActions: ResultAction[], questIds: string[]): number | null {
+	let earliestTarget: number | null = null;
 	for (const action of resultActions) {
-		if (action.kind === 'journal-set' && action.targetJournalIndex !== undefined) {
-			return action.targetJournalIndex;
+		if (
+			action.kind === 'journal-set'
+			&& action.targetJournalIndex !== undefined
+			&& action.targetQuestId !== undefined
+			&& questIds.includes(action.targetQuestId)
+		) {
+			earliestTarget = earliestTarget === null
+				? action.targetJournalIndex
+				: Math.min(earliestTarget, action.targetJournalIndex);
 		}
 	}
-	return null;
+	return earliestTarget;
 }
 
 function addFileNode(
@@ -2615,8 +2744,12 @@ function firstChoiceValue(conditions: Condition[]): number | null {
 	return Math.min(...choiceValues);
 }
 
-function hasForeignQuestReferences(record: DialogueRecord): boolean {
-	return record.questReferences.length > 0 && !record.directlyRelevant;
+function hasJournalResultsForOtherQuests(record: DialogueRecord, questIds: string[]): boolean {
+	return record.resultActions.some(
+		(action) => action.kind === 'journal-set'
+			&& Boolean(action.targetQuestId)
+			&& !questIds.includes(action.targetQuestId as string),
+	);
 }
 
 function containsJournalLine(lines: string[]): boolean {
