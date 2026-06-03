@@ -2033,7 +2033,7 @@ function extractQuestTitle(documents: MarkdownDocument[]): string | null {
 		return null;
 	}
 
-	return stripBlockId(firstLine);
+	return stripWikilinkSyntax(stripBlockId(firstLine));
 }
 
 function isQuestNameNote(document: MarkdownDocument): boolean {
@@ -2938,12 +2938,15 @@ function normalizeQuestNameKey(text: string | null): string | null {
 		return null;
 	}
 
-	const normalized = stripBlockId(text)
+	const normalized = stripWikilinkSyntax(stripBlockId(text))
 		.toLowerCase()
-		.replace(/\[\[|\]\]/g, '')
 		.replace(/[^a-z0-9]+/g, ' ')
 		.trim();
 	return normalized.length > 0 ? normalized : null;
+}
+
+function stripWikilinkSyntax(text: string): string {
+	return text.replace(/\[\[(?:[^|\]]*?\|)?([^|\]]*?)\]\]/g, '$1').trim();
 }
 
 function normalizeConditionKey(conditions: Condition[]): string {
