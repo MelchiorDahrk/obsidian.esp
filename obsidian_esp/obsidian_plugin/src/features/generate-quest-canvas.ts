@@ -714,7 +714,7 @@ function layoutBranchFamily(
 		const dialogueHeight = measureCanvasBodyHeight(record.bodyText, DIALOGUE_WIDTH);
 		const localResultLines = record.resultActions
 			.filter((action) => action.kind !== 'choice-set')
-			.map((action) => action.displayText);
+			.map((action) => renderResultAction(action, allMilestones));
 		const localResultHeight = localResultLines.length > 0 ? measureTextHeight(localResultLines.join('\n'), DIALOGUE_WIDTH) + RESULT_GAP_Y : 0;
 		const clusterHeight = Math.max(gateHeight, dialogueHeight) + localResultHeight + CLUSTER_GAP_Y;
 		const recordY = currentY;
@@ -768,7 +768,7 @@ function layoutBranchFamily(
 				continue;
 			}
 
-			const targetMilestone = allMilestones.find((milestone) => milestone.index === action.targetJournalIndex);
+			const targetMilestone = resolveJournalResultMilestone(action, allMilestones);
 			if (!targetMilestone) {
 				continue;
 			}
@@ -2621,6 +2621,49 @@ function hasForeignQuestReferences(record: DialogueRecord): boolean {
 
 function containsJournalLine(lines: string[]): boolean {
 	return lines.some((line) => line.startsWith('Journal [['));
+}
+
+function renderResultAction(action: ResultAction, allMilestones: JournalMilestone[]): string {
+	if (action.kind !== 'journal-set' || action.targetJournalIndex === undefined) {
+		return action.displayText;
+	}
+
+	const targetMilestone = resolveJournalResultMilestone(action, allMilestones);
+	if (!targetMilestone) {
+		return action.displayText;
+	}
+
+	const labelQuestId = action.targetQuestId ?? targetMilestone.questId;
+	const label = `${labelQuestId} ${action.targetJournalIndex}`;
+	return `Journal [[${toWikilinkTarget(targetMilestone.file.path, targetMilestone.canvasSubpath)}|${label}]]`;
+}
+
+function resolveJournalResultMilestone(
+	action: ResultAction,
+	allMilestones: JournalMilestone[],
+): JournalMilestone | null {
+	if (action.kind !== 'journal-set' || action.targetJournalIndex === undefined) {
+		return null;
+	}
+
+	if (action.targetQuestId) {
+		return allMilestones.find(
+			(milestone) => milestone.questId === action.targetQuestId && milestone.index === action.targetJournalIndex,
+		) ?? null;
+	}
+
+	const matches = allMilestones.filter((milestone) => milestone.index === action.targetJournalIndex);
+	if (matches.length === 1) {
+		return matches[0] ?? null;
+	}
+
+	return null;
+}
+
+function toWikilinkTarget(filePath: string, subpath?: string | null): string {
+	const fileName = filePath.split('/').pop() ?? filePath;
+	const linkPath = fileName.replace(/\.md$/i, '');
+	return `${linkPath}${subpath ?? ''}`;
 }
 
 function buildCenteredOffsets(count: number, gap: number): number[] {
