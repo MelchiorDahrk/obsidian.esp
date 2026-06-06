@@ -15,9 +15,9 @@
               "state": {
                 "file": "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving.canvas",
                 "viewState": {
-                  "x": 4366.096717205392,
-                  "y": 41.93594785889047,
-                  "zoom": -0.5673673261559873
+                  "x": 4764.227232682506,
+                  "y": 184.21769709508703,
+                  "zoom": -2.2340339928226536
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -185,8 +185,9 @@
   },
   "active": "ac6084e5332dbcef",
   "lastOpenFiles": [
-    "TES3 Plugins/OAAB_Grazelands/Topic/The Final Lesson/The Final Lesson ~8.md",
     "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving_generated.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving - Copy.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests",
     "TES3 Plugins/OAAB_Grazelands/Voice/Thief/Thief.md",
     "TES3 Plugins/OAAB_Grazelands/Voice/Idle/Idle.md",
@@ -229,7 +230,6 @@
     "TES3 Plugins/OAAB_Grazelands/Quests/The Eerie Lantern.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/The Domain of Living Fire.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/A Smidge Too Far.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/The Final Door.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/Let The Ebony Flow.canvas"
+    "TES3 Plugins/OAAB_Grazelands/Quests/The Final Door.canvas"
   ]
 }

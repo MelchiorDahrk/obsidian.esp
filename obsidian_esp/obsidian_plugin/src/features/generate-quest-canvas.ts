@@ -31,9 +31,11 @@ const VARIANT_GAP_Y = 420;
 const RESULT_GAP_Y = 30;
 const CHOICE_COLUMN_GAP_X = 1320;
 const TOPIC_SEGMENT_GAP_X = 1920;
-const FOLLOWUP_GROUP_GAP_X = 700;
+const FOLLOWUP_GROUP_GAP_X = 500;
 const CLUSTER_GAP_Y = 140;
 const FINAL_NODE_GAP_Y = 24;
+const MIN_HORIZONTAL_EDGE_GAP_X = 75;
+const MAX_COMPACT_EDGE_GAP_X = 180;
 const PRE_JOURNAL_PHASE = 0;
 const KNOWN_FRONTMATTER_KEYS = new Set([
 	'Source',
@@ -187,6 +189,12 @@ interface TopicLayoutResult {
 	bottomY: number;
 	mainLaneCenterY: number;
 	nodeIds: string[];
+}
+
+interface AnchoredTopicLayout {
+	choiceValue: number;
+	anchorY: number;
+	layout: TopicLayoutResult;
 }
 
 interface PhaseTopicSegment {
@@ -477,6 +485,7 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 
 	connectChoiceTransitions(canvasContext, phaseAnchoredRecords);
 	connectScriptedMilestones(canvasContext, phaseGraph.orderedPhases);
+	compactHorizontalConnectionLayout(canvasContext);
 	resolveCanvasNodeOverlaps(canvasContext);
 
 	const relatedFiles = new Map<string, TFile>();
@@ -615,11 +624,9 @@ function layoutBranchFamily(
 ): { firstEntryId: string; nextY: number; choiceAnchors: ChoiceAnchor[] } {
 	const familyRecords = [...family.records].sort(compareDialogueRecords);
 	const familyChoiceActions = family.results.filter((action) => action.kind === 'choice-set');
-	const choiceNodeIds = new Map<string, string>();
 	const choiceAnchors: ChoiceAnchor[] = [];
 	let currentY = startY;
 	let firstEntryId = '';
-	let choiceCursorY = startY;
 
 	for (let recordIndex = 0; recordIndex < familyRecords.length; recordIndex += 1) {
 		const record = familyRecords[recordIndex];
@@ -634,7 +641,13 @@ function layoutBranchFamily(
 			.filter((action) => action.kind !== 'choice-set')
 			.map((action) => renderResultAction(action, allMilestones));
 		const localResultHeight = localResultLines.length > 0 ? measureTextHeight(localResultLines.join('\n'), DIALOGUE_WIDTH) + RESULT_GAP_Y : 0;
-		const clusterHeight = Math.max(gateHeight, dialogueHeight) + localResultHeight + CLUSTER_GAP_Y;
+		const choiceActions = familyChoiceActions.filter((action) => action.choiceValue !== undefined);
+		const choiceHeights = choiceActions.map((action) => measureTextHeight(action.displayText, CHOICE_WIDTH));
+		const choiceStackHeight = choiceHeights.reduce((total, height, index) => {
+			const spacing = index === 0 ? 0 : 24;
+			return total + spacing + height;
+		}, 0);
+		const clusterHeight = Math.max(gateHeight, dialogueHeight, choiceStackHeight) + localResultHeight + CLUSTER_GAP_Y;
 		const recordY = currentY;
 		const dialogueId = addFileNode(
 			context,
@@ -702,25 +715,27 @@ function layoutBranchFamily(
 			incrementPhaseCount(context.phaseIncomingCounts, targetMilestone.index);
 		}
 
-		for (const choiceAction of familyChoiceActions) {
-			if (choiceAction.choiceValue === undefined) {
+		let choiceCursorY = recordY + Math.max(0, Math.round((dialogueHeight - choiceStackHeight) / 2));
+		const recordChoiceNodeIds = new Map<string, string>();
+		for (let choiceIndex = 0; choiceIndex < choiceActions.length; choiceIndex += 1) {
+			const choiceAction = choiceActions[choiceIndex];
+			const choiceHeight = choiceHeights[choiceIndex] ?? measureTextHeight(choiceAction?.displayText ?? '', CHOICE_WIDTH);
+			if (!choiceAction || choiceAction.choiceValue === undefined) {
 				continue;
 			}
-
 			const choiceNodeKey = choiceActionIdentity(choiceAction);
-			let choiceNodeId = choiceNodeIds.get(choiceNodeKey);
+			let choiceNodeId = recordChoiceNodeIds.get(choiceNodeKey);
 			if (!choiceNodeId) {
-				const choiceHeight = measureTextHeight(choiceAction.displayText, CHOICE_WIDTH);
 				choiceNodeId = addTextNode(
 					context,
-					`choice:${family.id}:${choiceAction.choiceValue}:${choiceAction.displayText}`,
+					`choice:${record.file.path}:${choiceAction.choiceValue}:${choiceAction.displayText}`,
 					choiceAction.displayText,
 					choiceX,
 					choiceCursorY,
 					CHOICE_WIDTH,
 					GATE_COLOR,
 				);
-				choiceNodeIds.set(choiceNodeKey, choiceNodeId);
+				recordChoiceNodeIds.set(choiceNodeKey, choiceNodeId);
 				choiceAnchors.push({
 					choiceValue: choiceAction.choiceValue,
 					nodeId: choiceNodeId,
@@ -731,7 +746,7 @@ function layoutBranchFamily(
 					topic: family.topic,
 					choiceValue: choiceAction.choiceValue,
 					nodeId: choiceNodeId,
-					sourceRecords: familyRecords,
+					sourceRecords: [record],
 				});
 				choiceCursorY += choiceHeight + 24;
 			}
@@ -819,6 +834,7 @@ function layoutTopicFamilies(
 		const mainLaneCenterY = Math.round((groupTopY + mainLaneBottomY) / 2);
 		const mainColumnTopY = localTopY;
 		const mainColumnBottomY = localBottomY;
+		const anchoredChildLayouts: AnchoredTopicLayout[] = [];
 		for (const anchor of collapseChoiceAnchors(emittedAnchors).sort((left, right) => left.y - right.y || left.choiceValue - right.choiceValue)) {
 			const childGroup = groupsByChoice.get(choiceGroupKey(anchor.choiceValue));
 			if (!childGroup) {
@@ -829,6 +845,11 @@ function layoutTopicFamilies(
 			const cachedChildLayout = renderedGroupLayouts.get(childGroupKey);
 			if (cachedChildLayout) {
 				childLayouts.push(cachedChildLayout);
+				anchoredChildLayouts.push({
+					choiceValue: anchor.choiceValue,
+					anchorY: anchor.y,
+					layout: cachedChildLayout,
+				});
 				continue;
 			}
 			if (renderingGroups.has(childGroupKey)) {
@@ -843,9 +864,14 @@ function layoutTopicFamilies(
 				childStartY,
 			);
 			childLayouts.push(childLayout);
+			anchoredChildLayouts.push({
+				choiceValue: anchor.choiceValue,
+				anchorY: anchor.y,
+				layout: childLayout,
+			});
 		}
 
-		pushDownOverlappingLayouts(context, childLayouts, LANE_GAP_Y);
+		arrangeAnchoredChildLayouts(context, anchoredChildLayouts, CLUSTER_GAP_Y);
 		localTopY = mainColumnTopY;
 		localBottomY = mainColumnBottomY;
 		for (const childLayout of childLayouts) {
@@ -929,6 +955,80 @@ function pushDownOverlappingLayouts(
 
 		previousBottomY = layout.bottomY;
 	}
+}
+
+function arrangeAnchoredChildLayouts(
+	context: CanvasLayoutContext,
+	anchoredLayouts: AnchoredTopicLayout[],
+	gapY: number,
+): void {
+	const orderedLayouts = [...anchoredLayouts]
+		.filter((item) => item.layout.nodeIds.length > 0)
+		.sort((left, right) => left.anchorY - right.anchorY || left.choiceValue - right.choiceValue);
+	if (orderedLayouts.length === 0) {
+		return;
+	}
+
+	const heights = orderedLayouts.map((item) => item.layout.bottomY - item.layout.topY);
+	const cumulativeMinimumTops: number[] = [];
+	let cumulativeTop = 0;
+	for (let index = 0; index < orderedLayouts.length; index += 1) {
+		cumulativeMinimumTops.push(cumulativeTop);
+		cumulativeTop += (heights[index] ?? 0) + gapY;
+	}
+
+	const desiredOffsets = orderedLayouts.map((item, index) => {
+		const height = heights[index] ?? 0;
+		const minimumTop = cumulativeMinimumTops[index] ?? 0;
+		return item.anchorY - height / 2 - minimumTop;
+	});
+	const compactOffsets = compactIncreasingOffsets(desiredOffsets);
+
+	for (let index = 0; index < orderedLayouts.length; index += 1) {
+		const item = orderedLayouts[index];
+		if (!item) {
+			continue;
+		}
+
+		const nextTop = Math.round((compactOffsets[index] ?? 0) + (cumulativeMinimumTops[index] ?? 0));
+		shiftTopicLayout(context, item.layout, nextTop - item.layout.topY);
+	}
+}
+
+function compactIncreasingOffsets(desiredOffsets: number[]): number[] {
+	const blocks: Array<{ start: number; end: number; weight: number; total: number }> = [];
+	for (let index = 0; index < desiredOffsets.length; index += 1) {
+		blocks.push({
+			start: index,
+			end: index,
+			weight: 1,
+			total: desiredOffsets[index] ?? 0,
+		});
+
+		while (blocks.length >= 2) {
+			const right = blocks[blocks.length - 1];
+			const left = blocks[blocks.length - 2];
+			if (!left || !right || left.total / left.weight <= right.total / right.weight) {
+				break;
+			}
+
+			blocks.splice(blocks.length - 2, 2, {
+				start: left.start,
+				end: right.end,
+				weight: left.weight + right.weight,
+				total: left.total + right.total,
+			});
+		}
+	}
+
+	const offsets = new Array<number>(desiredOffsets.length);
+	for (const block of blocks) {
+		const value = block.total / block.weight;
+		for (let index = block.start; index <= block.end; index += 1) {
+			offsets[index] = value;
+		}
+	}
+	return offsets;
 }
 
 function shiftTopicLayout(
@@ -1653,6 +1753,131 @@ function connectScriptedMilestones(context: CanvasLayoutContext, phaseIndices: n
 	}
 }
 
+function compactHorizontalConnectionLayout(context: CanvasLayoutContext): void {
+	const lockedGroups = buildLockedVerticalGroups(context);
+	const nodeById = new Map(context.nodes.map((node) => [node.id, node]));
+	const groupByNodeId = buildLockedGroupByNodeId(lockedGroups);
+	const incomingEdgesByGroup = new Map<string, CanvasEdge[]>();
+
+	for (const edge of context.edges) {
+		if (edge.fromSide !== 'right' || edge.toSide !== 'left') {
+			continue;
+		}
+
+		const fromGroup = groupByNodeId.get(edge.fromNode);
+		const toGroup = groupByNodeId.get(edge.toNode);
+		if (!fromGroup || !toGroup || fromGroup.id === toGroup.id) {
+			continue;
+		}
+
+		const incomingEdges = incomingEdgesByGroup.get(toGroup.id) ?? [];
+		incomingEdges.push(edge);
+		incomingEdgesByGroup.set(toGroup.id, incomingEdges);
+	}
+
+	const orderedGroups = [...lockedGroups.values()].sort(
+		(left, right) => left.leftX - right.leftX || left.topY - right.topY || left.id.localeCompare(right.id),
+	);
+	const baseLeftX = Math.min(...orderedGroups.map((group) => group.leftX));
+	const compactLeftByGroupId = new Map<string, number>();
+
+	for (const group of orderedGroups) {
+		const incomingEdges = incomingEdgesByGroup.get(group.id) ?? [];
+		let compactLeftX = incomingEdges.length > 0 ? 0 : group.leftX - baseLeftX;
+
+		for (const edge of incomingEdges) {
+			const fromGroup = groupByNodeId.get(edge.fromNode);
+			const toGroup = groupByNodeId.get(edge.toNode);
+			const fromNode = nodeById.get(edge.fromNode);
+			const toNode = nodeById.get(edge.toNode);
+			if (!fromGroup || !toGroup || !fromNode || !toNode) {
+				continue;
+			}
+
+			const compactFromLeftX = compactLeftByGroupId.get(fromGroup.id) ?? fromGroup.leftX - baseLeftX;
+			const sourceRightOffset = fromNode.x + fromNode.width - fromGroup.leftX;
+			const targetLeftOffset = toNode.x - toGroup.leftX;
+			const sourceEndpointX = edgeEndpoint(fromNode, edge.fromSide).x;
+			const targetEndpointX = edgeEndpoint(toNode, edge.toSide).x;
+			const compactGapX = compactEdgeGapX(edge, fromNode, toNode, targetEndpointX - sourceEndpointX);
+			compactLeftX = Math.max(
+				compactLeftX,
+				compactFromLeftX + sourceRightOffset + compactGapX - targetLeftOffset,
+			);
+		}
+
+		compactLeftByGroupId.set(group.id, compactLeftX);
+	}
+
+	for (const group of orderedGroups) {
+		const compactLeftX = compactLeftByGroupId.get(group.id);
+		if (compactLeftX === undefined) {
+			continue;
+		}
+
+		shiftLockedGroup(group, Math.round(baseLeftX + compactLeftX - group.leftX), 0);
+	}
+}
+
+function buildLockedGroupByNodeId(lockedGroups: Map<string, LockedVerticalGroup>): Map<string, LockedVerticalGroup> {
+	const groupByNodeId = new Map<string, LockedVerticalGroup>();
+	for (const group of lockedGroups.values()) {
+		for (const node of group.nodes) {
+			groupByNodeId.set(node.id, group);
+		}
+	}
+	return groupByNodeId;
+}
+
+function compactEdgeGapX(
+	edge: CanvasEdge,
+	fromNode: CanvasNode,
+	toNode: CanvasNode,
+	currentGapX: number,
+): number {
+	if (edge.fromSide !== 'right' || edge.toSide !== 'left') {
+		return MIN_HORIZONTAL_EDGE_GAP_X;
+	}
+
+	if (isGateNode(fromNode) && isDialogueFileNode(toNode)) {
+		return Math.max(MIN_HORIZONTAL_EDGE_GAP_X, Math.min(currentGapX, MIN_HORIZONTAL_EDGE_GAP_X));
+	}
+
+	if (isDialogueFileNode(fromNode) && isChoiceNode(toNode)) {
+		return Math.max(MIN_HORIZONTAL_EDGE_GAP_X, Math.min(currentGapX, 160));
+	}
+
+	return Math.max(MIN_HORIZONTAL_EDGE_GAP_X, Math.min(currentGapX, MAX_COMPACT_EDGE_GAP_X));
+}
+
+function edgeEndpoint(
+	node: CanvasNode,
+	side: 'left' | 'right' | 'top' | 'bottom',
+): { x: number; y: number } {
+	switch (side) {
+		case 'left':
+			return { x: node.x, y: node.y + node.height / 2 };
+		case 'right':
+			return { x: node.x + node.width, y: node.y + node.height / 2 };
+		case 'top':
+			return { x: node.x + node.width / 2, y: node.y };
+		case 'bottom':
+			return { x: node.x + node.width / 2, y: node.y + node.height };
+	}
+}
+
+function isChoiceNode(node: CanvasNode): boolean {
+	return node.type === 'text' && /^".*"\s+-\s+Choice\s+-?\d+/.test(node.text ?? '');
+}
+
+function isGateNode(node: CanvasNode): boolean {
+	return node.type === 'text' && !isChoiceNode(node);
+}
+
+function isDialogueFileNode(node: CanvasNode): boolean {
+	return node.type === 'file' && !node.file?.includes(`/${JOURNAL_FOLDER_NAME}/`);
+}
+
 function resolveCanvasNodeOverlaps(context: CanvasLayoutContext): void {
 	const lockedGroups = buildLockedVerticalGroups(context);
 	const maxPasses = Math.max(1, context.nodes.length * context.nodes.length);
@@ -1680,7 +1905,7 @@ function resolveCanvasNodeOverlaps(context: CanvasLayoutContext): void {
 					continue;
 				}
 
-				shiftLockedGroup(lowerGroup, minimumLowerY - lowerGroup.topY);
+				shiftLockedGroup(lowerGroup, 0, minimumLowerY - lowerGroup.topY);
 				changed = true;
 			}
 		}
@@ -1769,15 +1994,18 @@ function lockedGroupsOverlapHorizontally(left: LockedVerticalGroup, right: Locke
 	return left.leftX < right.rightX && right.leftX < left.rightX;
 }
 
-function shiftLockedGroup(group: LockedVerticalGroup, deltaY: number): void {
-	if (deltaY === 0) {
+function shiftLockedGroup(group: LockedVerticalGroup, deltaX: number, deltaY: number): void {
+	if (deltaX === 0 && deltaY === 0) {
 		return;
 	}
 
 	for (const node of group.nodes) {
+		node.x += deltaX;
 		node.y += deltaY;
 	}
 
+	group.leftX += deltaX;
+	group.rightX += deltaX;
 	group.topY += deltaY;
 	group.bottomY += deltaY;
 }
@@ -2533,7 +2761,8 @@ function groupBranchFamilies(records: DialogueRecord[], questIds: string[]): Bra
 
 function compareBranchFamilies(left: BranchFamily, right: BranchFamily): number {
 	if (left.type === right.type && left.topic === right.topic) {
-		return compareFamilyInfoOrder(left, right)
+		return compareFamilyChoiceBreadth(left, right)
+			|| compareFamilyInfoOrder(left, right)
 			|| left.priority - right.priority
 			|| compareNullableNumbers(left.progressionTarget, right.progressionTarget)
 			|| left.records[0]?.file.path.localeCompare(right.records[0]?.file.path ?? '')
@@ -2545,6 +2774,29 @@ function compareBranchFamilies(left: BranchFamily, right: BranchFamily): number 
 		|| left.topic.localeCompare(right.topic)
 		|| left.records[0]?.file.path.localeCompare(right.records[0]?.file.path ?? '')
 		|| 0;
+}
+
+function compareFamilyChoiceBreadth(left: BranchFamily, right: BranchFamily): number {
+	const leftChoices = familyChoiceValues(left);
+	const rightChoices = familyChoiceValues(right);
+	if (leftChoices.length === 0 && rightChoices.length === 0) {
+		return 0;
+	}
+
+	return leftChoices.length - rightChoices.length
+		|| compareNullableNumbers(maxNumber(leftChoices), maxNumber(rightChoices));
+}
+
+function familyChoiceValues(family: BranchFamily): number[] {
+	return uniqueNumbers(
+		family.results
+			.filter((action) => action.kind === 'choice-set' && action.choiceValue !== undefined)
+			.map((action) => action.choiceValue as number),
+	);
+}
+
+function maxNumber(values: number[]): number | null {
+	return values.length > 0 ? Math.max(...values) : null;
 }
 
 function compareDialogueRecords(left: DialogueRecord, right: DialogueRecord): number {
