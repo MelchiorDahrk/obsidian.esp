@@ -454,6 +454,10 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 
 			if (milestoneNodeId) {
 				for (const entryId of topicLayout.rootEntryIds) {
+					if (!entryCanFollowPhaseMilestone(entryId, segment.families, canvasContext, scope.questIds)) {
+						continue;
+					}
+
 					addEdge(canvasContext, `${milestoneNodeId}:${entryId}`, milestoneNodeId, 'right', entryId, 'left');
 				}
 			}
@@ -531,6 +535,30 @@ function createCanvasLayoutContext(): CanvasLayoutContext {
 
 function contextPhaseNodeId(context: CanvasLayoutContext, phaseValue: number): string | undefined {
 	return context.phaseNodeIds.get(phaseValue);
+}
+
+function entryCanFollowPhaseMilestone(
+	entryId: string,
+	families: BranchFamily[],
+	context: CanvasLayoutContext,
+	questIds: string[],
+): boolean {
+	const entryRecords = families.flatMap((family) => family.records).filter(
+		(record) => context.recordEntryNodeIds.get(record.id) === entryId,
+	);
+	if (entryRecords.length === 0) {
+		return true;
+	}
+
+	return entryRecords.some((record) => recordHasSelectedQuestJournalCondition(record, questIds));
+}
+
+function recordHasSelectedQuestJournalCondition(record: DialogueRecord, questIds: string[]): boolean {
+	return record.conditions.some(
+		(condition) => condition.kind === 'journal'
+			&& condition.questId !== undefined
+			&& questIds.includes(condition.questId),
+	);
 }
 
 function addPhaseMilestone(
