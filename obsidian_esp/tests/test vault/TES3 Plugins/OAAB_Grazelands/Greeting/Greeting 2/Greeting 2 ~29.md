@@ -21,9 +21,6 @@ Function0: Global
 Variable0: ABtv_JailedVault >= 1
 Function1: Function
 Variable1: Choice = 4
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-Sit there and sulk then. ^obsidian-esp-canvas-6380c876e7
+Sit there and sulk then.

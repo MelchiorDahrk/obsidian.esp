@@ -23,9 +23,6 @@ Function1: Function
 Variable1: Choice = 10
 Function2: Function
 Variable2: PcSpeechcraft >= 70
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-I understand, %PCName. [[Master Aryon]] can be overzealous with his [[security]] precautions. Watch where you're going from now on. ^obsidian-esp-canvas-7f624263df
+I understand, %PCName. [[Master Aryon]] can be overzealous with his [[security]] precautions. Watch where you're going from now on.

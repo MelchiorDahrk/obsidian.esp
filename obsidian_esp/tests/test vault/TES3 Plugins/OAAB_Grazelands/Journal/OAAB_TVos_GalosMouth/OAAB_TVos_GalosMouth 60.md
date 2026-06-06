@@ -8,9 +8,6 @@ Index: 60
 Quest Name: false
 Finished: false
 Restart: false
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-I convinced [[Reynel Uvirith]] to become Aryon's [[Mouth]]. I should let Galos Mathendis know. ^obsidian-esp-canvas-11764a6dc5
+I convinced [[Reynel Uvirith]] to become Aryon's [[Mouth]]. I should let Galos Mathendis know.

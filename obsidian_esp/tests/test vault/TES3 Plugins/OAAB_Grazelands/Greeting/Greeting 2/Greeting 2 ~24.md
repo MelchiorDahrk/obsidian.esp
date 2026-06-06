@@ -24,9 +24,6 @@ Function1: Function
 Variable1: Choice = 12
 Function2: Function
 Variable2: PcIllusion < 70
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-[[Master Aryon]] didn't tell me anything about auditing his [[security]]. You can rot in your cell, trickster. ^obsidian-esp-canvas-d188952f81
+[[Master Aryon]] didn't tell me anything about auditing his [[security]]. You can rot in your cell, trickster.

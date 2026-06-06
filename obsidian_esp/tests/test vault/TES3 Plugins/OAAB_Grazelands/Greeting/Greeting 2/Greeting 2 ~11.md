@@ -19,9 +19,6 @@ Result: |
   Journal OAAB_TVos_GalosMouth 10
 Function0: Journal
 Variable0: OAAB_TVos_GalosMouth = 0
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-%PCName, a courier from [[Tel Vos]] stopped by while you were away. She left this letter. ^obsidian-esp-canvas-3972744be5
+%PCName, a courier from [[Tel Vos]] stopped by while you were away. She left this letter.

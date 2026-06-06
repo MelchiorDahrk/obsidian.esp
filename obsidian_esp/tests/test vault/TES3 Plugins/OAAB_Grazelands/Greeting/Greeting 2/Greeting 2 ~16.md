@@ -15,9 +15,6 @@ Cell: Falvilo's Endeavor, Upper Level
 PC Faction:
 PC Rank:
 Result: Goodbye
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-You don't [[need]] to be down here, %PCRace. Shove off. ^obsidian-esp-canvas-0607954819
+You don't [[need]] to be down here, %PCRace. Shove off.

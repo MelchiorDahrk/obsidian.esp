@@ -10,12 +10,10 @@ const CANVAS_BODY_BLOCK_PREFIX = 'obsidian-esp-canvas';
 const QUEST_NAME_FIELD = 'Quest Name';
 const JOURNAL_FOLDER_NAME = 'Journal';
 const QUESTS_FOLDER_NAME = 'Quests';
-const HEADER_COLOR = '2';
 const DIALOGUE_COLOR = '3';
 const GATE_COLOR = '4';
 const RESULT_COLOR = '5';
 const JOURNAL_COLOR = '6';
-const SECTION_HEADER_WIDTH = 240;
 const GATE_WIDTH = 385;
 const CHOICE_WIDTH = 320;
 const DIALOGUE_WIDTH = 440;
@@ -25,11 +23,9 @@ const FILE_NODE_PADDING_Y = 40;
 const TEXT_NODE_HORIZONTAL_PADDING = 48;
 const APPROX_TEXT_CHAR_WIDTH = 8;
 const PHASE_GAP_X = 1320;
-const HEADER_GAP_X = 180;
 const GATE_GAP_X = 520;
 const DIALOGUE_GAP_X = 980;
 const CHOICE_GAP_X = 1580;
-const HEADER_Y_OFFSET = 150;
 const LANE_GAP_Y = 560;
 const VARIANT_GAP_Y = 420;
 const RESULT_GAP_Y = 30;
@@ -140,6 +136,7 @@ interface DialogueRecord {
 	resultQuestReferences: string[];
 	ownedQuestReferences: string[];
 	questReferences: string[];
+	infoOrder: number;
 	primaryChoiceValue: number | null;
 	choiceValues: number[];
 	choiceTargets: number[];
@@ -246,7 +243,6 @@ interface CanvasLayoutContext {
 	relatedFiles: Map<string, TFile>;
 	fileBodyTextByPath: Map<string, string>;
 	phaseNodeIds: Map<number, string>;
-	topicHeaderIds: Map<string, string>;
 	recordEntryNodeIds: Map<string, string>;
 	choiceTransitionAnchors: ChoiceTransitionAnchor[];
 	nodeIds: Set<string>;
@@ -400,7 +396,9 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 		...record,
 		phaseAnchor: determinePhaseAnchor(record.conditions, record.resultActions, phaseIndices, scope.questIds),
 	}));
-	const families = groupBranchFamilies(scopedRelevantRecords, scope.questIds);
+	const orderedRelevantRecords = assignDialogueInfoOrder(scopedRelevantRecords);
+	const phaseAnchoredRecords = resolveChoiceDerivedPhaseAnchors(orderedRelevantRecords);
+	const families = groupBranchFamilies(phaseAnchoredRecords, scope.questIds);
 	const warnings: string[] = [];
 	const canvasContext = createCanvasLayoutContext();
 	for (const document of scope.journalDocuments) {
@@ -453,21 +451,10 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 				topicBaseX,
 				scope.journalMilestones,
 			);
-			const segmentKey = phaseTopicSegmentKey(phaseValue, topicSegmentIndex, segment.topic);
 
-			if (topicLayout.rootEntryIds.length > 0) {
-				const headerId = addTopicHeader(
-					canvasContext,
-					segmentKey,
-					segment.topic,
-					topicBaseX - 340,
-					topicLayout.topY - HEADER_Y_OFFSET,
-				);
-				if (milestoneNodeId) {
-					addEdge(canvasContext, `${milestoneNodeId}:${headerId}`, milestoneNodeId, 'right', headerId, 'left');
-				}
+			if (milestoneNodeId) {
 				for (const entryId of topicLayout.rootEntryIds) {
-					addEdge(canvasContext, `${headerId}:${entryId}`, headerId, 'right', entryId, 'left');
+					addEdge(canvasContext, `${milestoneNodeId}:${entryId}`, milestoneNodeId, 'right', entryId, 'left');
 				}
 			}
 			if (Number.isFinite(topicLayout.topY) && Number.isFinite(topicLayout.bottomY)) {
@@ -484,7 +471,7 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 		}
 	}
 
-	connectChoiceTransitions(canvasContext, scopedRelevantRecords);
+	connectChoiceTransitions(canvasContext, phaseAnchoredRecords);
 	connectScriptedMilestones(canvasContext, phaseGraph.orderedPhases);
 	resolveCanvasNodeOverlaps(canvasContext);
 
@@ -493,7 +480,7 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 	for (const milestone of scope.journalDocuments) {
 		relatedFiles.set(milestone.file.path, milestone.file);
 	}
-	for (const record of scopedRelevantRecords) {
+	for (const record of phaseAnchoredRecords) {
 		relatedFiles.set(record.file.path, record.file);
 	}
 	for (const milestone of scope.journalMilestones) {
@@ -506,7 +493,7 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 			subpath: milestone.canvasSubpath,
 		});
 	}
-	for (const record of scopedRelevantRecords) {
+	for (const record of phaseAnchoredRecords) {
 		if (!record.canvasSubpath) {
 			continue;
 		}
@@ -533,7 +520,6 @@ function createCanvasLayoutContext(): CanvasLayoutContext {
 		relatedFiles: new Map<string, TFile>(),
 		fileBodyTextByPath: new Map<string, string>(),
 		phaseNodeIds: new Map<number, string>(),
-		topicHeaderIds: new Map<string, string>(),
 		recordEntryNodeIds: new Map<string, string>(),
 		choiceTransitionAnchors: [],
 		nodeIds: new Set<string>(),
@@ -587,34 +573,6 @@ function centerPhaseMilestone(context: CanvasLayoutContext, phaseValue: number, 
 	}
 
 	node.y = Math.round(centerY - node.height / 2);
-}
-
-function addTopicHeader(
-	context: CanvasLayoutContext,
-	key: string,
-	topic: string,
-	x: number,
-	y: number,
-): string {
-	const existingId = context.topicHeaderIds.get(key);
-	if (existingId) {
-		return existingId;
-	}
-
-	const nodeId = createNodeId(`header:${key}`);
-	context.nodes.push({
-		id: nodeId,
-		type: 'text',
-		text: `## [[${topic}]]`,
-		x,
-		y,
-		width: SECTION_HEADER_WIDTH,
-		height: 56,
-		color: HEADER_COLOR,
-	});
-	context.nodeIds.add(nodeId);
-	context.topicHeaderIds.set(key, nodeId);
-	return nodeId;
 }
 
 function layoutBranchFamily(
@@ -1344,10 +1302,6 @@ function sourceGroupStepX(): number {
 	return (CHOICE_GAP_X - GATE_GAP_X) + FOLLOWUP_GROUP_GAP_X;
 }
 
-function phaseTopicSegmentKey(phaseValue: number, segmentIndex: number, topic: string): string {
-	return `${phaseValue}:${segmentIndex}:${topic}`;
-}
-
 function connectChoiceTransitions(context: CanvasLayoutContext, records: DialogueRecord[]): void {
 	const orderedRecordsByTopic = new Map<string, DialogueRecord[]>();
 	for (const [topic, topicRecords] of groupRecordsByTopic(records)) {
@@ -1374,6 +1328,55 @@ function connectChoiceTransitions(context: CanvasLayoutContext, records: Dialogu
 		addEdge(context, connectionKey, anchor.nodeId, 'right', entryNodeId, 'left');
 		connected.add(connectionKey);
 	}
+}
+
+function assignDialogueInfoOrder(records: DialogueRecord[]): DialogueRecord[] {
+	for (const topicRecords of groupRecordsByTopic(records).values()) {
+		const orderedRecords = orderTopicRecordsByInfoSequence(topicRecords);
+		for (let index = 0; index < orderedRecords.length; index += 1) {
+			const record = orderedRecords[index];
+			if (!record) {
+				continue;
+			}
+
+			record.infoOrder = index;
+		}
+	}
+
+	return records;
+}
+
+function resolveChoiceDerivedPhaseAnchors(records: DialogueRecord[]): DialogueRecord[] {
+	const orderedRecordsByTopic = new Map<string, DialogueRecord[]>();
+	for (const [topic, topicRecords] of groupRecordsByTopic(records)) {
+		orderedRecordsByTopic.set(topic, orderTopicRecordsByInfoSequence(topicRecords));
+	}
+
+	let changed = true;
+	while (changed) {
+		changed = false;
+		for (const record of records) {
+			for (const choiceValue of record.choiceTargets) {
+				const targetRecord = resolveChoiceTransitionTarget(
+					{
+						topic: record.topic,
+						choiceValue,
+						nodeId: '',
+						sourceRecords: [record],
+					},
+					orderedRecordsByTopic,
+				);
+				if (!targetRecord || targetRecord.phaseAnchor >= record.phaseAnchor) {
+					continue;
+				}
+
+				record.phaseAnchor = targetRecord.phaseAnchor;
+				changed = true;
+			}
+		}
+	}
+
+	return records;
 }
 
 function resolveChoiceTransitionTarget(
@@ -2085,6 +2088,7 @@ function toDialogueRecord(
 		resultQuestReferences,
 		ownedQuestReferences,
 		questReferences: uniqueValues([...conditionQuestReferences, ...resultQuestReferences]),
+		infoOrder: Number.MAX_SAFE_INTEGER,
 		primaryChoiceValue: firstChoiceValue(conditionEntries),
 		choiceValues: conditionEntries
 			.filter((condition) => condition.kind === 'choice' && condition.choiceValue !== undefined)
@@ -2500,6 +2504,14 @@ function groupBranchFamilies(records: DialogueRecord[], questIds: string[]): Bra
 }
 
 function compareBranchFamilies(left: BranchFamily, right: BranchFamily): number {
+	if (left.type === right.type && left.topic === right.topic) {
+		return compareFamilyInfoOrder(left, right)
+			|| left.priority - right.priority
+			|| compareNullableNumbers(left.progressionTarget, right.progressionTarget)
+			|| left.records[0]?.file.path.localeCompare(right.records[0]?.file.path ?? '')
+			|| 0;
+	}
+
 	return left.priority - right.priority
 		|| compareNullableNumbers(left.progressionTarget, right.progressionTarget)
 		|| left.topic.localeCompare(right.topic)
@@ -2508,8 +2520,25 @@ function compareBranchFamilies(left: BranchFamily, right: BranchFamily): number 
 }
 
 function compareDialogueRecords(left: DialogueRecord, right: DialogueRecord): number {
-	return normalizeConditionKey(left.speakerConditions).localeCompare(normalizeConditionKey(right.speakerConditions))
+	return compareInfoOrder(left, right)
+		|| normalizeConditionKey(left.speakerConditions).localeCompare(normalizeConditionKey(right.speakerConditions))
 		|| left.file.path.localeCompare(right.file.path);
+}
+
+function compareFamilyInfoOrder(left: BranchFamily, right: BranchFamily): number {
+	return minFamilyInfoOrder(left) - minFamilyInfoOrder(right);
+}
+
+function minFamilyInfoOrder(family: BranchFamily): number {
+	return Math.min(...family.records.map((record) => record.infoOrder), Number.MAX_SAFE_INTEGER);
+}
+
+function compareInfoOrder(left: DialogueRecord, right: DialogueRecord): number {
+	if (left.topic !== right.topic || left.type !== right.type) {
+		return 0;
+	}
+
+	return left.infoOrder - right.infoOrder;
 }
 
 function determinePhaseAnchor(

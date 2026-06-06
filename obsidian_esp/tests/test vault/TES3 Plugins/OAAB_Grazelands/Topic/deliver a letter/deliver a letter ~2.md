@@ -18,9 +18,6 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosLetter = 100
 Function1: Function
 Variable1: Choice = 5
-canvas:
-  - "[[Enchanted Quill Acquaintances.canvas]]"
 ---
 
-
-As a matter of fact, I just learned of a visitor in town that I'd like you to speak with about my [[enchanting research]]. ^obsidian-esp-canvas-a3a35c137c
+As a matter of fact, I just learned of a visitor in town that I'd like you to speak with about my [[enchanting research]].

@@ -18,9 +18,6 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosLesson >= 100
 Function1: Function
 Variable1: Choice = 2
-canvas:
-  - "[[Enchanted Quill Acquaintances.canvas]]"
 ---
 
-
-If you change your mind, I'll be here. ^obsidian-esp-canvas-6f67b98a0b
+If you change your mind, I'll be here.

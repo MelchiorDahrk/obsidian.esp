@@ -15,9 +15,9 @@
               "state": {
                 "file": "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving.canvas",
                 "viewState": {
-                  "x": 4363.332252407543,
-                  "y": -348.84383452950465,
-                  "zoom": -1.4218482662811365
+                  "x": 4366.096717205392,
+                  "y": 41.93594785889047,
+                  "zoom": -0.5673673261559873
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -185,8 +185,7 @@
   },
   "active": "ac6084e5332dbcef",
   "lastOpenFiles": [
-    "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/Enchanted Quill Acquaintances.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Topic/The Final Lesson/The Final Lesson ~8.md",
     "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests",
     "TES3 Plugins/OAAB_Grazelands/Voice/Thief/Thief.md",
@@ -223,6 +222,8 @@
     "TES3 Plugins/OAAB_Grazelands/Voice",
     "TES3 Plugins/OAAB_Grazelands/Topic/work",
     "TES3 Plugins/OAAB_Grazelands/Topic/the incident",
+    "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/Enchanted Quill Acquaintances.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/Waxing Pathetic Scamps.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/A New [[Mouth]] for [[Master Aryon]].canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/The Eerie Lantern.canvas",

@@ -23,11 +23,7 @@ Function2: Journal
 Variable2: OAAB_TVos_GalosIndoranyon = 0
 canvas:
   - "[[A Lesson in Thieving.canvas]]"
-  - "[[Enchanted Quill Acquaintances.canvas]]"
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
-
-
 
 
 I've heard that there is an ashlander scout staying at the Varo Tradehouse in [[Vos]]. I'd like you to speak with her about [[Indoranyon]] if you have the time. ^obsidian-esp-canvas-5c862c3fa4

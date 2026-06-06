@@ -18,9 +18,6 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosMouth <= 50
 Function1: Journal
 Variable1: OAAB_TVos_GalosMouth >= 20
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-I didn't notice anyone with that description. ^obsidian-esp-canvas-8e0507b26f
+I didn't notice anyone with that description.

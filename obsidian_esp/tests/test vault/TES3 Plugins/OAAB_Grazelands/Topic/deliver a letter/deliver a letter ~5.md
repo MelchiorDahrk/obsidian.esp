@@ -20,9 +20,6 @@ Function1: Journal
 Variable1: OAAB_TVos_GalosLetter <= 20
 Function2: Item
 Variable2: ABtv_Key_MilynInscribed < 1
-canvas:
-  - "[[Enchanted Quill Acquaintances.canvas]]"
 ---
 
-
-Please be careful with that letter. We Telvanni are very protective of our research. I've dedicated my entire life to the topics disclosed within. ^obsidian-esp-canvas-73042af0b6
+Please be careful with that letter. We Telvanni are very protective of our research. I've dedicated my entire life to the topics disclosed within.

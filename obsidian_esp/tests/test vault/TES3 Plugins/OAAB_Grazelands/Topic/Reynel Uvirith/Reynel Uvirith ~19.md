@@ -20,9 +20,6 @@ Function1: Not ID
 Variable1: neloth = 1
 Function2: Journal
 Variable2: OAAB_TVos_GalosMouth >= 20
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-Never heard of her. ^obsidian-esp-canvas-cd4ff72fe0
+Never heard of her.

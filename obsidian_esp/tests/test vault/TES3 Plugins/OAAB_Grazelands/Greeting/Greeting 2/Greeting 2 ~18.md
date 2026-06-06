@@ -16,9 +16,6 @@ PC Faction:
 PC Rank:
 Function0: Global
 Variable0: ABtv_JailedVault = -5
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-I can't prove that you magicked yourself out of the cell, but you know what you did... I'm watching you. ^obsidian-esp-canvas-3ef3f57ebf
+I can't prove that you magicked yourself out of the cell, but you know what you did... I'm watching you.

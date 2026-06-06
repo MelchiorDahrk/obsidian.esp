@@ -19,9 +19,6 @@ Function0: Global
 Variable0: ABtv_JailedVault >= 1
 Function1: Function
 Variable1: Choice = 1
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-Why should I? I'm sure [[Master Aryon]] had a good reason for dropping you in my cell. ^obsidian-esp-canvas-c9891d0aab
+Why should I? I'm sure [[Master Aryon]] had a good reason for dropping you in my cell.

@@ -21,9 +21,6 @@ Function1: Not ID
 Variable1: ulyno uvirith = 1
 Function2: Journal
 Variable2: OAAB_TVos_GalosMouth >= 20
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-The only Uvirith I know about is Ulyno. She's a Master-At-Arms at the Scout and Drillmaster in the Redoran Waistworks. ^obsidian-esp-canvas-4d47fc58ea
+The only Uvirith I know about is Ulyno. She's a Master-At-Arms at the Scout and Drillmaster in the Redoran Waistworks.

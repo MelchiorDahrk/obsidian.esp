@@ -18,9 +18,6 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosMouth = 50
 Function1: Not ID
 Variable1: ulyno uvirith = 1
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-An Uvirith from [[House Telvanni]] here in [[Vivec]]? No, I don't know of any. There is an Ulyno Uvirith in the Redoran Canton. A weaponmaster from what I hear. You might try asking her. ^obsidian-esp-canvas-c0b1ad1bf2
+An Uvirith from [[House Telvanni]] here in [[Vivec]]? No, I don't know of any. There is an Ulyno Uvirith in the Redoran Canton. A weaponmaster from what I hear. You might try asking her.

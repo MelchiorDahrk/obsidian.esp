@@ -22,9 +22,6 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosLetter = 10
 Function1: Item
 Variable1: ABtv_note_GalosToMilyn >= 1
-canvas:
-  - "[[Enchanted Quill Acquaintances.canvas]]"
 ---
 
-
-I hear more from [[Tel Vos]] nowadays than [[Sadrith Mora]] or Port Telvannis combined. But give me the letter. Yes, I see. Galos isn't expecting a written response. So just tell him that I understand. Oh, and give this to him. ^obsidian-esp-canvas-bb72846dd8
+I hear more from [[Tel Vos]] nowadays than [[Sadrith Mora]] or Port Telvannis combined. But give me the letter. Yes, I see. Galos isn't expecting a written response. So just tell him that I understand. Oh, and give this to him.

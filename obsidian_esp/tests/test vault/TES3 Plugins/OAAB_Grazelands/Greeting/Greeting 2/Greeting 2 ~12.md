@@ -15,9 +15,6 @@ Cell:
 PC Faction:
 PC Rank:
 Result: AddTopic "do business"
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-Ho, friend. Are you here in [[Vos]] to [[do business]]? ^obsidian-esp-canvas-44bfd4dccb
+Ho, friend. Are you here in [[Vos]] to [[do business]]?

@@ -8,9 +8,6 @@ Index: 10
 Quest Name: false
 Finished: false
 Restart: false
-canvas:
-  - "[[Enchanted Quill Acquaintances.canvas]]"
 ---
 
-
-Galos Mathendis asked me to [[deliver a letter]] to Milyn Faram in [[Odirniran]]. Something to do with his [[enchanting research]]. ^obsidian-esp-canvas-45e68aa2d6
+Galos Mathendis asked me to [[deliver a letter]] to Milyn Faram in [[Odirniran]]. Something to do with his [[enchanting research]].
