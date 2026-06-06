@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosLetter = 100
 Function1: Function
 Variable1: Choice = 3
+canvas:
+  - "[[Enchanted Quill Acquaintances.canvas]]"
 ---
 
-No, thank you.
+
+No, thank you. ^obsidian-esp-canvas-4a3ad971ee

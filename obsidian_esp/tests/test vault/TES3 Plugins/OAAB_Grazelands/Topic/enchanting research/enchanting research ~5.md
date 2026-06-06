@@ -16,6 +16,9 @@ PC Faction: Telvanni
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_GalosTallow >= 10
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-I still [[need]] scamp skin to make scamp tallow.
+
+I still [[need]] scamp skin to make scamp tallow. ^obsidian-esp-canvas-8856017e4e

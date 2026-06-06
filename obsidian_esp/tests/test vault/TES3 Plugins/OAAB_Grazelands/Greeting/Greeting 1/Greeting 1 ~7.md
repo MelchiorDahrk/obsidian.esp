@@ -2,8 +2,8 @@
 Source:
 Type: Greeting
 Topic: Greeting 1
-DiagID: 29587342553714892
-PrevID: 2899717154874914000
+DiagID: 29587342553714891
+PrevID: 2899717154874913949
 Disposition: 0
 ID: galos mathendis
 Race:

@@ -23,6 +23,9 @@ Function1: Function
 Variable1: Choice = 12
 Function2: Function
 Variable2: PcIllusion >= 70
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-My mistake, %PCName. Please accept my apology.
+
+My mistake, %PCName. Please accept my apology. ^obsidian-esp-canvas-a6d73a6499

@@ -28,4 +28,4 @@ Function5: Not ID
 Variable5: Dro'zharim = 1
 ---
 
-Have you visited the Tel [[Vos [[Dwemer]] Museum]]? [[Master Aryon]] has filled it with many strange dwarf-made artifacts. [[Smokeskin-Killer]], the caretaker, is always trying to get people to go on missions into [[Dwemer ruins]]. Apparently Aryon doesn't like sending him in if it hasn't already been explored.
+Have you visited the [[Tel [[Vos]] [[Dwemer]] Museum]]? [[Master Aryon]] has filled it with many strange dwarf-made artifacts. [[Smokeskin-Killer]], the caretaker, is always trying to get people to go on missions into [[Dwemer ruins]]. Apparently Aryon doesn't like sending him in if it hasn't already been explored.

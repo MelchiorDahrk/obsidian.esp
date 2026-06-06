@@ -23,6 +23,9 @@ Function1: Item
 Variable1: bookskill_enchant5 >= 1
 Function2: Function
 Variable2: Choice = 3
+canvas:
+  - "[[A Lesson in Thieving.canvas]]"
 ---
 
-What? Have you been reading my notes? Well... thank you, %PCName.
+
+What? Have you been reading my notes? Well... thank you, %PCName. ^obsidian-esp-canvas-7b1c394b45

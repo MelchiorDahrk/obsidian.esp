@@ -14,6 +14,9 @@ Rank:
 Cell: Falvilo's Endeavor, Upper Level
 PC Faction:
 PC Rank:
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-Stay out of the way.
+
+Stay out of the way. ^obsidian-esp-canvas-dacb5d02ba

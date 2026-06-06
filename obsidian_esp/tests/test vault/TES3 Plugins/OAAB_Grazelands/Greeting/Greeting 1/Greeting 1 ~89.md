@@ -2,8 +2,8 @@
 Source:
 Type: Greeting
 Topic: Greeting 1
-DiagID: 24115114142334018000
-PrevID: 2307026855566118000
+DiagID: 24115114142334017229
+PrevID: 2307026855566117665
 Disposition: 0
 ID: milar maryon
 Race:

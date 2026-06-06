@@ -2,8 +2,8 @@
 Source:
 Type: Greeting
 Topic: Greeting 1
-DiagID: 3053214723210355000
-PrevID: 27452200481270026000
+DiagID: 3053214723210355451
+PrevID: 27452200481270027902
 Disposition: 0
 ID: ABtv_TelMoraTrader
 Race:

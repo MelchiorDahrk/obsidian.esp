@@ -4,42 +4,27 @@
     "type": "split",
     "children": [
       {
-        "id": "6e3896bdc0eff0c5",
+        "id": "9bcb7db302011531",
         "type": "tabs",
         "children": [
           {
-            "id": "c76eb392f14636c5",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai.md",
-                "mode": "preview",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Salkurnudai"
-            }
-          },
-          {
-            "id": "60c7f79825468f96",
+            "id": "ac6084e5332dbcef",
             "type": "leaf",
             "state": {
               "type": "canvas",
               "state": {
-                "file": "TES3 Plugins/OAAB_Grazelands/Quests/The Eerie Lantern.canvas",
+                "file": "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving.canvas",
                 "viewState": {
-                  "x": 3719.287487224857,
-                  "y": -980.6564756462965,
-                  "zoom": -1.5209700289464299
+                  "x": 4363.332252407543,
+                  "y": -348.84383452950465,
+                  "zoom": -1.4218482662811365
                 }
               },
               "icon": "lucide-layout-dashboard",
-              "title": "The Eerie Lantern"
+              "title": "A Lesson in Thieving"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -198,37 +183,37 @@
       "bases:Create new base": false
     }
   },
-  "active": "fe7c426b0a2d30eb",
+  "active": "ac6084e5332dbcef",
   "lastOpenFiles": [
-    "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_HauntedLantern/OAAB_TVos_HauntedLantern 0.md",
-    "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 1/Greeting 1 ~1645.md",
-    "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 1/Greeting 1 ~57.md",
-    "TES3 Plugins/OAAB_Grazelands/Quests/The Eerie Lantern.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_HauntedLantern/OAAB_TVos_HauntedLantern.md",
-    "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_HauntedLantern/OAAB_TVos_HauntedLantern 120.md",
-    "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_HauntedLantern/OAAB_TVos_HauntedLantern 110.md",
-    "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_HauntedLantern/OAAB_TVos_HauntedLantern 100.md",
-    "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_HauntedLantern/OAAB_TVos_HauntedLantern 30.md",
-    "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_HauntedLantern/OAAB_TVos_HauntedLantern 22.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~6.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~11.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~10.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~1.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~0.md",
-    "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_HauntedLantern/OAAB_TVos_HauntedLantern 20.md",
-    "TES3 Plugins/OAAB_Grazelands/Speaker/ABtv_WildAshlander.md",
-    "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_HauntedLantern/OAAB_TVos_HauntedLantern 10.md",
-    "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 1/Greeting 1.md",
-    "TES3 Plugins/OAAB_Grazelands/Speaker",
-    "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 1/Greeting 1 ~55.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~25.md",
+    "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/Enchanted Quill Acquaintances.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests",
-    "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 1/Greeting 1 ~1.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/bastard Ashlanders/bastard Ashlanders ~0.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/bastard Ashlanders/bastard Ashlanders.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/bastard Ashlanders",
-    "TES3 Plugins/OAAB_Grazelands/Topic/robbed me/robbed me ~1.md",
+    "TES3 Plugins/OAAB_Grazelands/Voice/Thief/Thief.md",
+    "TES3 Plugins/OAAB_Grazelands/Voice/Idle/Idle.md",
+    "TES3 Plugins/OAAB_Grazelands/Voice/Hit/Hit.md",
+    "TES3 Plugins/OAAB_Grazelands/Voice/Flee/Flee.md",
+    "TES3 Plugins/OAAB_Grazelands/Voice/Attack/Attack.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/work/work.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/the incident/the incident.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/shinies are delicious/shinies are delicious.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/scuttle/scuttle.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/rogue ashlander bounty/rogue ashlander bounty.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/robbed me/robbed me.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/restorative supplies/restorative supplies.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/rat catcher/rat catcher.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/rat/rat.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/my trade/my trade.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/mushroom roots from Tel Vos/mushroom roots from Tel Vos.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/much to atone for/much to atone for.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/martial arts/martial arts.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/little secret/little secret.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/latest rumors/latest rumors.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/items wandering off/items wandering off.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/go free/go free.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/ghost lantern/ghost lantern.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/enchanting research/enchanting research.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/ebony trade/ebony trade.md",
     "TES3 Plugins/OAAB_Grazelands/base.base",
     "TES3 Plugins/OAAB_Grazelands/Voice/Thief",
     "TES3 Plugins/OAAB_Grazelands/Voice/Idle",
@@ -236,7 +221,14 @@
     "TES3 Plugins/OAAB_Grazelands/Voice/Flee",
     "TES3 Plugins/OAAB_Grazelands/Voice/Attack",
     "TES3 Plugins/OAAB_Grazelands/Voice",
-    "TES3 Plugins/OAAB_Grazelands/Quests/Galos Indoranyon.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/HH Caldera Mine.canvas"
+    "TES3 Plugins/OAAB_Grazelands/Topic/work",
+    "TES3 Plugins/OAAB_Grazelands/Topic/the incident",
+    "TES3 Plugins/OAAB_Grazelands/Quests/Waxing Pathetic Scamps.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/A New [[Mouth]] for [[Master Aryon]].canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/The Eerie Lantern.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/The Domain of Living Fire.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/A Smidge Too Far.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/The Final Door.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/Let The Ebony Flow.canvas"
   ]
 }

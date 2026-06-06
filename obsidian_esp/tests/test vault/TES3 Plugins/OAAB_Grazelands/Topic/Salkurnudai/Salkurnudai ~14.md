@@ -2,8 +2,8 @@
 Source:
 Type: Topic
 Topic: Salkurnudai
-DiagID: 30085684172016036
-PrevID: 2335262842965720000
+DiagID: 30085684172016035
+PrevID: 2335262842965720113
 Disposition: 0
 ID:
 Race:
@@ -25,8 +25,6 @@ Function2: Item
 Variable2: ABtv_light_AshlLanternGhost >= 1
 Function3: Journal
 Variable3: OAAB_TVos_HauntedLantern < 30
-canvas:
-  - "[[The Eerie Lantern.canvas]]"
 ---
 
 You met an ancestor, %PCName. A [[sacred]] and serious demonstration of favor. That lantern you found, we call it a [[ghost lantern]]. On occasion, our [[ancestors]] will walk the blessed lands of [[Sunna Guradan]] in flesh by their own volition. This land is pleasant for them and free of any mortal chill which they shun. Sometimes they long for the warm breeze of [[Red Mountain]] to touch their skin again.

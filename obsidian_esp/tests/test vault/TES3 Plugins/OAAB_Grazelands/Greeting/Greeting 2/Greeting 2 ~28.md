@@ -19,6 +19,9 @@ Function0: Global
 Variable0: ABtv_JailedVault >= 1
 Function1: Function
 Variable1: Choice = 3
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-You're in the [[Tel Vos]] Jail. You were probably snooping around somewhere you didn't belong.
+
+You're in the [[Tel Vos]] Jail. You were probably snooping around somewhere you didn't belong. ^obsidian-esp-canvas-3045bdfb74

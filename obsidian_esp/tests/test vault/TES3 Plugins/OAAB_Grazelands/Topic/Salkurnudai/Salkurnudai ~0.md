@@ -2,7 +2,7 @@
 Source:
 Type: Topic
 Topic: Salkurnudai
-DiagID: 30477237722492527000
+DiagID: 30477237722492526460
 PrevID:
 Disposition: 0
 ID:
@@ -19,9 +19,6 @@ Result: |
   Goodbye
 Function0: Journal
 Variable0: OAAB_TVos_HauntedLantern = 110
-canvas:
-  - "[[The Eerie Lantern.canvas]]"
-The Eerie Lantern: []
 ---
 
 You have failed your quest and the spirit has gone mad. This is a sad day. I can see now that the ancestor's favor was misplaced in you. Please leave.

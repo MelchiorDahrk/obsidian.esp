@@ -21,6 +21,9 @@ Function1: Function
 Variable1: Choice = 2
 Function2: Function
 Variable2: PcStrength < 90
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-You'll [[kill me]]? I doubt it, fetcher. Only a fool lashes out in anger after humiliating themselves.
+
+You'll [[kill me]]? I doubt it, fetcher. Only a fool lashes out in anger after humiliating themselves. ^obsidian-esp-canvas-1593e7edba

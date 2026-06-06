@@ -2,8 +2,8 @@
 Source:
 Type: Greeting
 Topic: Greeting 1
-DiagID: 22750236392054616000
-PrevID: 2534730971837221400
+DiagID: 22750236392054615393
+PrevID: 2534730971837221385
 Disposition: 0
 ID: ABtv_Dae_ScampThief
 Race:

@@ -2,8 +2,8 @@
 Source:
 Type: Topic
 Topic: Salkurnudai
-DiagID: 2875712272054912500
-PrevID: 2653213395308310500
+DiagID: 2875712272054912321
+PrevID: 2653213395308310644
 Disposition: 0
 ID:
 Race:
@@ -16,9 +16,6 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_HauntedLantern = 30
-canvas:
-  - "[[The Eerie Lantern.canvas]]"
-The Eerie Lantern: []
 ---
 
 You have been tasked with taking a [[ghost lantern]] to [[Molaguradan]]. Do not set the lantern down for any reason until you have completed your quest.

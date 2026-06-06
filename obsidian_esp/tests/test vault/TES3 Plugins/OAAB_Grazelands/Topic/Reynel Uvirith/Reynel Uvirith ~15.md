@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosMouth <= 50
 Function1: Journal
 Variable1: OAAB_TVos_GalosMouth >= 20
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-What? You think I'm going to tell some nosy [[outlander]] what she did heret?
+
+What? You think I'm going to tell some nosy [[outlander]] what she did heret? ^obsidian-esp-canvas-2c0d1ffbec

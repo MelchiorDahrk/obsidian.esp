@@ -2,8 +2,8 @@
 Source:
 Type: Topic
 Topic: Salkurnudai
-DiagID: 25825237761517232000
-PrevID: 537517219540226050
+DiagID: 25825237761517230922
+PrevID: 537517219540226039
 Disposition: 0
 ID:
 Race:
@@ -23,8 +23,6 @@ Function2: Item
 Variable2: ABtv_light_AshlLanternGhost < 1
 Function3: Journal
 Variable3: OAAB_TVos_HauntedLantern < 30
-canvas:
-  - "[[The Eerie Lantern.canvas]]"
 ---
 
 You met an ancestor, %PCName. A [[sacred]] and serious demonstration of favor. That lantern you found, we call it a [[ghost lantern]]. Where is it now?

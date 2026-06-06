@@ -17,6 +17,9 @@ PC Rank:
 Result: Choice "Hey, let me out!" 1 "When I get out of here..." 2 "Where am I?" 3 "Leave me alone." 4
 Function0: Global
 Variable0: ABtv_JailedVault = 1
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-Took a wrong turn, %PCRace? Hahaha!
+
+Took a wrong turn, %PCRace? Hahaha! ^obsidian-esp-canvas-3c87db9487

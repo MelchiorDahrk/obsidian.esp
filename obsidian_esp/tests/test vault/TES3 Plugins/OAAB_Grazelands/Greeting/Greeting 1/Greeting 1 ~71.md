@@ -2,8 +2,8 @@
 Source:
 Type: Greeting
 Topic: Greeting 1
-DiagID: 19821749057363896
-PrevID: 1046010361392231200
+DiagID: 19821749057363894
+PrevID: 1046010361392231219
 Disposition: 0
 ID: smokeskin_killer
 Race:

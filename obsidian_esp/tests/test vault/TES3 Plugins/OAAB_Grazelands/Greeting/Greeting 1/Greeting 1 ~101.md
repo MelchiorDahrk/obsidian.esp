@@ -2,7 +2,7 @@
 Source:
 Type: Greeting
 Topic: Greeting 1
-DiagID: 918112366299595400
+DiagID: 918112366299595384
 PrevID: 863721020237253900
 Disposition: 0
 ID: alenus vendu

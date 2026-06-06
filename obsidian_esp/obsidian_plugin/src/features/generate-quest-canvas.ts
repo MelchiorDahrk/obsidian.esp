@@ -177,6 +177,19 @@ interface ChoiceAnchorGroup {
 	y: number;
 }
 
+interface ChoiceTransitionAnchor {
+	topic: string;
+	choiceValue: number;
+	nodeId: string;
+	sourceRecords: DialogueRecord[];
+}
+
+interface DeferredChoiceEdge {
+	choiceValue: number;
+	nodeIds: string[];
+	targetGroupKey: string;
+}
+
 interface TopicLayoutResult {
 	rootEntryIds: string[];
 	topY: number;
@@ -291,6 +304,8 @@ interface CanvasLayoutContext {
 	fileBodyTextByPath: Map<string, string>;
 	phaseNodeIds: Map<number, string>;
 	topicHeaderIds: Map<string, string>;
+	recordEntryNodeIds: Map<string, string>;
+	choiceTransitionAnchors: ChoiceTransitionAnchor[];
 	nodeIds: Set<string>;
 	edgeIds: Set<string>;
 	phaseIncomingCounts: Map<number, number>;
@@ -553,6 +568,7 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 		});
 	}
 
+	connectChoiceTransitions(canvasContext, scopedRelevantRecords);
 	connectScriptedMilestones(canvasContext, phaseGraph.orderedPhases);
 	resolveCanvasNodeOverlaps(canvasContext);
 
@@ -610,6 +626,8 @@ function createCanvasLayoutContext(): CanvasLayoutContext {
 		fileBodyTextByPath: new Map<string, string>(),
 		phaseNodeIds: new Map<number, string>(),
 		topicHeaderIds: new Map<string, string>(),
+		recordEntryNodeIds: new Map<string, string>(),
+		choiceTransitionAnchors: [],
 		nodeIds: new Set<string>(),
 		edgeIds: new Set<string>(),
 		phaseIncomingCounts: new Map<number, number>(),
@@ -703,7 +721,7 @@ function layoutBranchFamily(
 ): { firstEntryId: string; nextY: number; choiceAnchors: ChoiceAnchor[] } {
 	const familyRecords = [...family.records].sort(compareDialogueRecords);
 	const familyChoiceActions = family.results.filter((action) => action.kind === 'choice-set');
-	const choiceNodeIds = new Map<number, string>();
+	const choiceNodeIds = new Map<string, string>();
 	const choiceAnchors: ChoiceAnchor[] = [];
 	let currentY = startY;
 	let firstEntryId = '';
@@ -750,6 +768,7 @@ function layoutBranchFamily(
 		if (firstEntryId.length === 0) {
 			firstEntryId = gateId;
 		}
+		context.recordEntryNodeIds.set(record.id, gateId);
 
 		if (gateId !== dialogueId) {
 			addEdge(context, `${gateId}:${dialogueId}`, gateId, 'right', dialogueId, 'left');
@@ -794,24 +813,31 @@ function layoutBranchFamily(
 				continue;
 			}
 
-			let choiceNodeId = choiceNodeIds.get(choiceAction.choiceValue);
+			const choiceNodeKey = choiceActionIdentity(choiceAction);
+			let choiceNodeId = choiceNodeIds.get(choiceNodeKey);
 			if (!choiceNodeId) {
 				const choiceHeight = measureTextHeight(choiceAction.displayText, CHOICE_WIDTH);
 				choiceNodeId = addTextNode(
 					context,
-					`choice:${family.id}:${choiceAction.choiceValue}`,
+					`choice:${family.id}:${choiceAction.choiceValue}:${choiceAction.displayText}`,
 					choiceAction.displayText,
 					choiceX,
 					choiceCursorY,
 					CHOICE_WIDTH,
 					GATE_COLOR,
 				);
-				choiceNodeIds.set(choiceAction.choiceValue, choiceNodeId);
+				choiceNodeIds.set(choiceNodeKey, choiceNodeId);
 				choiceAnchors.push({
 					choiceValue: choiceAction.choiceValue,
 					nodeId: choiceNodeId,
 					x: choiceX,
 					y: Math.round(choiceCursorY + choiceHeight / 2),
+				});
+				context.choiceTransitionAnchors.push({
+					topic: family.topic,
+					choiceValue: choiceAction.choiceValue,
+					nodeId: choiceNodeId,
+					sourceRecords: familyRecords,
 				});
 				choiceCursorY += choiceHeight + 24;
 			}
@@ -851,8 +877,44 @@ function layoutTopicFamilies(
 	const renderedGroupLayouts = new Map<string, TopicLayoutResult>();
 	const renderingGroups = new Set<string>();
 	const rootEntryIds: string[] = [];
+	const deferredChoiceEdges: DeferredChoiceEdge[] = [];
 	let topicTopY = Number.POSITIVE_INFINITY;
 	let topicBottomY = Number.NEGATIVE_INFINITY;
+
+	const connectChoiceAnchorToLayout = (anchor: ChoiceAnchorGroup, childLayout: TopicLayoutResult): void => {
+		for (const anchorNodeId of anchor.nodeIds) {
+			for (const entryId of childLayout.rootEntryIds) {
+				addEdge(
+					context,
+					`${anchorNodeId}:${entryId}:${anchor.choiceValue}`,
+					anchorNodeId,
+					'right',
+					entryId,
+					'left',
+				);
+			}
+		}
+	};
+
+	const flushDeferredChoiceEdges = (targetGroupKey: string, targetLayout: TopicLayoutResult): void => {
+		for (let index = deferredChoiceEdges.length - 1; index >= 0; index -= 1) {
+			const deferred = deferredChoiceEdges[index];
+			if (!deferred || deferred.targetGroupKey !== targetGroupKey) {
+				continue;
+			}
+
+			connectChoiceAnchorToLayout(
+				{
+					choiceValue: deferred.choiceValue,
+					nodeIds: deferred.nodeIds,
+					x: 0,
+					y: 0,
+				},
+				targetLayout,
+			);
+			deferredChoiceEdges.splice(index, 1);
+		}
+	};
 
 	const renderChoiceGroup = (group: ChoiceGroup, gateX: number, startY: number): TopicLayoutResult => {
 		const groupKey = choiceGroupKey(group.choiceValue);
@@ -905,6 +967,22 @@ function layoutTopicFamilies(
 				continue;
 			}
 
+			const childGroupKey = choiceGroupKey(childGroup.choiceValue);
+			const cachedChildLayout = renderedGroupLayouts.get(childGroupKey);
+			if (cachedChildLayout) {
+				connectChoiceAnchorToLayout(anchor, cachedChildLayout);
+				childLayouts.push(cachedChildLayout);
+				continue;
+			}
+			if (renderingGroups.has(childGroupKey)) {
+				deferredChoiceEdges.push({
+					choiceValue: anchor.choiceValue,
+					nodeIds: anchor.nodeIds,
+					targetGroupKey: childGroupKey,
+				});
+				continue;
+			}
+
 			const childHeight = estimateChoiceColumnHeight(childGroup.families);
 			const childStartY = Math.round(anchor.y - childHeight / 2);
 			const childLayout = renderChoiceGroup(
@@ -912,18 +990,7 @@ function layoutTopicFamilies(
 				anchor.x + FOLLOWUP_GROUP_GAP_X,
 				childStartY,
 			);
-			for (const anchorNodeId of anchor.nodeIds) {
-				for (const entryId of childLayout.rootEntryIds) {
-					addEdge(
-						context,
-						`${anchorNodeId}:${entryId}:${anchor.choiceValue}`,
-						anchorNodeId,
-						'right',
-						entryId,
-						'left',
-					);
-				}
-			}
+			connectChoiceAnchorToLayout(anchor, childLayout);
 			childLayouts.push(childLayout);
 		}
 
@@ -946,6 +1013,7 @@ function layoutTopicFamilies(
 			nodeIds: context.nodes.slice(renderedNodeCount).map((node) => node.id),
 		};
 		renderedGroupLayouts.set(groupKey, layout);
+		flushDeferredChoiceEdges(groupKey, layout);
 		renderingGroups.delete(groupKey);
 		return layout;
 	};
@@ -1400,6 +1468,10 @@ function compareChoiceGroups(left: ChoiceGroup, right: ChoiceGroup): number {
 	return compareNullableNumbers(left.choiceValue, right.choiceValue);
 }
 
+function choiceActionIdentity(action: ResultAction): string {
+	return `${action.choiceValue ?? ''}:${action.displayText}`;
+}
+
 function choiceGroupKey(choiceValue: number | null): string {
 	return choiceValue === null ? 'root' : String(choiceValue);
 }
@@ -1515,6 +1587,173 @@ function familyPrimaryChoiceValue(family: BranchFamily): number | null {
 
 function firstFamilyRecordPath(family: BranchFamily): string | null {
 	return [...family.records].sort(compareDialogueRecords)[0]?.file.path ?? null;
+}
+
+function connectChoiceTransitions(context: CanvasLayoutContext, records: DialogueRecord[]): void {
+	const orderedRecordsByTopic = new Map<string, DialogueRecord[]>();
+	for (const [topic, topicRecords] of groupRecordsByTopic(records)) {
+		orderedRecordsByTopic.set(topic, orderTopicRecordsByInfoSequence(topicRecords));
+	}
+
+	const connected = new Set<string>();
+	for (const anchor of context.choiceTransitionAnchors) {
+		const targetRecords = resolveChoiceTransitionTargets(anchor, orderedRecordsByTopic);
+		for (const targetRecord of targetRecords) {
+			const entryNodeId = context.recordEntryNodeIds.get(targetRecord.id);
+			if (!entryNodeId) {
+				continue;
+			}
+
+			const connectionKey = `${anchor.nodeId}:${entryNodeId}:${anchor.choiceValue}`;
+			if (connected.has(connectionKey)) {
+				continue;
+			}
+
+			addEdge(context, connectionKey, anchor.nodeId, 'right', entryNodeId, 'left');
+			connected.add(connectionKey);
+		}
+	}
+}
+
+function resolveChoiceTransitionTargets(
+	anchor: ChoiceTransitionAnchor,
+	orderedRecordsByTopic: Map<string, DialogueRecord[]>,
+): DialogueRecord[] {
+	const topicRecords = orderedRecordsByTopic.get(anchor.topic) ?? [];
+	const targets: DialogueRecord[] = [];
+	const targetIds = new Set<string>();
+
+	for (const sourceRecord of anchor.sourceRecords) {
+		const targetRecord = topicRecords.find((candidate) => (
+			candidate.id !== sourceRecord.id
+			&& candidate.choiceValues.includes(anchor.choiceValue)
+			&& conditionsCanFollowChoice(sourceRecord, candidate, anchor.choiceValue)
+		));
+		if (!targetRecord || targetIds.has(targetRecord.id)) {
+			continue;
+		}
+
+		targets.push(targetRecord);
+		targetIds.add(targetRecord.id);
+	}
+
+	return targets;
+}
+
+function orderTopicRecordsByInfoSequence(records: DialogueRecord[]): DialogueRecord[] {
+	const recordsByDiagId = new Map<string, DialogueRecord>();
+	const nextRecordsByPrevId = new Map<string, DialogueRecord[]>();
+	for (const record of records) {
+		if (record.diagId.length > 0) {
+			recordsByDiagId.set(record.diagId, record);
+		}
+		if (record.prevId.length > 0) {
+			const nextRecords = nextRecordsByPrevId.get(record.prevId) ?? [];
+			nextRecords.push(record);
+			nextRecordsByPrevId.set(record.prevId, nextRecords);
+		}
+	}
+
+	const orderedRecords: DialogueRecord[] = [];
+	const visitedRecordIds = new Set<string>();
+	const visitRecord = (record: DialogueRecord): void => {
+		if (visitedRecordIds.has(record.id)) {
+			return;
+		}
+
+		orderedRecords.push(record);
+		visitedRecordIds.add(record.id);
+		for (const nextRecord of [...(nextRecordsByPrevId.get(record.diagId) ?? [])].sort(compareDialogueRecords)) {
+			visitRecord(nextRecord);
+		}
+	};
+
+	for (const record of [...records].sort(compareDialogueRecords)) {
+		if (record.prevId.length > 0 && recordsByDiagId.has(record.prevId)) {
+			continue;
+		}
+		visitRecord(record);
+	}
+
+	for (const record of [...records].sort(compareDialogueRecords)) {
+		visitRecord(record);
+	}
+
+	return orderedRecords;
+}
+
+function conditionsCanFollowChoice(sourceRecord: DialogueRecord, candidate: DialogueRecord, choiceValue: number): boolean {
+	const candidateChoiceConditions = candidate.conditions.filter((condition) => condition.kind === 'choice');
+	if (
+		candidateChoiceConditions.length > 0
+		&& candidateChoiceConditions.some((condition) => condition.choiceValue !== choiceValue)
+	) {
+		return false;
+	}
+
+	const knownJournalValues = collectKnownJournalValuesAfterResult(sourceRecord);
+	for (const condition of candidate.conditions) {
+		if (
+			condition.kind !== 'journal'
+			|| condition.questId === undefined
+			|| condition.value === undefined
+		) {
+			continue;
+		}
+
+		const knownValue = knownJournalValues.get(condition.questId);
+		if (knownValue !== undefined && !journalConditionMatches(knownValue, condition)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+function collectKnownJournalValuesAfterResult(record: DialogueRecord): Map<string, number> {
+	const knownValues = new Map<string, number>();
+	for (const condition of record.conditions) {
+		if (
+			condition.kind === 'journal'
+			&& condition.questId !== undefined
+			&& condition.value !== undefined
+			&& condition.operator === '='
+		) {
+			knownValues.set(condition.questId, condition.value);
+		}
+	}
+
+	for (const action of record.resultActions) {
+		if (
+			action.kind === 'journal-set'
+			&& action.targetQuestId !== undefined
+			&& action.targetJournalIndex !== undefined
+		) {
+			knownValues.set(action.targetQuestId, action.targetJournalIndex);
+		}
+	}
+
+	return knownValues;
+}
+
+function journalConditionMatches(value: number, condition: Condition): boolean {
+	if (condition.value === undefined) {
+		return true;
+	}
+
+	switch (condition.operator) {
+		case '<=':
+			return value <= condition.value;
+		case '>=':
+			return value >= condition.value;
+		case '<':
+			return value < condition.value;
+		case '>':
+			return value > condition.value;
+		case '=':
+		default:
+			return value === condition.value;
+	}
 }
 
 function connectScriptedMilestones(context: CanvasLayoutContext, phaseIndices: number[]): void {

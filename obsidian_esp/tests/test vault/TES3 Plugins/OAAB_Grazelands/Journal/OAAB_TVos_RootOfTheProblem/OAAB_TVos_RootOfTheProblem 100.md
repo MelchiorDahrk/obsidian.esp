@@ -10,4 +10,4 @@ Finished: false
 Restart: false
 ---
 
-I should check in with Dreynos Elvul in [[Vos]] about the mushroom [[roots from Tel Vos]] which were breaking into his house.
+I should check in with Dreynos Elvul in [[Vos]] about the [[mushroom [[roots]] from Tel Vos]] which were breaking into his house.

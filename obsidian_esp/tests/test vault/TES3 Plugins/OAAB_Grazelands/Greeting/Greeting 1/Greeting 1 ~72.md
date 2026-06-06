@@ -2,8 +2,8 @@
 Source:
 Type: Greeting
 Topic: Greeting 1
-DiagID: 19014190441399210000
-PrevID: 19821749057363896
+DiagID: 19014190441399210873
+PrevID: 19821749057363894
 Disposition: 0
 ID: ABtv_MudanMulMiner3
 Race:

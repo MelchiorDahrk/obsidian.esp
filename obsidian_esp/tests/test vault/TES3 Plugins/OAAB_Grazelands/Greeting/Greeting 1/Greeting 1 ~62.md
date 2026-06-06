@@ -2,8 +2,8 @@
 Source:
 Type: Greeting
 Topic: Greeting 1
-DiagID: 9177324842891118000
-PrevID: 1198868702631815700
+DiagID: 9177324842891117932
+PrevID: 1198868702631815608
 Disposition: 0
 ID: aryon
 Race:

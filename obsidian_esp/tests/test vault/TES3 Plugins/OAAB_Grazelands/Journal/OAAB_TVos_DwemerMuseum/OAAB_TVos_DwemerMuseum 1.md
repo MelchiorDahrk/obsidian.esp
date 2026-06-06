@@ -10,4 +10,4 @@ Finished: false
 Restart: false
 ---
 
-[[Smokeskin-Killer]] informed me that [[Master Aryon]] may be interested in a new addition to the Tel [[Vos [[Dwemer]] Museum]].
+[[Smokeskin-Killer]] informed me that [[Master Aryon]] may be interested in a new addition to the [[Tel [[Vos]] [[Dwemer]] Museum]].

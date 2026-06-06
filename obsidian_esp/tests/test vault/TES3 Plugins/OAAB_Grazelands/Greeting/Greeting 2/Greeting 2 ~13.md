@@ -14,6 +14,9 @@ Rank:
 Cell:
 PC Faction:
 PC Rank:
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-House [[business]] waits for no man, %PCRace.
+
+House [[business]] waits for no man, %PCRace. ^obsidian-esp-canvas-df68fae958

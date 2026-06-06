@@ -18,4 +18,4 @@ Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem = 0
 ---
 
-Watch your step around the [[wickwheat]], [[outlander]]. These plants are my livelihood, thank you. If only those mushroom [[roots from Tel Vos]] would be as considerate.
+Watch your step around the [[wickwheat]], [[outlander]]. These plants are my livelihood, thank you. If only those [[mushroom [[roots]] from Tel Vos]] would be as considerate.

@@ -2,8 +2,8 @@
 Source:
 Type: Topic
 Topic: Salkurnudai
-DiagID: 1883656521985917400
-PrevID: 18393801253098692
+DiagID: 1883656521985917365
+PrevID: 18393801253098693
 Disposition: 0
 ID:
 Race:
@@ -24,10 +24,6 @@ Function1: Function
 Variable1: Choice = 4
 Function2: Journal
 Variable2: OAAB_TVos_HauntedLantern < 30
-canvas:
-  - "[[The Eerie Lantern.canvas]]"
-The Eerie Lantern:
-  - "[[OAAB_TVos_HauntedLantern 120]]"
 ---
 
 I am disappointed by your [[decision]], but I will settle the spirit myself.

@@ -24,6 +24,9 @@ Function1: Function
 Variable1: Choice = 11
 Function2: Item
 Variable2: Gold_001 >= 300
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-That should cover your fine, %PCName. Stay out of trouble.
+
+That should cover your fine, %PCName. Stay out of trouble. ^obsidian-esp-canvas-35c73f2e37

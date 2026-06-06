@@ -2,8 +2,8 @@
 Source:
 Type: Greeting
 Topic: Greeting 1
-DiagID: 128006973072422940
-PrevID: 310941559979747900
+DiagID: 128006973072422939
+PrevID: 310941559979747883
 Disposition: 0
 ID: mirvon andrethi
 Race:

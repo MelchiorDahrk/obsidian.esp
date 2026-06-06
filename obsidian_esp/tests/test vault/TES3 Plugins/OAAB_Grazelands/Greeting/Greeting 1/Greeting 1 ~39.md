@@ -2,8 +2,8 @@
 Source:
 Type: Greeting
 Topic: Greeting 1
-DiagID: 223732044880231170
-PrevID: 851626596899819300
+DiagID: 223732044880231162
+PrevID: 851626596899819200
 Disposition: 0
 ID: ABtv_Talk_DwPrintMach
 Race:

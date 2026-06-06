@@ -21,6 +21,9 @@ Function1: Function
 Variable1: Choice = 2
 Function2: Function
 Variable2: PcStrength >= 90
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-You'll [[kill me]]? Maybe so, but I'll die with a smile on my face. Only a fool lashes out in anger after humiliating themselves.
+
+You'll [[kill me]]? Maybe so, but I'll die with a smile on my face. Only a fool lashes out in anger after humiliating themselves. ^obsidian-esp-canvas-cd258e7098

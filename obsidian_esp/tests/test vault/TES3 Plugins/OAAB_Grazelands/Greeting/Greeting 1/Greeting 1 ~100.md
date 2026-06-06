@@ -3,7 +3,7 @@ Source:
 Type: Greeting
 Topic: Greeting 1
 DiagID: 863721020237253900
-PrevID: 306522609273871940
+PrevID: 306522609273871918
 Disposition: 0
 ID: alenus vendu
 Race:

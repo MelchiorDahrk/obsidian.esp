@@ -2,8 +2,8 @@
 Source:
 Type: Greeting
 Topic: Greeting 1
-DiagID: 2595319549188881400
-PrevID: 557353012343314370
+DiagID: 2595319549188881304
+PrevID: 557353012343314399
 Disposition: 0
 ID: smokeskin_killer
 Race:
@@ -23,4 +23,4 @@ Function2: Journal
 Variable2: OAAB_TVos_DwemerMuseum = 0
 ---
 
-[[Master Aryon]] tells us that he is well pleased with the museum. We delight in his approval and desire more. It is willing to help expand the Tel [[Vos [[Dwemer]] Museum]]?
+[[Master Aryon]] tells us that he is well pleased with the museum. We delight in his approval and desire more. It is willing to help expand the [[Tel [[Vos]] [[Dwemer]] Museum]]?

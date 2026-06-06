@@ -2,8 +2,8 @@
 Source:
 Type: Greeting
 Topic: Greeting 1
-DiagID: 2699523060953927000
-PrevID: 281492897131757020
+DiagID: 2699523060953927042
+PrevID: 281492897131757026
 Disposition: 0
 ID: Dro'zharim
 Race: Khajiit

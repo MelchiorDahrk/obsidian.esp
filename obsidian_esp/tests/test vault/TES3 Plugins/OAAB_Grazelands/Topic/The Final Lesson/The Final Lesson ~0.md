@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_GalosLesson > 100
+canvas:
+  - "[[A Lesson in Thieving.canvas]]"
 ---
 
-The book has been very useful, %PCName. Thank you again.
+
+The book has been very useful, %PCName. Thank you again. ^obsidian-esp-canvas-c10c07634b
