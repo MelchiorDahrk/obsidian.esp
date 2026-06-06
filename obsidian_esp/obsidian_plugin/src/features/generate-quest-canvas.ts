@@ -184,12 +184,6 @@ interface ChoiceTransitionAnchor {
 	sourceRecords: DialogueRecord[];
 }
 
-interface DeferredChoiceEdge {
-	choiceValue: number;
-	nodeIds: string[];
-	targetGroupKey: string;
-}
-
 interface TopicLayoutResult {
 	rootEntryIds: string[];
 	topY: number;
@@ -877,44 +871,8 @@ function layoutTopicFamilies(
 	const renderedGroupLayouts = new Map<string, TopicLayoutResult>();
 	const renderingGroups = new Set<string>();
 	const rootEntryIds: string[] = [];
-	const deferredChoiceEdges: DeferredChoiceEdge[] = [];
 	let topicTopY = Number.POSITIVE_INFINITY;
 	let topicBottomY = Number.NEGATIVE_INFINITY;
-
-	const connectChoiceAnchorToLayout = (anchor: ChoiceAnchorGroup, childLayout: TopicLayoutResult): void => {
-		for (const anchorNodeId of anchor.nodeIds) {
-			for (const entryId of childLayout.rootEntryIds) {
-				addEdge(
-					context,
-					`${anchorNodeId}:${entryId}:${anchor.choiceValue}`,
-					anchorNodeId,
-					'right',
-					entryId,
-					'left',
-				);
-			}
-		}
-	};
-
-	const flushDeferredChoiceEdges = (targetGroupKey: string, targetLayout: TopicLayoutResult): void => {
-		for (let index = deferredChoiceEdges.length - 1; index >= 0; index -= 1) {
-			const deferred = deferredChoiceEdges[index];
-			if (!deferred || deferred.targetGroupKey !== targetGroupKey) {
-				continue;
-			}
-
-			connectChoiceAnchorToLayout(
-				{
-					choiceValue: deferred.choiceValue,
-					nodeIds: deferred.nodeIds,
-					x: 0,
-					y: 0,
-				},
-				targetLayout,
-			);
-			deferredChoiceEdges.splice(index, 1);
-		}
-	};
 
 	const renderChoiceGroup = (group: ChoiceGroup, gateX: number, startY: number): TopicLayoutResult => {
 		const groupKey = choiceGroupKey(group.choiceValue);
@@ -970,16 +928,10 @@ function layoutTopicFamilies(
 			const childGroupKey = choiceGroupKey(childGroup.choiceValue);
 			const cachedChildLayout = renderedGroupLayouts.get(childGroupKey);
 			if (cachedChildLayout) {
-				connectChoiceAnchorToLayout(anchor, cachedChildLayout);
 				childLayouts.push(cachedChildLayout);
 				continue;
 			}
 			if (renderingGroups.has(childGroupKey)) {
-				deferredChoiceEdges.push({
-					choiceValue: anchor.choiceValue,
-					nodeIds: anchor.nodeIds,
-					targetGroupKey: childGroupKey,
-				});
 				continue;
 			}
 
@@ -990,7 +942,6 @@ function layoutTopicFamilies(
 				anchor.x + FOLLOWUP_GROUP_GAP_X,
 				childStartY,
 			);
-			connectChoiceAnchorToLayout(anchor, childLayout);
 			childLayouts.push(childLayout);
 		}
 
@@ -1013,7 +964,6 @@ function layoutTopicFamilies(
 			nodeIds: context.nodes.slice(renderedNodeCount).map((node) => node.id),
 		};
 		renderedGroupLayouts.set(groupKey, layout);
-		flushDeferredChoiceEdges(groupKey, layout);
 		renderingGroups.delete(groupKey);
 		return layout;
 	};
@@ -1597,47 +1547,47 @@ function connectChoiceTransitions(context: CanvasLayoutContext, records: Dialogu
 
 	const connected = new Set<string>();
 	for (const anchor of context.choiceTransitionAnchors) {
-		const targetRecords = resolveChoiceTransitionTargets(anchor, orderedRecordsByTopic);
-		for (const targetRecord of targetRecords) {
-			const entryNodeId = context.recordEntryNodeIds.get(targetRecord.id);
-			if (!entryNodeId) {
-				continue;
-			}
-
-			const connectionKey = `${anchor.nodeId}:${entryNodeId}:${anchor.choiceValue}`;
-			if (connected.has(connectionKey)) {
-				continue;
-			}
-
-			addEdge(context, connectionKey, anchor.nodeId, 'right', entryNodeId, 'left');
-			connected.add(connectionKey);
-		}
-	}
-}
-
-function resolveChoiceTransitionTargets(
-	anchor: ChoiceTransitionAnchor,
-	orderedRecordsByTopic: Map<string, DialogueRecord[]>,
-): DialogueRecord[] {
-	const topicRecords = orderedRecordsByTopic.get(anchor.topic) ?? [];
-	const targets: DialogueRecord[] = [];
-	const targetIds = new Set<string>();
-
-	for (const sourceRecord of anchor.sourceRecords) {
-		const targetRecord = topicRecords.find((candidate) => (
-			candidate.id !== sourceRecord.id
-			&& candidate.choiceValues.includes(anchor.choiceValue)
-			&& conditionsCanFollowChoice(sourceRecord, candidate, anchor.choiceValue)
-		));
-		if (!targetRecord || targetIds.has(targetRecord.id)) {
+		const targetRecord = resolveChoiceTransitionTarget(anchor, orderedRecordsByTopic);
+		if (!targetRecord) {
 			continue;
 		}
 
-		targets.push(targetRecord);
-		targetIds.add(targetRecord.id);
+		const entryNodeId = context.recordEntryNodeIds.get(targetRecord.id);
+		if (!entryNodeId) {
+			continue;
+		}
+
+		const connectionKey = `${anchor.nodeId}:${entryNodeId}:${anchor.choiceValue}`;
+		if (connected.has(connectionKey)) {
+			continue;
+		}
+
+		addEdge(context, connectionKey, anchor.nodeId, 'right', entryNodeId, 'left');
+		connected.add(connectionKey);
+	}
+}
+
+function resolveChoiceTransitionTarget(
+	anchor: ChoiceTransitionAnchor,
+	orderedRecordsByTopic: Map<string, DialogueRecord[]>,
+): DialogueRecord | null {
+	const topicRecords = orderedRecordsByTopic.get(anchor.topic) ?? [];
+	for (const candidate of topicRecords) {
+		if (!candidate.choiceValues.includes(anchor.choiceValue)) {
+			continue;
+		}
+
+		if (
+			anchor.sourceRecords.some((sourceRecord) => (
+				candidate.id !== sourceRecord.id
+				&& conditionsCanFollowChoice(sourceRecord, candidate, anchor.choiceValue)
+			))
+		) {
+			return candidate;
+		}
 	}
 
-	return targets;
+	return null;
 }
 
 function orderTopicRecordsByInfoSequence(records: DialogueRecord[]): DialogueRecord[] {
@@ -1691,6 +1641,10 @@ function conditionsCanFollowChoice(sourceRecord: DialogueRecord, candidate: Dial
 		return false;
 	}
 
+	if (!speakerConditionsAreCompatible(sourceRecord.speakerConditions, candidate.speakerConditions)) {
+		return false;
+	}
+
 	const knownJournalValues = collectKnownJournalValuesAfterResult(sourceRecord);
 	for (const condition of candidate.conditions) {
 		if (
@@ -1707,7 +1661,60 @@ function conditionsCanFollowChoice(sourceRecord: DialogueRecord, candidate: Dial
 		}
 	}
 
+	const knownItemValues = collectKnownItemValues(sourceRecord.conditions);
+	for (const condition of candidate.conditions) {
+		if (
+			condition.kind !== 'item'
+			|| condition.questId === undefined
+			|| condition.value === undefined
+		) {
+			continue;
+		}
+
+		const knownValue = knownItemValues.get(condition.questId);
+		if (knownValue !== undefined && !numericConditionMatches(knownValue, condition)) {
+			return false;
+		}
+	}
+
 	return true;
+}
+
+function speakerConditionsAreCompatible(sourceConditions: Condition[], candidateConditions: Condition[]): boolean {
+	const sourceValuesByLabel = new Map<string, string>();
+	for (const condition of sourceConditions) {
+		const parsed = parseSpeakerConditionDisplayText(condition.displayText);
+		if (!parsed) {
+			continue;
+		}
+		sourceValuesByLabel.set(parsed.label, parsed.value.toLowerCase());
+	}
+
+	for (const condition of candidateConditions) {
+		const parsed = parseSpeakerConditionDisplayText(condition.displayText);
+		if (!parsed) {
+			continue;
+		}
+
+		const sourceValue = sourceValuesByLabel.get(parsed.label);
+		if (sourceValue !== undefined && sourceValue !== parsed.value.toLowerCase()) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+function parseSpeakerConditionDisplayText(displayText: string): { label: string; value: string } | null {
+	const separator = displayText.indexOf(' = ');
+	if (separator === -1) {
+		return null;
+	}
+
+	return {
+		label: displayText.slice(0, separator),
+		value: displayText.slice(separator + 3),
+	};
 }
 
 function collectKnownJournalValuesAfterResult(record: DialogueRecord): Map<string, number> {
@@ -1736,7 +1743,33 @@ function collectKnownJournalValuesAfterResult(record: DialogueRecord): Map<strin
 	return knownValues;
 }
 
+function collectKnownItemValues(conditions: Condition[]): Map<string, number> {
+	const knownValues = new Map<string, number>();
+	for (const condition of conditions) {
+		if (
+			condition.kind !== 'item'
+			|| condition.questId === undefined
+			|| condition.value === undefined
+			|| condition.operator !== '='
+		) {
+			continue;
+		}
+
+		knownValues.set(condition.questId, condition.value);
+	}
+
+	return knownValues;
+}
+
 function journalConditionMatches(value: number, condition: Condition): boolean {
+	if (condition.value === undefined) {
+		return true;
+	}
+
+	return numericConditionMatches(value, condition);
+}
+
+function numericConditionMatches(value: number, condition: Condition): boolean {
 	if (condition.value === undefined) {
 		return true;
 	}
@@ -2322,9 +2355,13 @@ function parseConditions(frontmatter: Record<string, FrontmatterValue>, questIds
 		}
 
 		if ((rawFunction ?? '').trim() === 'Item') {
+			const itemCondition = parseNumericVariableCondition(rawVariable);
 			conditions.push({
 				kind: 'item',
 				displayText: `Item - ${rawVariable}`,
+				questId: itemCondition?.id,
+				operator: itemCondition?.operator,
+				value: itemCondition?.value,
 			});
 			continue;
 		}
@@ -2384,6 +2421,26 @@ function parseChoiceCondition(rawFunction: string, rawVariable: string): Conditi
 		kind: 'choice',
 		displayText: rawVariable,
 		choiceValue: Number.parseInt(choiceValue, 10),
+	};
+}
+
+function parseNumericVariableCondition(rawVariable: string): { id: string; operator: string; value: number } | null {
+	const variableMatch = rawVariable.match(/([^\s]+)\s*(<=|>=|=|<|>)\s*(-?\d+)/);
+	if (!variableMatch) {
+		return null;
+	}
+
+	const id = variableMatch[1];
+	const operator = variableMatch[2];
+	const value = variableMatch[3];
+	if (id === undefined || operator === undefined || value === undefined) {
+		return null;
+	}
+
+	return {
+		id,
+		operator,
+		value: Number.parseInt(value, 10),
 	};
 }
 
