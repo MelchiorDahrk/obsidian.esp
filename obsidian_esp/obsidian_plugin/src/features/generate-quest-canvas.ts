@@ -38,8 +38,6 @@ const TOPIC_SEGMENT_GAP_X = 1920;
 const FOLLOWUP_GROUP_GAP_X = 700;
 const CLUSTER_GAP_Y = 140;
 const FINAL_NODE_GAP_Y = 24;
-const JUMP_FANOUT_THRESHOLD = 4;
-const JUMP_SPAN_THRESHOLD_Y = 900;
 const PRE_JOURNAL_PHASE = 0;
 const KNOWN_FRONTMATTER_KEYS = new Set([
 	'Source',
@@ -445,8 +443,8 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 	const relevantRecordIds = resolvePropagatedRelevantRecords(allRecords, directRelevant, scope.questIds);
 	const relevantRecords = allRecords.filter(
 		(record) => relevantRecordIds.has(record.id)
-			&& (effectiveOwnership.get(record.id) ?? []).some((questId) => scope.questIds.includes(questId))
-			&& !hasJournalResultsForOtherQuests(record, scope.questIds),
+			&& isRelevantToQuest(record, effectiveOwnership, scope.questIds)
+			&& !hasOnlyJournalResultsForOtherQuests(record, scope.questIds),
 	);
 
 	if (relevantRecords.length === 0) {
@@ -556,7 +554,6 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 	}
 
 	connectScriptedMilestones(canvasContext, phaseGraph.orderedPhases);
-	insertJumpNodes(canvasContext);
 	resolveCanvasNodeOverlaps(canvasContext);
 
 	const relatedFiles = new Map<string, TFile>();
@@ -1544,94 +1541,6 @@ function connectScriptedMilestones(context: CanvasLayoutContext, phaseIndices: n
 	}
 }
 
-function insertJumpNodes(context: CanvasLayoutContext): void {
-	const outgoingBySource = new Map<string, CanvasEdge[]>();
-	for (const edge of context.edges) {
-		const outgoing = outgoingBySource.get(edge.fromNode) ?? [];
-		outgoing.push(edge);
-		outgoingBySource.set(edge.fromNode, outgoing);
-	}
-
-	const nextEdges: CanvasEdge[] = [];
-	const nextNodes: CanvasNode[] = [];
-	const removedEdgeIds = new Set<string>();
-	let jumpNumber = 1;
-
-	for (const [sourceNodeId, outgoing] of outgoingBySource) {
-		if (outgoing.length < JUMP_FANOUT_THRESHOLD) {
-			continue;
-		}
-
-		const sourceNode = context.nodes.find((node) => node.id === sourceNodeId);
-		if (!sourceNode) {
-			continue;
-		}
-
-		const targetNodes = outgoing
-			.map((edge) => context.nodes.find((node) => node.id === edge.toNode))
-			.filter((node): node is CanvasNode => node !== undefined);
-		if (targetNodes.length < JUMP_FANOUT_THRESHOLD) {
-			continue;
-		}
-
-		const ys = targetNodes.map((node) => node.y);
-		const xs = targetNodes.map((node) => node.x);
-		const span = Math.max(...ys) - Math.min(...ys);
-		if (span < JUMP_SPAN_THRESHOLD_Y) {
-			continue;
-		}
-
-		const sourceJumpId = createNodeId(`jump-source:${sourceNodeId}`);
-		const resumeJumpId = createNodeId(`jump-resume:${sourceNodeId}`);
-		const jumpLabel = `Jump #${jumpNumber}`;
-		jumpNumber += 1;
-		const sourceJumpNode: CanvasNode = {
-			id: sourceJumpId,
-			type: 'text',
-			text: jumpLabel,
-			x: sourceNode.x + 260,
-			y: Math.round((Math.min(...ys) + Math.max(...ys)) / 2),
-			width: 160,
-			height: 72,
-		};
-		const resumeJumpNode: CanvasNode = {
-			id: resumeJumpId,
-			type: 'text',
-			text: jumpLabel,
-			x: Math.max(sourceJumpNode.x + 260, Math.min(...xs) - 240),
-			y: sourceJumpNode.y,
-			width: 160,
-			height: 72,
-		};
-		nextNodes.push(sourceJumpNode, resumeJumpNode);
-		nextEdges.push({
-			id: createEdgeId(`${sourceNodeId}:${sourceJumpId}`),
-			fromNode: sourceNodeId,
-			fromSide: 'right',
-			toNode: sourceJumpId,
-			toSide: 'left',
-		});
-
-		for (const edge of outgoing) {
-			removedEdgeIds.add(edge.id);
-			nextEdges.push({
-				id: createEdgeId(`${resumeJumpId}:${edge.toNode}`),
-				fromNode: resumeJumpId,
-				fromSide: 'right',
-				toNode: edge.toNode,
-				toSide: edge.toSide,
-			});
-		}
-	}
-
-	if (nextNodes.length === 0) {
-		return;
-	}
-
-	context.nodes = [...context.nodes, ...nextNodes];
-	context.edges = [...context.edges.filter((edge) => !removedEdgeIds.has(edge.id)), ...nextEdges];
-}
-
 function resolveCanvasNodeOverlaps(context: CanvasLayoutContext): void {
 	const lockedGroups = buildLockedVerticalGroups(context);
 	const maxPasses = Math.max(1, context.nodes.length * context.nodes.length);
@@ -2341,14 +2250,14 @@ function resolvePropagatedRelevantRecords(
 			}
 
 			const previous = record.prevId ? diagMap.get(record.prevId) : undefined;
-			if (previous && !relevant.has(previous.id) && !hasJournalResultsForOtherQuests(previous, questIds)) {
+			if (previous && !relevant.has(previous.id) && !hasOnlyJournalResultsForOtherQuests(previous, questIds)) {
 				relevant.add(previous.id);
 				changed = true;
 			}
 
 			const nextRecords = record.diagId ? nextByPrev.get(record.diagId) ?? [] : [];
 			for (const nextRecord of nextRecords) {
-				if (relevant.has(nextRecord.id) || hasJournalResultsForOtherQuests(nextRecord, questIds)) {
+				if (relevant.has(nextRecord.id) || hasOnlyJournalResultsForOtherQuests(nextRecord, questIds)) {
 					continue;
 				}
 
@@ -2358,7 +2267,7 @@ function resolvePropagatedRelevantRecords(
 		}
 
 		for (const record of allRecords) {
-			if (relevant.has(record.id) || record.choiceTargets.length === 0 || hasJournalResultsForOtherQuests(record, questIds)) {
+			if (relevant.has(record.id) || record.choiceTargets.length === 0 || hasOnlyJournalResultsForOtherQuests(record, questIds)) {
 				continue;
 			}
 
@@ -2744,12 +2653,24 @@ function firstChoiceValue(conditions: Condition[]): number | null {
 	return Math.min(...choiceValues);
 }
 
-function hasJournalResultsForOtherQuests(record: DialogueRecord, questIds: string[]): boolean {
-	return record.resultActions.some(
-		(action) => action.kind === 'journal-set'
-			&& Boolean(action.targetQuestId)
-			&& !questIds.includes(action.targetQuestId as string),
+function isRelevantToQuest(
+	record: DialogueRecord,
+	effectiveOwnership: Map<string, string[]>,
+	questIds: string[],
+): boolean {
+	const activeQuestIds = new Set(questIds);
+	return (
+		(effectiveOwnership.get(record.id) ?? []).some((questId) => activeQuestIds.has(questId))
+			|| record.questReferences.some((questId) => activeQuestIds.has(questId))
 	);
+}
+
+function hasOnlyJournalResultsForOtherQuests(record: DialogueRecord, questIds: string[]): boolean {
+	const journalResults = record.resultActions.filter(
+		(action) => action.kind === 'journal-set' && Boolean(action.targetQuestId),
+	);
+	return journalResults.length > 0
+		&& journalResults.every((action) => !questIds.includes(action.targetQuestId as string));
 }
 
 function containsJournalLine(lines: string[]): boolean {
