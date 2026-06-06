@@ -206,52 +206,6 @@ interface PhaseGraph {
 	mainTargets: Map<number, number | null>;
 }
 
-interface PhasePlacement {
-	topY: number;
-	bottomY: number;
-	mainLaneCenterY: number;
-}
-
-interface TopicChoiceResolutionSummary {
-	choiceValue: number;
-	sourceRecordPaths: string[];
-	entryRecordPaths: string[];
-}
-
-interface TopicDebugSummary {
-	segmentIndex: number;
-	topic: string;
-	mainLaneCenterY: number | null;
-	familyOrder: Array<{
-		priority: number;
-		progressionTarget: number | null;
-		primaryChoiceValue: number | null;
-		choiceTargets: number[];
-		recordPaths: string[];
-	}>;
-	rootChoices: Array<number | null>;
-	choiceResolutions: TopicChoiceResolutionSummary[];
-}
-
-interface PhaseDebugSummary {
-	phaseValue: number;
-	orderIndex: number;
-	x: number;
-	milestoneY: number | null;
-	incoming: number[];
-	outgoing: number[];
-	mainTarget: number | null;
-	phaseTopY: number | null;
-	phaseBottomY: number | null;
-	mainLaneCenterY: number | null;
-	topics: TopicDebugSummary[];
-}
-
-interface PhaseGraphDebugSummary {
-	questTitle: string;
-	phases: PhaseDebugSummary[];
-}
-
 interface CanvasNode {
 	id: string;
 	type: 'file' | 'text';
@@ -279,16 +233,11 @@ interface CanvasBuildResult {
 	relatedFiles: TFile[];
 	fileNodeTargets: FileNodeTarget[];
 	warnings: string[];
-	phaseGraphSummary: PhaseGraphDebugSummary;
 }
 
 interface FileNodeTarget {
 	file: TFile;
 	subpath: string;
-}
-
-interface QuestCanvasGenerationOptions {
-	writePhaseGraphDebug?: boolean;
 }
 
 interface CanvasLayoutContext {
@@ -315,15 +264,6 @@ export async function generateQuestCanvasFromVaultFolder(app: App): Promise<void
 	await generateQuestCanvasForFolder(app, folder);
 }
 
-export async function generateQuestCanvasDebugFromVaultFolder(app: App): Promise<void> {
-	const folder = await selectVaultFolder(app);
-	if (!folder) {
-		return;
-	}
-
-	await generateQuestCanvasForFolder(app, folder, { writePhaseGraphDebug: true });
-}
-
 export function canGenerateQuestCanvasFromFolder(folder: TFolder): boolean {
 	return folder.parent?.name === JOURNAL_FOLDER_NAME;
 }
@@ -331,7 +271,6 @@ export function canGenerateQuestCanvasFromFolder(folder: TFolder): boolean {
 export async function generateQuestCanvasForFolder(
 	app: App,
 	folder: TFolder,
-	options: QuestCanvasGenerationOptions = {},
 ): Promise<void> {
 	const progress = new ProgressBar('Generating quest canvas');
 	try {
@@ -339,10 +278,6 @@ export async function generateQuestCanvasForFolder(
 		const scope = await discoverQuestScope(app, folder);
 		progress.update(25, `Resolving dialogue for ${scope.questTitle}`);
 		const buildResult = await buildQuestCanvas(app, scope);
-		if (options.writePhaseGraphDebug) {
-			progress.update(70, 'Writing phase graph summary');
-			await writePhaseGraphSummary(app, scope.outputCanvasPath, buildResult.phaseGraphSummary);
-		}
 		progress.update(80, 'Writing canvas and backlinks');
 		await writeCanvasPlan(app, scope.outputCanvasPath, buildResult.nodes, buildResult.edges);
 		await updateCanvasLinksAndBodyBlocks(
@@ -356,8 +291,7 @@ export async function generateQuestCanvasForFolder(
 			buildResult.warnings.length > 0
 				? ` ${buildResult.warnings[0]}`
 				: '';
-		const debugSuffix = options.writePhaseGraphDebug ? ' Wrote a phase graph summary JSON alongside the canvas.' : '';
-		new Notice(`Generated ${scope.questTitle}.canvas.${warningSuffix}${debugSuffix}`);
+		new Notice(`Generated ${scope.questTitle}.canvas.${warningSuffix}`);
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
 		new Notice(`Failed to generate quest canvas: ${message}`, 10000);
@@ -477,8 +411,6 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 	}
 	const phaseGraph = buildPhaseGraph(phaseIndices, families);
 	const phaseXPositions = new Map<number, number>();
-	const phasePlacements = new Map<number, PhasePlacement>();
-	const topicPlacements = new Map<string, TopicLayoutResult>();
 
 	const milestonesByPhase = new Map<number, JournalMilestone[]>();
 	for (const milestone of scope.journalMilestones) {
@@ -511,8 +443,6 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 			: undefined;
 		const phaseSegments = phaseGraph.segmentsByPhase.get(phaseValue) ?? [];
 		let topicSegmentIndex = 0;
-		let phaseTopY = Number.POSITIVE_INFINITY;
-		let phaseBottomY = Number.NEGATIVE_INFINITY;
 		const phaseCenters: number[] = [];
 		for (const segment of phaseSegments) {
 			const topicBaseX = phaseX + GATE_GAP_X + topicSegmentIndex * TOPIC_SEGMENT_GAP_X;
@@ -524,7 +454,6 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 				scope.journalMilestones,
 			);
 			const segmentKey = phaseTopicSegmentKey(phaseValue, topicSegmentIndex, segment.topic);
-			topicPlacements.set(segmentKey, topicLayout);
 
 			if (topicLayout.rootEntryIds.length > 0) {
 				const headerId = addTopicHeader(
@@ -542,8 +471,6 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 				}
 			}
 			if (Number.isFinite(topicLayout.topY) && Number.isFinite(topicLayout.bottomY)) {
-				phaseTopY = Math.min(phaseTopY, topicLayout.topY);
-				phaseBottomY = Math.max(phaseBottomY, topicLayout.bottomY);
 				phaseCenters.push(topicLayout.mainLaneCenterY);
 			}
 
@@ -555,11 +482,6 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 		if (milestoneNodeId) {
 			centerPhaseMilestone(canvasContext, phaseValue, phaseCenterY);
 		}
-		phasePlacements.set(phaseValue, {
-			topY: Number.isFinite(phaseTopY) ? phaseTopY : phaseCenterY,
-			bottomY: Number.isFinite(phaseBottomY) ? phaseBottomY : phaseCenterY,
-			mainLaneCenterY: phaseCenterY,
-		});
 	}
 
 	connectChoiceTransitions(canvasContext, scopedRelevantRecords);
@@ -601,14 +523,6 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 		relatedFiles: [...relatedFiles.values()].sort((left, right) => left.path.localeCompare(right.path)),
 		fileNodeTargets: [...fileNodeTargets.values()].sort((left, right) => left.file.path.localeCompare(right.file.path)),
 		warnings,
-		phaseGraphSummary: buildPhaseGraphDebugSummary(
-			scope.questTitle,
-			phaseGraph,
-			phaseXPositions,
-			canvasContext,
-			phasePlacements,
-			topicPlacements,
-		),
 	};
 }
 
@@ -1434,111 +1348,6 @@ function phaseTopicSegmentKey(phaseValue: number, segmentIndex: number, topic: s
 	return `${phaseValue}:${segmentIndex}:${topic}`;
 }
 
-function buildPhaseGraphDebugSummary(
-	questTitle: string,
-	phaseGraph: PhaseGraph,
-	phaseXPositions: Map<number, number>,
-	context: CanvasLayoutContext,
-	phasePlacements: Map<number, PhasePlacement>,
-	topicPlacements: Map<string, TopicLayoutResult>,
-): PhaseGraphDebugSummary {
-	return {
-		questTitle,
-		phases: phaseGraph.orderedPhases.map((phaseValue, orderIndex) => {
-			const milestoneNodeId = context.phaseNodeIds.get(phaseValue);
-			const milestoneNode = context.nodes.find((node) => node.id === milestoneNodeId);
-			const segments = phaseGraph.segmentsByPhase.get(phaseValue) ?? [];
-			return {
-				phaseValue,
-				orderIndex,
-				x: phaseXPositions.get(phaseValue) ?? 0,
-				milestoneY: milestoneNode?.y ?? null,
-				incoming: [...(phaseGraph.incomingTransitions.get(phaseValue) ?? [])].sort((left, right) => left - right),
-				outgoing: [...(phaseGraph.outgoingTransitions.get(phaseValue) ?? [])].sort((left, right) => left - right),
-				mainTarget: phaseGraph.mainTargets.get(phaseValue) ?? null,
-				phaseTopY: phasePlacements.get(phaseValue)?.topY ?? null,
-				phaseBottomY: phasePlacements.get(phaseValue)?.bottomY ?? null,
-				mainLaneCenterY: phasePlacements.get(phaseValue)?.mainLaneCenterY ?? null,
-				topics: segments.map((segment, segmentIndex) => {
-					const segmentKey = phaseTopicSegmentKey(phaseValue, segmentIndex, segment.topic);
-					const topicPlacement = topicPlacements.get(segmentKey);
-					const choiceGroups = groupFamiliesByPrimaryChoice(segment.families);
-					const rootChoiceGroups = resolveRootChoiceGroups(choiceGroups);
-					return {
-						segmentIndex,
-						topic: segment.topic,
-						mainLaneCenterY: topicPlacement?.mainLaneCenterY ?? null,
-						familyOrder: [...segment.families].sort(compareBranchFamilies).map((family) => ({
-							priority: family.priority,
-							progressionTarget: family.progressionTarget,
-							primaryChoiceValue: familyPrimaryChoiceValue(family),
-							choiceTargets: uniqueNumbers(
-								family.results
-									.filter((action) => action.kind === 'choice-set' && action.choiceValue !== undefined)
-									.map((action) => action.choiceValue as number),
-							),
-							recordPaths: family.records
-								.map((record) => record.file.path)
-								.sort((left, right) => left.localeCompare(right)),
-						})),
-						rootChoices: orderChoiceGroupsForLanes(rootChoiceGroups.length > 0 ? rootChoiceGroups : choiceGroups, phaseValue)
-							.map((group) => group.choiceValue),
-						choiceResolutions: summarizeChoiceResolutions(segment.families),
-					};
-				}),
-			};
-		}),
-	};
-}
-
-function summarizeChoiceResolutions(families: BranchFamily[]): TopicChoiceResolutionSummary[] {
-	const sourceRecordPathsByChoice = new Map<number, string[]>();
-	const childGroupsByChoice = mapChoiceGroupsByChoice(groupFamiliesByPrimaryChoice(families));
-
-	for (const family of families) {
-		const familyRecordPaths = family.records.map((record) => record.file.path);
-		for (const action of family.results) {
-			if (action.kind !== 'choice-set' || action.choiceValue === undefined) {
-				continue;
-			}
-
-			const existing = sourceRecordPathsByChoice.get(action.choiceValue) ?? [];
-			existing.push(...familyRecordPaths);
-			sourceRecordPathsByChoice.set(action.choiceValue, existing);
-		}
-	}
-
-	return [...sourceRecordPathsByChoice.entries()]
-		.sort((left, right) => left[0] - right[0])
-		.map(([choiceValue, sourceRecordPaths]) => {
-			const childGroup = childGroupsByChoice.get(choiceGroupKey(choiceValue));
-			return {
-				choiceValue,
-				sourceRecordPaths: uniqueValues(sourceRecordPaths).sort((left, right) => left.localeCompare(right)),
-				entryRecordPaths: childGroup
-					? [...childGroup.families]
-						.sort(compareBranchFamilies)
-						.map((family) => firstFamilyRecordPath(family))
-						.filter((path): path is string => path !== null)
-					: [],
-			};
-		});
-}
-
-function familyPrimaryChoiceValue(family: BranchFamily): number | null {
-	const choiceValues = family.records
-		.map((record) => record.primaryChoiceValue)
-		.filter((value): value is number => value !== null);
-	if (choiceValues.length === 0) {
-		return null;
-	}
-	return Math.min(...choiceValues);
-}
-
-function firstFamilyRecordPath(family: BranchFamily): string | null {
-	return [...family.records].sort(compareDialogueRecords)[0]?.file.path ?? null;
-}
-
 function connectChoiceTransitions(context: CanvasLayoutContext, records: DialogueRecord[]): void {
 	const orderedRecordsByTopic = new Map<string, DialogueRecord[]>();
 	for (const [topic, topicRecords] of groupRecordsByTopic(records)) {
@@ -1940,28 +1749,6 @@ function shiftLockedGroup(group: LockedVerticalGroup, deltaY: number): void {
 
 	group.topY += deltaY;
 	group.bottomY += deltaY;
-}
-
-async function writePhaseGraphSummary(
-	app: App,
-	outputCanvasPath: string,
-	summary: PhaseGraphDebugSummary,
-): Promise<void> {
-	const summaryPath = phaseGraphSummaryPath(outputCanvasPath);
-	const parentFolderPath = summaryPath.substring(0, summaryPath.lastIndexOf('/'));
-	await ensureFolder(app, parentFolderPath);
-	const summaryJson = JSON.stringify(summary, null, '\t');
-	const existing = app.vault.getAbstractFileByPath(summaryPath);
-	if (existing instanceof TFile) {
-		await app.vault.process(existing, () => summaryJson);
-		return;
-	}
-
-	await app.vault.create(summaryPath, summaryJson);
-}
-
-function phaseGraphSummaryPath(outputCanvasPath: string): string {
-	return outputCanvasPath.replace(/\.canvas$/i, '.phase-graph.json');
 }
 
 async function writeCanvasPlan(
