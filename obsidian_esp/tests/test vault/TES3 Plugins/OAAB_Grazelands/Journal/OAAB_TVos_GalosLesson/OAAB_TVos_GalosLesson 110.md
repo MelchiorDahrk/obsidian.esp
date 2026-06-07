@@ -8,9 +8,6 @@ Index: 110
 Quest Name: false
 Finished: true
 Restart: false
-canvas:
-  - "[[A Lesson in Thieving.canvas]]"
 ---
 
-
-Galos gave me some training in enchanting as a [[reward]] for finding "[[The Final Lesson]]" for his [[enchanting research]]. ^obsidian-esp-canvas-fcecf10b51
+Galos gave me some training in enchanting as a [[reward]] for finding "[[The Final Lesson]]" for his [[enchanting research]].

@@ -21,6 +21,9 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosMouth <= 10
 Function1: Function
 Variable1: Choice = 1
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-As I said, she made land in [[Sadrith Mora]] but left soon thereafter according to [[my friend]]. Perhaps if you ask around in the city someone will have seen or heard from her. She's a redhaired [[Dunmer]] woman. I expect well-dressed. I would start down at the docks.
+
+As I said, she made land in [[Sadrith Mora]] but left soon thereafter according to [[my friend]]. Perhaps if you ask around in the city someone will have seen or heard from her. She's a redhaired [[Dunmer]] woman. I expect well-dressed. I would start down at the docks. ^obsidian-esp-canvas-c0fbf0638a

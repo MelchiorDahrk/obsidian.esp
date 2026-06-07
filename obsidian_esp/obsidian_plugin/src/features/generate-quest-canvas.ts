@@ -2569,45 +2569,10 @@ function resolvePropagatedRelevantRecords(
 ): Set<string> {
 	const relevant = new Set<string>(directRelevant);
 	const recordsByTopic = groupRecordsByTopic(allRecords);
-	const diagMap = new Map<string, DialogueRecord>();
-	const nextByPrev = new Map<string, DialogueRecord[]>();
-
-	for (const record of allRecords) {
-		if (record.diagId.length > 0) {
-			diagMap.set(record.diagId, record);
-		}
-		if (record.prevId.length > 0) {
-			const nextRecords = nextByPrev.get(record.prevId) ?? [];
-			nextRecords.push(record);
-			nextByPrev.set(record.prevId, nextRecords);
-		}
-	}
 
 	let changed = true;
 	while (changed) {
 		changed = false;
-
-		for (const record of allRecords) {
-			if (!relevant.has(record.id)) {
-				continue;
-			}
-
-			const previous = record.prevId ? diagMap.get(record.prevId) : undefined;
-			if (previous && !relevant.has(previous.id) && !hasOnlyJournalResultsForOtherQuests(previous, questIds)) {
-				relevant.add(previous.id);
-				changed = true;
-			}
-
-			const nextRecords = record.diagId ? nextByPrev.get(record.diagId) ?? [] : [];
-			for (const nextRecord of nextRecords) {
-				if (relevant.has(nextRecord.id) || hasOnlyJournalResultsForOtherQuests(nextRecord, questIds)) {
-					continue;
-				}
-
-				relevant.add(nextRecord.id);
-				changed = true;
-			}
-		}
 
 		for (const record of allRecords) {
 			if (relevant.has(record.id) || record.choiceTargets.length === 0 || hasOnlyJournalResultsForOtherQuests(record, questIds)) {
@@ -2617,7 +2582,10 @@ function resolvePropagatedRelevantRecords(
 			const topicRecords = recordsByTopic.get(record.topic) ?? [];
 			const leadsToRelevant = topicRecords.some(
 				(candidate) => relevant.has(candidate.id)
-					&& record.choiceTargets.some((value) => candidate.choiceValues.includes(value)),
+					&& record.choiceTargets.some((value) => (
+						candidate.choiceValues.includes(value)
+							&& conditionsCanFollowChoice(record, candidate, value)
+					)),
 			);
 
 			if (leadsToRelevant) {
@@ -2677,13 +2645,9 @@ function resolveEffectiveQuestOwnership(allRecords: DialogueRecord[]): Map<strin
 
 function buildAncestorRecordMap(allRecords: DialogueRecord[]): Map<string, string[]> {
 	const ancestorsByRecordId = new Map<string, Set<string>>();
-	const recordsByDiagId = new Map<string, DialogueRecord>();
 	const recordsByTopic = groupRecordsByTopic(allRecords);
 
 	for (const record of allRecords) {
-		if (record.diagId.length > 0) {
-			recordsByDiagId.set(record.diagId, record);
-		}
 		ancestorsByRecordId.set(record.id, new Set<string>());
 	}
 
@@ -2693,18 +2657,18 @@ function buildAncestorRecordMap(allRecords: DialogueRecord[]): Map<string, strin
 			continue;
 		}
 
-		const previous = record.prevId ? recordsByDiagId.get(record.prevId) : undefined;
-		if (previous) {
-			recordAncestors.add(previous.id);
-		}
-
 		const topicRecords = recordsByTopic.get(record.topic) ?? [];
 		for (const candidate of topicRecords) {
 			if (candidate.id === record.id || candidate.choiceTargets.length === 0) {
 				continue;
 			}
 
-			if (candidate.choiceTargets.some((value) => record.choiceValues.includes(value))) {
+			if (
+				candidate.choiceTargets.some((value) => (
+					record.choiceValues.includes(value)
+						&& conditionsCanFollowChoice(candidate, record, value)
+				))
+			) {
 				recordAncestors.add(candidate.id);
 			}
 		}

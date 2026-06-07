@@ -22,9 +22,6 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosLesson = 10
 Function1: Item
 Variable1: bookskill_enchant5 >= 1
-canvas:
-  - "[[A Lesson in Thieving.canvas]]"
 ---
 
-
-You have a copy of the book? Wonderful! I can feel a breakthrough approaching in my research. As [[compensation]] for your [[work]], what would you like? I could teach you something about enchanting? Or perhaps you'd prefer a soul gem I filled recently? ^obsidian-esp-canvas-2e95e0b431
+You have a copy of the book? Wonderful! I can feel a breakthrough approaching in my research. As [[compensation]] for your [[work]], what would you like? I could teach you something about enchanting? Or perhaps you'd prefer a soul gem I filled recently?

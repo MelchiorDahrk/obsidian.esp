@@ -1,0 +1,2326 @@
+{
+	"nodes": [
+		{
+			"id": "86d52277aba52a29",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosMouth/OAAB_TVos_GalosMouth 10.md",
+			"subpath": "#^obsidian-esp-canvas-01e9f7c82b",
+			"x": 1600,
+			"y": -133,
+			"width": 440,
+			"height": 138,
+			"color": "6"
+		},
+		{
+			"id": "afe5e8ea95b99506",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosMouth/OAAB_TVos_GalosMouth 20.md",
+			"subpath": "#^obsidian-esp-canvas-f7420d21d3",
+			"x": 6935,
+			"y": -157,
+			"width": 440,
+			"height": 186,
+			"color": "6"
+		},
+		{
+			"id": "c10fc32197561eb3",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosMouth/OAAB_TVos_GalosMouth 30.md",
+			"subpath": "#^obsidian-esp-canvas-e61832eab5",
+			"x": 8635,
+			"y": -151,
+			"width": 440,
+			"height": 186,
+			"color": "6"
+		},
+		{
+			"id": "db4e74f437be80c0",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosMouth/OAAB_TVos_GalosMouth 40.md",
+			"subpath": "#^obsidian-esp-canvas-bc9e1a732f",
+			"x": 10235,
+			"y": -139,
+			"width": 440,
+			"height": 186,
+			"color": "6"
+		},
+		{
+			"id": "866bd07381c7634d",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosMouth/OAAB_TVos_GalosMouth 50.md",
+			"subpath": "#^obsidian-esp-canvas-1180bef42c",
+			"x": 11835,
+			"y": -145,
+			"width": 440,
+			"height": 162,
+			"color": "6"
+		},
+		{
+			"id": "b9ca5b26c08ad3ca",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosMouth/OAAB_TVos_GalosMouth 60.md",
+			"subpath": "#^obsidian-esp-canvas-11764a6dc5",
+			"x": 13640,
+			"y": -123,
+			"width": 440,
+			"height": 114,
+			"color": "6"
+		},
+		{
+			"id": "1d73c1dfe070b521",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosMouth/OAAB_TVos_GalosMouth 100.md",
+			"subpath": "#^obsidian-esp-canvas-dfc826229a",
+			"x": 15240,
+			"y": -147,
+			"width": 440,
+			"height": 162,
+			"color": "6"
+		},
+		{
+			"id": "221c94d0d983af14",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosMouth/OAAB_TVos_GalosMouth 110.md",
+			"subpath": "#^obsidian-esp-canvas-4eb6b5d976",
+			"x": 16840,
+			"y": -139,
+			"width": 440,
+			"height": 138,
+			"color": "6"
+		},
+		{
+			"id": "8fdea1bd1f32317f",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 2/Greeting 2 ~11.md",
+			"subpath": "#^obsidian-esp-canvas-3972744be5",
+			"x": 980,
+			"y": -207,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "8f77eb1afcbfd708",
+			"type": "text",
+			"text": "Disposition = 0\nFaction = Telvanni\nPC Faction = Telvanni\nPC Rank = Rank 5\nCell = Uvirith's Grave\nJournal - OAAB_TVos_GalosMouth = 0",
+			"x": 520,
+			"y": -207,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "b8180c90c9cdfdae",
+			"type": "text",
+			"text": "Player->AddItem \"ABtv_note_GalosCourier\" 1\nJournal [[OAAB_TVos_GalosMouth 10#^obsidian-esp-canvas-01e9f7c82b|OAAB_TVos_GalosMouth 10]]",
+			"x": 980,
+			"y": -63,
+			"width": 440,
+			"height": 98,
+			"color": "6"
+		},
+		{
+			"id": "9d4961c00b124c62",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/a new mouth for Aryon/a new mouth for Aryon ~5.md",
+			"subpath": "#^obsidian-esp-canvas-808da37e29",
+			"x": 2580,
+			"y": -96,
+			"width": 440,
+			"height": 282,
+			"color": "3"
+		},
+		{
+			"id": "540235bfe89cbad5",
+			"type": "text",
+			"text": "Disposition = 0\nPC Faction = Telvanni\nPC Rank = Rank 5\nID = galos mathendis\nJournal - OAAB_TVos_GalosMouth <= 10",
+			"x": 2120,
+			"y": -211,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "1707072660258460",
+			"type": "text",
+			"text": "\"You need me to track her down?\" - Choice 1",
+			"x": 3180,
+			"y": -168,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "2c8c71e7b9d48989",
+			"type": "text",
+			"text": "\"I'm sorry, Galos, I don't have time for a wild goose chase. Aryon will just have to wait.\" - Choice 2",
+			"x": 3180,
+			"y": 4,
+			"width": 320,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "ad47537dfe87cda3",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/a new mouth for Aryon/a new mouth for Aryon ~4.md",
+			"subpath": "#^obsidian-esp-canvas-c0fbf0638a",
+			"x": 6315,
+			"y": -651,
+			"width": 440,
+			"height": 210,
+			"color": "3"
+		},
+		{
+			"id": "53944d9af5f6e084",
+			"type": "text",
+			"text": "Disposition = 0\nPC Faction = Telvanni\nPC Rank = Rank 5\nID = galos mathendis\nChoice = 1\nJournal - OAAB_TVos_GalosMouth <= 10",
+			"x": 5855,
+			"y": -651,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "790a8fd8078fa542",
+			"type": "text",
+			"text": "AddTopic \"[[Reynel Uvirith]]\"\nJournal [[OAAB_TVos_GalosMouth 20#^obsidian-esp-canvas-f7420d21d3|OAAB_TVos_GalosMouth 20]]",
+			"x": 6315,
+			"y": -411,
+			"width": 440,
+			"height": 98,
+			"color": "6"
+		},
+		{
+			"id": "ce1a0e7e6d514d24",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/a new mouth for Aryon/a new mouth for Aryon ~3.md",
+			"subpath": "#^obsidian-esp-canvas-4fbcf6c0d4",
+			"x": 4140,
+			"y": 169,
+			"width": 440,
+			"height": 162,
+			"color": "3"
+		},
+		{
+			"id": "f557a201c872a503",
+			"type": "text",
+			"text": "Disposition = 0\nPC Faction = Telvanni\nPC Rank = Rank 5\nID = galos mathendis\nChoice = 2\nJournal - OAAB_TVos_GalosMouth <= 10",
+			"x": 3680,
+			"y": 169,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "78bccacec117ccae",
+			"type": "text",
+			"text": "\"*Sigh* Very well, Galos. Where do I start?\" - Choice 1",
+			"x": 4740,
+			"y": 169,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "59958ff782d1043b",
+			"type": "text",
+			"text": "\"I wasn't born yesterday, Galos. Aryon did what he did toward his own ends. If I hadn't conveniently arrived, someone else would have served his purposes.\" - Choice 3",
+			"x": 4740,
+			"y": 267,
+			"width": 320,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "7fdf1d00fcdda82e",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 2/Greeting 2 ~10.md",
+			"subpath": "#^obsidian-esp-canvas-3124dd466f",
+			"x": 2680,
+			"y": 210,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "8fe5d33fb5c17489",
+			"type": "text",
+			"text": "Disposition = 0\nID = ABtv_ReynelUvirith\nJournal - OAAB_TVos_GalosMouth <= 50",
+			"x": 2220,
+			"y": 210,
+			"width": 385,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "453e08519504f7e5",
+			"type": "text",
+			"text": "\"You know my name?\" - Choice 1",
+			"x": 3280,
+			"y": -70,
+			"width": 320,
+			"height": 50,
+			"color": "4"
+		},
+		{
+			"id": "c1fe6dd6a0898e5e",
+			"type": "text",
+			"text": "\"I have a proposition from Master Aryon.\" - Choice 2",
+			"x": 3280,
+			"y": 126,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "b821ae5ac4584202",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 2/Greeting 2 ~9.md",
+			"subpath": "#^obsidian-esp-canvas-b197db9c23",
+			"x": 4240,
+			"y": -1178,
+			"width": 440,
+			"height": 96,
+			"color": "3"
+		},
+		{
+			"id": "cc5031af0dd86889",
+			"type": "text",
+			"text": "Disposition = 0\nID = ABtv_ReynelUvirith\nChoice = 1\nJournal - OAAB_TVos_GalosMouth <= 50",
+			"x": 3780,
+			"y": -1178,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "be4851ced54e0bce",
+			"type": "text",
+			"text": "\"I have a proposition from Master Aryon.\" - Choice 2",
+			"x": 4840,
+			"y": -1167,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "b88f967f52543dc3",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 2/Greeting 2 ~8.md",
+			"subpath": "#^obsidian-esp-canvas-4ebb6aa977",
+			"x": 5800,
+			"y": 263,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "c450b98a54d6cb08",
+			"type": "text",
+			"text": "Disposition = 0\nID = ABtv_ReynelUvirith\nChoice = 2\nJournal - OAAB_TVos_GalosMouth <= 50",
+			"x": 5340,
+			"y": 263,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "e606de7f8caefd41",
+			"type": "text",
+			"text": "\"Be reasonable, Reynel. This is a good opportunity.\" - Choice 3",
+			"x": 6400,
+			"y": 263,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "fe5223ad4965e289",
+			"type": "text",
+			"text": "\"Fine, don't accept then.\" - Choice 4",
+			"x": 6400,
+			"y": 361,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "874eda29e790970d",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 2/Greeting 2 ~6.md",
+			"subpath": "#^obsidian-esp-canvas-7ffc26ff03",
+			"x": 7360,
+			"y": -394,
+			"width": 440,
+			"height": 162,
+			"color": "3"
+		},
+		{
+			"id": "f65a564c5ef40b76",
+			"type": "text",
+			"text": "Disposition = 0\nID = ABtv_ReynelUvirith\nChoice = 3\nJournal - OAAB_TVos_GalosMouth <= 50",
+			"x": 6900,
+			"y": -394,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "03eb90c85775915a",
+			"type": "text",
+			"text": "\"Very well, I wish you luck.\" - Choice 5",
+			"x": 7960,
+			"y": -394,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "b9c13181aff0133b",
+			"type": "text",
+			"text": "\"I'm sure Master Aryon can undo anything you have begun.\" - Choice 6",
+			"x": 7960,
+			"y": -158,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "39f2027befd35995",
+			"type": "text",
+			"text": "\"Do you truly believe House Redoran will ever see you as anything but a Telvanni spy?\" - Choice 7",
+			"x": 7960,
+			"y": -60,
+			"width": 320,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "d9092986cd94267e",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 2/Greeting 2 ~5.md",
+			"subpath": "#^obsidian-esp-canvas-7af9bc801a",
+			"x": 8920,
+			"y": -934,
+			"width": 440,
+			"height": 96,
+			"color": "3"
+		},
+		{
+			"id": "2b0d5a7b6e2b4745",
+			"type": "text",
+			"text": "Disposition = 0\nID = ABtv_ReynelUvirith\nChoice = 5\nJournal - OAAB_TVos_GalosMouth <= 50",
+			"x": 8460,
+			"y": -934,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "02ea71bd5f9c24bb",
+			"type": "text",
+			"text": "ModDisposition -10\nGoodbye",
+			"x": 8920,
+			"y": -808,
+			"width": 440,
+			"height": 74,
+			"color": "5"
+		},
+		{
+			"id": "dedc578bc03a00cf",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 2/Greeting 2 ~4.md",
+			"subpath": "#^obsidian-esp-canvas-8af9413d02",
+			"x": 8920,
+			"y": -428,
+			"width": 440,
+			"height": 138,
+			"color": "3"
+		},
+		{
+			"id": "5e4864f64bd6bdf4",
+			"type": "text",
+			"text": "Disposition = 0\nID = ABtv_ReynelUvirith\nChoice = 6\nJournal - OAAB_TVos_GalosMouth <= 50",
+			"x": 8460,
+			"y": -428,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "25bc6154b11962ae",
+			"type": "text",
+			"text": "\"Aryon has influence, just look at how quickly I have risen under his guidance.\" - Choice 8",
+			"x": 9520,
+			"y": -408,
+			"width": 320,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "b65b6945831f67d9",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 2/Greeting 2 ~2.md",
+			"subpath": "#^obsidian-esp-canvas-eeb31f2339",
+			"x": 8920,
+			"y": 59,
+			"width": 440,
+			"height": 138,
+			"color": "3"
+		},
+		{
+			"id": "ba1e12b8eb1a08b2",
+			"type": "text",
+			"text": "Disposition = 0\nID = ABtv_ReynelUvirith\nChoice = 7\nDead - bolvyn venim = 1\nJournal - OAAB_TVos_GalosMouth <= 50",
+			"x": 8460,
+			"y": 59,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "b8cf85900b92286a",
+			"type": "text",
+			"text": "\"With House Redoran in chaos over Bolvyn Venim's death, you have no chance of swaying general opinions. You'll always be under suspicion.\" - Choice 8",
+			"x": 9520,
+			"y": 83,
+			"width": 320,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "aded748821c40758",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 2/Greeting 2 ~3.md",
+			"subpath": "#^obsidian-esp-canvas-abca693ee7",
+			"x": 11460,
+			"y": 314,
+			"width": 440,
+			"height": 138,
+			"color": "3"
+		},
+		{
+			"id": "ca1c0475d0bc4173",
+			"type": "text",
+			"text": "Disposition = 0\nID = ABtv_ReynelUvirith\nChoice = 7\nDead - bolvyn venim = 0\nJournal - OAAB_TVos_GalosMouth <= 50",
+			"x": 11000,
+			"y": 314,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "8d31ad8541b5fdc1",
+			"type": "text",
+			"text": "\"With Bolvyn Venim as their Archmaster, you have no chance of swaying general opinions. You'll always be under suspicion.\" - Choice 8",
+			"x": 12060,
+			"y": 284,
+			"width": 320,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "ea2b4b1c01f8211c",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 2/Greeting 2 ~7.md",
+			"subpath": "#^obsidian-esp-canvas-7f8e3edac8",
+			"x": 7360,
+			"y": 828,
+			"width": 440,
+			"height": 96,
+			"color": "3"
+		},
+		{
+			"id": "941d4919352d70a7",
+			"type": "text",
+			"text": "Disposition = 0\nID = ABtv_ReynelUvirith\nChoice = 4\nJournal - OAAB_TVos_GalosMouth <= 50",
+			"x": 6900,
+			"y": 702,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "f7ed577f4f8ceaf9",
+			"type": "text",
+			"text": "ModDisposition -25\nGoodbye",
+			"x": 7360,
+			"y": 954,
+			"width": 440,
+			"height": 74,
+			"color": "5"
+		},
+		{
+			"id": "73358e3150f3bae3",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 5/Greeting 5 ~4.md",
+			"subpath": "#^obsidian-esp-canvas-afaf959339",
+			"x": 2680,
+			"y": -434,
+			"width": 440,
+			"height": 234,
+			"color": "3"
+		},
+		{
+			"id": "64881e3c8b0c1838",
+			"type": "text",
+			"text": "Disposition = 0\nPC Faction = Telvanni\nPC Rank = Rank 5\nID = galos mathendis\nGlobal - ABtv_GalosRetired = 2\nJournal - OAAB_TVos_GalosMouth = 10",
+			"x": 2220,
+			"y": -434,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "51840696966eb9fe",
+			"type": "text",
+			"text": "AddTopic \"a new mouth for Aryon",
+			"x": 2680,
+			"y": -170,
+			"width": 440,
+			"height": 50,
+			"color": "5"
+		},
+		{
+			"id": "7337b5a45d7e39a2",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 5/Greeting 5 ~5.md",
+			"subpath": "#^obsidian-esp-canvas-e7b2152ee5",
+			"x": 2680,
+			"y": 348,
+			"width": 440,
+			"height": 186,
+			"color": "3"
+		},
+		{
+			"id": "8e5207c9ec6778b9",
+			"type": "text",
+			"text": "Disposition = 0\nPC Faction = Telvanni\nPC Rank = Rank 5\nID = galos mathendis\nGlobal - ABtv_GalosRetired = 2\nJournal - HT_Stronghold >= 100\nJournal - OAAB_TVos_GalosMouth = 0",
+			"x": 2220,
+			"y": 332,
+			"width": 385,
+			"height": 194,
+			"color": "4"
+		},
+		{
+			"id": "941d0a9b8914944f",
+			"type": "text",
+			"text": "AddTopic \"a new mouth for Aryon",
+			"x": 2680,
+			"y": 564,
+			"width": 440,
+			"height": 50,
+			"color": "5"
+		},
+		{
+			"id": "7c1234b447867f26",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/a new mouth for Aryon/a new mouth for Aryon ~1.md",
+			"subpath": "#^obsidian-esp-canvas-544fe61a27",
+			"x": 7915,
+			"y": 278,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "c04057e3907c88a1",
+			"type": "text",
+			"text": "Disposition = 0\nPC Faction = Telvanni\nPC Rank = Rank 5\nID = galos mathendis\nJournal - OAAB_TVos_GalosMouth <= 40\nJournal - OAAB_TVos_GalosMouth >= 20",
+			"x": 7455,
+			"y": -62,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "52b82affba6bec23",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~0.md",
+			"subpath": "#^obsidian-esp-canvas-5d45ee153e",
+			"x": 8015,
+			"y": -2162,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "7e3ff67c5d34d62c",
+			"type": "text",
+			"text": "Disposition = 0\nID = ulyno uvirith\nJournal - OAAB_TVos_GalosMouth <= 60\nJournal - OAAB_TVos_GalosMouth >= 20",
+			"x": 7555,
+			"y": -2162,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "2ef8fc7429356ba4",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~7.md",
+			"subpath": "#^obsidian-esp-canvas-7e18a916e3",
+			"x": 8015,
+			"y": -1900,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "e3da8f07c1cabb6b",
+			"type": "text",
+			"text": "Disposition = 0\nFaction = Telvanni\nPC Faction = Telvanni\nCell = Vivec\nJournal - OAAB_TVos_GalosMouth <= 50\nJournal - OAAB_TVos_GalosMouth >= 20\nNot ID - ulyno uvirith = 1",
+			"x": 7555,
+			"y": -1900,
+			"width": 385,
+			"height": 194,
+			"color": "4"
+		},
+		{
+			"id": "e9ece527d7120e7b",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~8.md",
+			"subpath": "#^obsidian-esp-canvas-302bc88d65",
+			"x": 8015,
+			"y": -1566,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "b58d00d410e004d4",
+			"type": "text",
+			"text": "Disposition = 0\nFaction = Telvanni\nCell = Vivec\nJournal - OAAB_TVos_GalosMouth <= 50\nJournal - OAAB_TVos_GalosMouth >= 20\nNot ID - ulyno uvirith = 1",
+			"x": 7555,
+			"y": -1566,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "1cd9d0c28389f67a",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~9.md",
+			"subpath": "#^obsidian-esp-canvas-5b17149004",
+			"x": 8015,
+			"y": -1256,
+			"width": 440,
+			"height": 162,
+			"color": "3"
+		},
+		{
+			"id": "edfb4121cdbb08a5",
+			"type": "text",
+			"text": "Disposition = 50\nFaction = Mages Guild\nCell = Vivec, Guild of Mages\nJournal - OAAB_TVos_GalosMouth <= 50\nJournal - OAAB_TVos_GalosMouth >= 20",
+			"x": 7555,
+			"y": -1256,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "60c101e828442cf6",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~10.md",
+			"subpath": "#^obsidian-esp-canvas-8e0507b26f",
+			"x": 8015,
+			"y": -954,
+			"width": 440,
+			"height": 96,
+			"color": "3"
+		},
+		{
+			"id": "31cf336588b201c5",
+			"type": "text",
+			"text": "Disposition = 0\nFaction = Mages Guild\nCell = Vivec, Guild of Mages\nJournal - OAAB_TVos_GalosMouth <= 50\nJournal - OAAB_TVos_GalosMouth >= 20",
+			"x": 7555,
+			"y": -954,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "f5d55125fe7d9227",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~11.md",
+			"subpath": "#^obsidian-esp-canvas-9602ecd7d8",
+			"x": 8015,
+			"y": -668,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "9cbae428665d7874",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Guard\nCell = Vivec\nJournal - OAAB_TVos_GalosMouth <= 50\nJournal - OAAB_TVos_GalosMouth >= 20",
+			"x": 7555,
+			"y": -668,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "bfaf28221526df74",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~12.md",
+			"subpath": "#^obsidian-esp-canvas-bb1dd8389c",
+			"x": 8015,
+			"y": -296,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "3e9353474fb42b27",
+			"type": "text",
+			"text": "Disposition = 50\nCell = Vivec\nJournal - OAAB_TVos_GalosMouth <= 50\nJournal - OAAB_TVos_GalosMouth >= 20",
+			"x": 7555,
+			"y": -208,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "0297de07377b68c5",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~13.md",
+			"subpath": "#^obsidian-esp-canvas-cb1bc9f559",
+			"x": 8015,
+			"y": 62,
+			"width": 440,
+			"height": 96,
+			"color": "3"
+		},
+		{
+			"id": "fe250662797ac5f6",
+			"type": "text",
+			"text": "Disposition = 0\nCell = Vivec\nJournal - OAAB_TVos_GalosMouth <= 50\nJournal - OAAB_TVos_GalosMouth >= 20",
+			"x": 7555,
+			"y": 132,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "c6c8c2099a0c62f3",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~15.md",
+			"subpath": "#^obsidian-esp-canvas-2c0d1ffbec",
+			"x": 8015,
+			"y": 416,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "d8f8babc68312150",
+			"type": "text",
+			"text": "Disposition = 0\nRace = Dark Elf\nFaction = Mages Guild\nCell = Sadrith Mora, Wolverine Hall: Mage's Guild\nJournal - OAAB_TVos_GalosMouth <= 50\nJournal - OAAB_TVos_GalosMouth >= 20",
+			"x": 7555,
+			"y": 416,
+			"width": 385,
+			"height": 194,
+			"color": "4"
+		},
+		{
+			"id": "89624de616fa8850",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~16.md",
+			"subpath": "#^obsidian-esp-canvas-f75a1bcc72",
+			"x": 8015,
+			"y": 554,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "d024302beb42fbf3",
+			"type": "text",
+			"text": "Disposition = 0\nFaction = Mages Guild\nCell = Sadrith Mora, Wolverine Hall: Mage's Guild\nJournal - OAAB_TVos_GalosMouth <= 50\nJournal - OAAB_TVos_GalosMouth >= 20",
+			"x": 7555,
+			"y": 634,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "91afe4eb7855e8d1",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~17.md",
+			"subpath": "#^obsidian-esp-canvas-951d0e99d4",
+			"x": 8015,
+			"y": 786,
+			"width": 440,
+			"height": 234,
+			"color": "3"
+		},
+		{
+			"id": "c7d6992605a0c332",
+			"type": "text",
+			"text": "Disposition = 0\nID = gals arethi\nJournal - OAAB_TVos_GalosMouth = 20",
+			"x": 7555,
+			"y": 1052,
+			"width": 385,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "6530582c8923bea4",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_GalosMouth 30#^obsidian-esp-canvas-e61832eab5|OAAB_TVos_GalosMouth 30]]",
+			"x": 8015,
+			"y": 1050,
+			"width": 440,
+			"height": 74,
+			"color": "6"
+		},
+		{
+			"id": "f30713e08df75fae",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~18.md",
+			"subpath": "#^obsidian-esp-canvas-c5507f0a23",
+			"x": 8015,
+			"y": 1264,
+			"width": 440,
+			"height": 138,
+			"color": "3"
+		},
+		{
+			"id": "3f007add807f553d",
+			"type": "text",
+			"text": "Disposition = 0\nFaction = Telvanni\nCell = Sadrith Mora\nJournal - OAAB_TVos_GalosMouth <= 40\nJournal - OAAB_TVos_GalosMouth >= 20\nNot ID - neloth = 1",
+			"x": 7555,
+			"y": 1264,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "0305059db04be8ff",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~19.md",
+			"subpath": "#^obsidian-esp-canvas-cd4ff72fe0",
+			"x": 8015,
+			"y": 1574,
+			"width": 440,
+			"height": 96,
+			"color": "3"
+		},
+		{
+			"id": "317cf220abd1b84c",
+			"type": "text",
+			"text": "Disposition = 0\nCell = Sadrith Mora\nJournal - OAAB_TVos_GalosMouth <= 40\nJournal - OAAB_TVos_GalosMouth >= 20\nNot ID - neloth = 1",
+			"x": 7555,
+			"y": 1574,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "314e637460263558",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~21.md",
+			"subpath": "#^obsidian-esp-canvas-f7ac6a3a09",
+			"x": 8015,
+			"y": 1860,
+			"width": 440,
+			"height": 186,
+			"color": "3"
+		},
+		{
+			"id": "6d1203197ca317e3",
+			"type": "text",
+			"text": "Disposition = 0\nID = galos mathendis\nJournal - OAAB_TVos_GalosMouth < 70\nJournal - OAAB_TVos_GalosMouth >= 20",
+			"x": 7555,
+			"y": 1860,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "9cfd457cb46a2a32",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~14.md",
+			"subpath": "#^obsidian-esp-canvas-5f482a7698",
+			"x": 9615,
+			"y": -183,
+			"width": 440,
+			"height": 138,
+			"color": "3"
+		},
+		{
+			"id": "02c2a449c98c81d1",
+			"type": "text",
+			"text": "Disposition = 70\nFaction = Mages Guild\nCell = Sadrith Mora, Wolverine Hall: Mage's Guild\nJournal - OAAB_TVos_GalosMouth = 30",
+			"x": 9155,
+			"y": -183,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "99e1c95b727a7157",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_GalosMouth 40#^obsidian-esp-canvas-bc9e1a732f|OAAB_TVos_GalosMouth 40]]",
+			"x": 9615,
+			"y": -15,
+			"width": 440,
+			"height": 74,
+			"color": "6"
+		},
+		{
+			"id": "524a42dac6f66ae2",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~1.md",
+			"subpath": "#^obsidian-esp-canvas-4d47fc58ea",
+			"x": 11215,
+			"y": -390,
+			"width": 440,
+			"height": 138,
+			"color": "3"
+		},
+		{
+			"id": "a80b7309c5885c1d",
+			"type": "text",
+			"text": "Disposition = 50\nFaction = Redoran\nCell = Vivec\nJournal - OAAB_TVos_GalosMouth <= 40\nJournal - OAAB_TVos_GalosMouth >= 20\nNot ID - ulyno uvirith = 1",
+			"x": 10755,
+			"y": -390,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "e658611feb3ce163",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_GalosMouth 50#^obsidian-esp-canvas-1180bef42c|OAAB_TVos_GalosMouth 50]]",
+			"x": 11215,
+			"y": -222,
+			"width": 440,
+			"height": 74,
+			"color": "6"
+		},
+		{
+			"id": "7e866d3e036a9da6",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~5.md",
+			"subpath": "#^obsidian-esp-canvas-8985d2ec09",
+			"x": 11215,
+			"y": 24,
+			"width": 440,
+			"height": 162,
+			"color": "3"
+		},
+		{
+			"id": "d7180225d9c240e9",
+			"type": "text",
+			"text": "Disposition = 50\nFaction = Telvanni\nCell = Vivec\nJournal - OAAB_TVos_GalosMouth <= 40\nJournal - OAAB_TVos_GalosMouth >= 20\nNot ID - ulyno uvirith = 1",
+			"x": 10755,
+			"y": 24,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "5294f043d702fc97",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_GalosMouth 50#^obsidian-esp-canvas-1180bef42c|OAAB_TVos_GalosMouth 50]]",
+			"x": 11215,
+			"y": 216,
+			"width": 440,
+			"height": 74,
+			"color": "6"
+		},
+		{
+			"id": "82b13c42af18311a",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 2/Greeting 2 ~1.md",
+			"subpath": "#^obsidian-esp-canvas-5c3cf8741c",
+			"x": 13020,
+			"y": -179,
+			"width": 440,
+			"height": 138,
+			"color": "3"
+		},
+		{
+			"id": "95032757af05c751",
+			"type": "text",
+			"text": "Disposition = 0\nID = ABtv_ReynelUvirith\nChoice = 8\nJournal - OAAB_TVos_GalosMouth <= 50",
+			"x": 12560,
+			"y": -112,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "9942c3c1b7bc56ef",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_GalosMouth 60#^obsidian-esp-canvas-11764a6dc5|OAAB_TVos_GalosMouth 60]]",
+			"x": 13020,
+			"y": -11,
+			"width": 440,
+			"height": 74,
+			"color": "6"
+		},
+		{
+			"id": "5db5453d5e418e41",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~2.md",
+			"subpath": "#^obsidian-esp-canvas-b4d36b779a",
+			"x": 12915,
+			"y": -592,
+			"width": 440,
+			"height": 138,
+			"color": "3"
+		},
+		{
+			"id": "6aa4fee689b0850e",
+			"type": "text",
+			"text": "Disposition = 50\nFaction = Redoran\nCell = Vivec\nJournal - OAAB_TVos_GalosMouth = 50\nNot ID - ulyno uvirith = 1",
+			"x": 12455,
+			"y": -592,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "4db5c0800ab97640",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~3.md",
+			"subpath": "#^obsidian-esp-canvas-af4fef52a7",
+			"x": 12915,
+			"y": -306,
+			"width": 440,
+			"height": 96,
+			"color": "3"
+		},
+		{
+			"id": "72f295eb468b88df",
+			"type": "text",
+			"text": "Disposition = 0\nFaction = Redoran\nPC Faction = Telvanni\nCell = Vivec\nJournal - OAAB_TVos_GalosMouth = 50\nNot ID - ulyno uvirith = 1",
+			"x": 12455,
+			"y": -306,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "c16f2323128c1e57",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~4.md",
+			"subpath": "#^obsidian-esp-canvas-b3ed8d392a",
+			"x": 12915,
+			"y": 87,
+			"width": 440,
+			"height": 96,
+			"color": "3"
+		},
+		{
+			"id": "4203b2e8863a28e8",
+			"type": "text",
+			"text": "Disposition = 0\nFaction = Redoran\nCell = Vivec\nJournal - OAAB_TVos_GalosMouth = 50\nNot ID - ulyno uvirith = 1",
+			"x": 12455,
+			"y": 34,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "f40d97414a07a975",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~6.md",
+			"subpath": "#^obsidian-esp-canvas-c0b1ad1bf2",
+			"x": 12915,
+			"y": 290,
+			"width": 440,
+			"height": 162,
+			"color": "3"
+		},
+		{
+			"id": "a0f1d922606f5aea",
+			"type": "text",
+			"text": "Disposition = 50\nFaction = Telvanni\nCell = Vivec\nJournal - OAAB_TVos_GalosMouth = 50\nNot ID - ulyno uvirith = 1",
+			"x": 12455,
+			"y": 290,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "439fa58156a7ffd7",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/a new mouth for Aryon/a new mouth for Aryon ~0.md",
+			"subpath": "#^obsidian-esp-canvas-54bdce3f0f",
+			"x": 14620,
+			"y": -263,
+			"width": 440,
+			"height": 234,
+			"color": "3"
+		},
+		{
+			"id": "7fd20afed77aeb20",
+			"type": "text",
+			"text": "Disposition = 0\nPC Faction = Telvanni\nPC Rank = Rank 5\nID = galos mathendis\nJournal - OAAB_TVos_GalosMouth = 60",
+			"x": 14160,
+			"y": -263,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "b548666cde8a5286",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_GalosMouth 100#^obsidian-esp-canvas-dfc826229a|OAAB_TVos_GalosMouth 100]]\nPlayer->additem \"Misc_SoulGem_Grand\" 1\nPlayer->additem \"Misc_SoulGem_Greater\" 2\nAddTopic \"[[enchanting research]]\"",
+			"x": 14620,
+			"y": 1,
+			"width": 440,
+			"height": 146,
+			"color": "6"
+		},
+		{
+			"id": "4fc450a76819ce9b",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 2/Greeting 2 ~0.md",
+			"subpath": "#^obsidian-esp-canvas-215193417d",
+			"x": 14720,
+			"y": 171,
+			"width": 440,
+			"height": 186,
+			"color": "3"
+		},
+		{
+			"id": "8d0542324daa66d0",
+			"type": "text",
+			"text": "Disposition = 0\nID = ABtv_ReynelUvirith\nJournal - OAAB_TVos_GalosMouth = 60",
+			"x": 14260,
+			"y": 171,
+			"width": 385,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "f662fe41c18195d9",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Reynel Uvirith/Reynel Uvirith ~20.md",
+			"subpath": "#^obsidian-esp-canvas-84c0acdffd",
+			"x": 14720,
+			"y": 381,
+			"width": 440,
+			"height": 138,
+			"color": "3"
+		},
+		{
+			"id": "cf4f104c892d96a2",
+			"type": "text",
+			"text": "Disposition = 0\nID = galos mathendis\nJournal - OAAB_TVos_GalosMouth >= 70",
+			"x": 14260,
+			"y": 293,
+			"width": 385,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "0e885b638e238af5",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/a new mouth for Aryon/a new mouth for Aryon ~2.md",
+			"subpath": "#^obsidian-esp-canvas-5fbae87d10",
+			"x": 16220,
+			"y": -219,
+			"width": 440,
+			"height": 162,
+			"color": "3"
+		},
+		{
+			"id": "2dca3134f9316542",
+			"type": "text",
+			"text": "Disposition = 0\nPC Faction = Telvanni\nPC Rank = Rank 5\nID = galos mathendis\nChoice = 3\nJournal - OAAB_TVos_GalosMouth <= 10",
+			"x": 15760,
+			"y": -219,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "a9db3c9604552084",
+			"type": "text",
+			"text": "ModDisposition -25\nJournal [[OAAB_TVos_GalosMouth 110#^obsidian-esp-canvas-4eb6b5d976|OAAB_TVos_GalosMouth 110]]\nGoodbye",
+			"x": 16220,
+			"y": -27,
+			"width": 440,
+			"height": 122,
+			"color": "6"
+		},
+		{
+			"id": "c4e7e62f47957529",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/enchanting research/enchanting research ~6.md",
+			"subpath": "#^obsidian-esp-canvas-fddb9881bf",
+			"x": 16320,
+			"y": 119,
+			"width": 440,
+			"height": 162,
+			"color": "3"
+		},
+		{
+			"id": "73471990bd24bc9e",
+			"type": "text",
+			"text": "Disposition = 0\nPC Faction = Telvanni\nID = galos mathendis\nJournal - OAAB_TVos_GalosMouth = 100",
+			"x": 15860,
+			"y": 119,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "2a8e38a213487a38",
+			"type": "text",
+			"text": "AddTopic \"Scamp tallow",
+			"x": 16320,
+			"y": 311,
+			"width": 440,
+			"height": 50,
+			"color": "5"
+		},
+		{
+			"id": "998476b0c5073f66",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 5/Greeting 5 ~1.md",
+			"subpath": "#^obsidian-esp-canvas-7b73f30abc",
+			"x": 16320,
+			"y": 385,
+			"width": 440,
+			"height": 234,
+			"color": "3"
+		},
+		{
+			"id": "bd5e96e5b6522d6d",
+			"type": "text",
+			"text": "Disposition = 0\nID = galos mathendis\nJournal - OAAB_TVos_GalosMouth = 100",
+			"x": 15860,
+			"y": 265,
+			"width": 385,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "9de77d6f0ba44b35",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 5/Greeting 5 ~2.md",
+			"subpath": "#^obsidian-esp-canvas-c77ebdeda6",
+			"x": 17820,
+			"y": -354,
+			"width": 440,
+			"height": 96,
+			"color": "3"
+		},
+		{
+			"id": "89b469e29c55bcde",
+			"type": "text",
+			"text": "Disposition = 0\nPC Faction = Telvanni\nID = galos mathendis\nGlobal - ABtv_GalosRetired = 2\nJournal - OAAB_TVos_GalosMouth = 110",
+			"x": 17360,
+			"y": -354,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "20b359d8ea9e9ad8",
+			"type": "text",
+			"text": "Goodbye",
+			"x": 17820,
+			"y": -228,
+			"width": 440,
+			"height": 50,
+			"color": "5"
+		},
+		{
+			"id": "9864014a53632364",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 5/Greeting 5 ~3.md",
+			"subpath": "#^obsidian-esp-canvas-7f106470e9",
+			"x": 17820,
+			"y": 12,
+			"width": 440,
+			"height": 96,
+			"color": "3"
+		},
+		{
+			"id": "ca22b6c7298211af",
+			"type": "text",
+			"text": "Disposition = 0\nID = galos mathendis\nGlobal - ABtv_GalosRetired = 2\nJournal - OAAB_TVos_GalosMouth = 110",
+			"x": 17360,
+			"y": 12,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "30b14b954bf9fb59",
+			"type": "text",
+			"text": "Goodbye",
+			"x": 17820,
+			"y": 138,
+			"width": 440,
+			"height": 50,
+			"color": "5"
+		}
+	],
+	"edges": [
+		{
+			"id": "49a1afff2c4c4033",
+			"fromNode": "8f77eb1afcbfd708",
+			"fromSide": "right",
+			"toNode": "8fdea1bd1f32317f",
+			"toSide": "left"
+		},
+		{
+			"id": "059364c6ff27d242",
+			"fromNode": "8fdea1bd1f32317f",
+			"fromSide": "bottom",
+			"toNode": "b8180c90c9cdfdae",
+			"toSide": "top"
+		},
+		{
+			"id": "fd0c0427583e4893",
+			"fromNode": "8fdea1bd1f32317f",
+			"fromSide": "right",
+			"toNode": "86d52277aba52a29",
+			"toSide": "left"
+		},
+		{
+			"id": "b74e96781e7be092",
+			"fromNode": "540235bfe89cbad5",
+			"fromSide": "right",
+			"toNode": "9d4961c00b124c62",
+			"toSide": "left"
+		},
+		{
+			"id": "098203193f2c2b6f",
+			"fromNode": "9d4961c00b124c62",
+			"fromSide": "right",
+			"toNode": "1707072660258460",
+			"toSide": "left"
+		},
+		{
+			"id": "ec70b4eb23655c5f",
+			"fromNode": "9d4961c00b124c62",
+			"fromSide": "right",
+			"toNode": "2c8c71e7b9d48989",
+			"toSide": "left"
+		},
+		{
+			"id": "66f32d41c6cae21b",
+			"fromNode": "53944d9af5f6e084",
+			"fromSide": "right",
+			"toNode": "ad47537dfe87cda3",
+			"toSide": "left"
+		},
+		{
+			"id": "322eec7a074557d4",
+			"fromNode": "ad47537dfe87cda3",
+			"fromSide": "bottom",
+			"toNode": "790a8fd8078fa542",
+			"toSide": "top"
+		},
+		{
+			"id": "4486dbdb0d0f91b9",
+			"fromNode": "ad47537dfe87cda3",
+			"fromSide": "right",
+			"toNode": "afe5e8ea95b99506",
+			"toSide": "left"
+		},
+		{
+			"id": "c23dd15f5514e38f",
+			"fromNode": "f557a201c872a503",
+			"fromSide": "right",
+			"toNode": "ce1a0e7e6d514d24",
+			"toSide": "left"
+		},
+		{
+			"id": "867c472191a74b0b",
+			"fromNode": "ce1a0e7e6d514d24",
+			"fromSide": "right",
+			"toNode": "78bccacec117ccae",
+			"toSide": "left"
+		},
+		{
+			"id": "17ebecc81975f8c8",
+			"fromNode": "ce1a0e7e6d514d24",
+			"fromSide": "right",
+			"toNode": "59958ff782d1043b",
+			"toSide": "left"
+		},
+		{
+			"id": "533e369a31ab38a4",
+			"fromNode": "86d52277aba52a29",
+			"fromSide": "right",
+			"toNode": "540235bfe89cbad5",
+			"toSide": "left"
+		},
+		{
+			"id": "7487632e58b66a22",
+			"fromNode": "8fe5d33fb5c17489",
+			"fromSide": "right",
+			"toNode": "7fdf1d00fcdda82e",
+			"toSide": "left"
+		},
+		{
+			"id": "4f0cb7c5ba6c8eaf",
+			"fromNode": "7fdf1d00fcdda82e",
+			"fromSide": "right",
+			"toNode": "453e08519504f7e5",
+			"toSide": "left"
+		},
+		{
+			"id": "8b5d6921dc1a4ed5",
+			"fromNode": "7fdf1d00fcdda82e",
+			"fromSide": "right",
+			"toNode": "c1fe6dd6a0898e5e",
+			"toSide": "left"
+		},
+		{
+			"id": "9eee30b6ad340318",
+			"fromNode": "cc5031af0dd86889",
+			"fromSide": "right",
+			"toNode": "b821ae5ac4584202",
+			"toSide": "left"
+		},
+		{
+			"id": "27db2f367fcd432e",
+			"fromNode": "b821ae5ac4584202",
+			"fromSide": "right",
+			"toNode": "be4851ced54e0bce",
+			"toSide": "left"
+		},
+		{
+			"id": "3cf4d3774886a209",
+			"fromNode": "c450b98a54d6cb08",
+			"fromSide": "right",
+			"toNode": "b88f967f52543dc3",
+			"toSide": "left"
+		},
+		{
+			"id": "cc0de82655733242",
+			"fromNode": "b88f967f52543dc3",
+			"fromSide": "right",
+			"toNode": "e606de7f8caefd41",
+			"toSide": "left"
+		},
+		{
+			"id": "c4660851cd77d2cb",
+			"fromNode": "b88f967f52543dc3",
+			"fromSide": "right",
+			"toNode": "fe5223ad4965e289",
+			"toSide": "left"
+		},
+		{
+			"id": "95d3da604c5067cc",
+			"fromNode": "f65a564c5ef40b76",
+			"fromSide": "right",
+			"toNode": "874eda29e790970d",
+			"toSide": "left"
+		},
+		{
+			"id": "5c2a8dd75c23f4df",
+			"fromNode": "874eda29e790970d",
+			"fromSide": "right",
+			"toNode": "03eb90c85775915a",
+			"toSide": "left"
+		},
+		{
+			"id": "4a859b7597b535f5",
+			"fromNode": "874eda29e790970d",
+			"fromSide": "right",
+			"toNode": "b9c13181aff0133b",
+			"toSide": "left"
+		},
+		{
+			"id": "0efce2ba54977bc4",
+			"fromNode": "874eda29e790970d",
+			"fromSide": "right",
+			"toNode": "39f2027befd35995",
+			"toSide": "left"
+		},
+		{
+			"id": "223a190d52ec4525",
+			"fromNode": "2b0d5a7b6e2b4745",
+			"fromSide": "right",
+			"toNode": "d9092986cd94267e",
+			"toSide": "left"
+		},
+		{
+			"id": "f58a3060c5ee9210",
+			"fromNode": "d9092986cd94267e",
+			"fromSide": "bottom",
+			"toNode": "02ea71bd5f9c24bb",
+			"toSide": "top"
+		},
+		{
+			"id": "8c98cfe2d01a2944",
+			"fromNode": "5e4864f64bd6bdf4",
+			"fromSide": "right",
+			"toNode": "dedc578bc03a00cf",
+			"toSide": "left"
+		},
+		{
+			"id": "7b331329d6747fe5",
+			"fromNode": "dedc578bc03a00cf",
+			"fromSide": "right",
+			"toNode": "25bc6154b11962ae",
+			"toSide": "left"
+		},
+		{
+			"id": "4c9182b6cd26109c",
+			"fromNode": "ba1e12b8eb1a08b2",
+			"fromSide": "right",
+			"toNode": "b65b6945831f67d9",
+			"toSide": "left"
+		},
+		{
+			"id": "4b785752f8e3e9e6",
+			"fromNode": "b65b6945831f67d9",
+			"fromSide": "right",
+			"toNode": "b8cf85900b92286a",
+			"toSide": "left"
+		},
+		{
+			"id": "e84a4f03d110b65f",
+			"fromNode": "ca1c0475d0bc4173",
+			"fromSide": "right",
+			"toNode": "aded748821c40758",
+			"toSide": "left"
+		},
+		{
+			"id": "c1c9aac50bd86761",
+			"fromNode": "aded748821c40758",
+			"fromSide": "right",
+			"toNode": "8d31ad8541b5fdc1",
+			"toSide": "left"
+		},
+		{
+			"id": "ef8c8f6ccc76fe8a",
+			"fromNode": "941d4919352d70a7",
+			"fromSide": "right",
+			"toNode": "ea2b4b1c01f8211c",
+			"toSide": "left"
+		},
+		{
+			"id": "81a553e33d88e1a3",
+			"fromNode": "ea2b4b1c01f8211c",
+			"fromSide": "bottom",
+			"toNode": "f7ed577f4f8ceaf9",
+			"toSide": "top"
+		},
+		{
+			"id": "6f9ff3bb4f16b047",
+			"fromNode": "86d52277aba52a29",
+			"fromSide": "right",
+			"toNode": "8fe5d33fb5c17489",
+			"toSide": "left"
+		},
+		{
+			"id": "dd0b51af20333ce5",
+			"fromNode": "64881e3c8b0c1838",
+			"fromSide": "right",
+			"toNode": "73358e3150f3bae3",
+			"toSide": "left"
+		},
+		{
+			"id": "8165c48fa63ac78d",
+			"fromNode": "73358e3150f3bae3",
+			"fromSide": "bottom",
+			"toNode": "51840696966eb9fe",
+			"toSide": "top"
+		},
+		{
+			"id": "cd434486454b4374",
+			"fromNode": "8e5207c9ec6778b9",
+			"fromSide": "right",
+			"toNode": "7337b5a45d7e39a2",
+			"toSide": "left"
+		},
+		{
+			"id": "0a5563fb3ed5dbb1",
+			"fromNode": "7337b5a45d7e39a2",
+			"fromSide": "bottom",
+			"toNode": "941d0a9b8914944f",
+			"toSide": "top"
+		},
+		{
+			"id": "f510443113852b61",
+			"fromNode": "86d52277aba52a29",
+			"fromSide": "right",
+			"toNode": "64881e3c8b0c1838",
+			"toSide": "left"
+		},
+		{
+			"id": "9ea95112ae2e59d4",
+			"fromNode": "86d52277aba52a29",
+			"fromSide": "right",
+			"toNode": "8e5207c9ec6778b9",
+			"toSide": "left"
+		},
+		{
+			"id": "4f40cdd4a8888f74",
+			"fromNode": "c04057e3907c88a1",
+			"fromSide": "right",
+			"toNode": "7c1234b447867f26",
+			"toSide": "left"
+		},
+		{
+			"id": "e5404635311a04f9",
+			"fromNode": "afe5e8ea95b99506",
+			"fromSide": "right",
+			"toNode": "c04057e3907c88a1",
+			"toSide": "left"
+		},
+		{
+			"id": "a3a83fa6ee6267f8",
+			"fromNode": "7e3ff67c5d34d62c",
+			"fromSide": "right",
+			"toNode": "52b82affba6bec23",
+			"toSide": "left"
+		},
+		{
+			"id": "3426e8935cde3a8d",
+			"fromNode": "e3da8f07c1cabb6b",
+			"fromSide": "right",
+			"toNode": "2ef8fc7429356ba4",
+			"toSide": "left"
+		},
+		{
+			"id": "7c00990ceee15df0",
+			"fromNode": "b58d00d410e004d4",
+			"fromSide": "right",
+			"toNode": "e9ece527d7120e7b",
+			"toSide": "left"
+		},
+		{
+			"id": "b5d7e2da038e5f2a",
+			"fromNode": "edfb4121cdbb08a5",
+			"fromSide": "right",
+			"toNode": "1cd9d0c28389f67a",
+			"toSide": "left"
+		},
+		{
+			"id": "bf9ffa322337deb0",
+			"fromNode": "31cf336588b201c5",
+			"fromSide": "right",
+			"toNode": "60c101e828442cf6",
+			"toSide": "left"
+		},
+		{
+			"id": "d8beef4e6ec90988",
+			"fromNode": "9cbae428665d7874",
+			"fromSide": "right",
+			"toNode": "f5d55125fe7d9227",
+			"toSide": "left"
+		},
+		{
+			"id": "e3f01764829e2d5c",
+			"fromNode": "3e9353474fb42b27",
+			"fromSide": "right",
+			"toNode": "bfaf28221526df74",
+			"toSide": "left"
+		},
+		{
+			"id": "12ba1357296c475f",
+			"fromNode": "fe250662797ac5f6",
+			"fromSide": "right",
+			"toNode": "0297de07377b68c5",
+			"toSide": "left"
+		},
+		{
+			"id": "02eed1562a510f92",
+			"fromNode": "d8f8babc68312150",
+			"fromSide": "right",
+			"toNode": "c6c8c2099a0c62f3",
+			"toSide": "left"
+		},
+		{
+			"id": "266fa172c52d62ae",
+			"fromNode": "d024302beb42fbf3",
+			"fromSide": "right",
+			"toNode": "89624de616fa8850",
+			"toSide": "left"
+		},
+		{
+			"id": "c7fc5c758b19b6dd",
+			"fromNode": "c7d6992605a0c332",
+			"fromSide": "right",
+			"toNode": "91afe4eb7855e8d1",
+			"toSide": "left"
+		},
+		{
+			"id": "4a39084491cb4f24",
+			"fromNode": "91afe4eb7855e8d1",
+			"fromSide": "bottom",
+			"toNode": "6530582c8923bea4",
+			"toSide": "top"
+		},
+		{
+			"id": "1162c77409ccbf44",
+			"fromNode": "91afe4eb7855e8d1",
+			"fromSide": "right",
+			"toNode": "c10fc32197561eb3",
+			"toSide": "left"
+		},
+		{
+			"id": "a0770062c17a5f56",
+			"fromNode": "3f007add807f553d",
+			"fromSide": "right",
+			"toNode": "f30713e08df75fae",
+			"toSide": "left"
+		},
+		{
+			"id": "80eac43c8c547d58",
+			"fromNode": "317cf220abd1b84c",
+			"fromSide": "right",
+			"toNode": "0305059db04be8ff",
+			"toSide": "left"
+		},
+		{
+			"id": "1be83a50aa5a1fcc",
+			"fromNode": "6d1203197ca317e3",
+			"fromSide": "right",
+			"toNode": "314e637460263558",
+			"toSide": "left"
+		},
+		{
+			"id": "89197b3f6fb67985",
+			"fromNode": "afe5e8ea95b99506",
+			"fromSide": "right",
+			"toNode": "7e3ff67c5d34d62c",
+			"toSide": "left"
+		},
+		{
+			"id": "50986693f2a64d25",
+			"fromNode": "afe5e8ea95b99506",
+			"fromSide": "right",
+			"toNode": "e3da8f07c1cabb6b",
+			"toSide": "left"
+		},
+		{
+			"id": "8731c6c6c48593f8",
+			"fromNode": "afe5e8ea95b99506",
+			"fromSide": "right",
+			"toNode": "b58d00d410e004d4",
+			"toSide": "left"
+		},
+		{
+			"id": "afdbf7cdcb96f6cb",
+			"fromNode": "afe5e8ea95b99506",
+			"fromSide": "right",
+			"toNode": "edfb4121cdbb08a5",
+			"toSide": "left"
+		},
+		{
+			"id": "4909f432184b0630",
+			"fromNode": "afe5e8ea95b99506",
+			"fromSide": "right",
+			"toNode": "31cf336588b201c5",
+			"toSide": "left"
+		},
+		{
+			"id": "0505691476b34e38",
+			"fromNode": "afe5e8ea95b99506",
+			"fromSide": "right",
+			"toNode": "9cbae428665d7874",
+			"toSide": "left"
+		},
+		{
+			"id": "f72b624d3fd544ab",
+			"fromNode": "afe5e8ea95b99506",
+			"fromSide": "right",
+			"toNode": "3e9353474fb42b27",
+			"toSide": "left"
+		},
+		{
+			"id": "301da2e1aef9106b",
+			"fromNode": "afe5e8ea95b99506",
+			"fromSide": "right",
+			"toNode": "fe250662797ac5f6",
+			"toSide": "left"
+		},
+		{
+			"id": "dafce091b82cd38d",
+			"fromNode": "afe5e8ea95b99506",
+			"fromSide": "right",
+			"toNode": "d8f8babc68312150",
+			"toSide": "left"
+		},
+		{
+			"id": "09256cbc2126a0d2",
+			"fromNode": "afe5e8ea95b99506",
+			"fromSide": "right",
+			"toNode": "d024302beb42fbf3",
+			"toSide": "left"
+		},
+		{
+			"id": "f34e48405b165d00",
+			"fromNode": "afe5e8ea95b99506",
+			"fromSide": "right",
+			"toNode": "c7d6992605a0c332",
+			"toSide": "left"
+		},
+		{
+			"id": "30e1be1adec018da",
+			"fromNode": "afe5e8ea95b99506",
+			"fromSide": "right",
+			"toNode": "3f007add807f553d",
+			"toSide": "left"
+		},
+		{
+			"id": "f7ec8fdc8af876ac",
+			"fromNode": "afe5e8ea95b99506",
+			"fromSide": "right",
+			"toNode": "317cf220abd1b84c",
+			"toSide": "left"
+		},
+		{
+			"id": "3bc4bad316bbc553",
+			"fromNode": "afe5e8ea95b99506",
+			"fromSide": "right",
+			"toNode": "6d1203197ca317e3",
+			"toSide": "left"
+		},
+		{
+			"id": "21102158d1ec08e4",
+			"fromNode": "02c2a449c98c81d1",
+			"fromSide": "right",
+			"toNode": "9cfd457cb46a2a32",
+			"toSide": "left"
+		},
+		{
+			"id": "d5646d6a0484e360",
+			"fromNode": "9cfd457cb46a2a32",
+			"fromSide": "bottom",
+			"toNode": "99e1c95b727a7157",
+			"toSide": "top"
+		},
+		{
+			"id": "b3eecdeae689e08a",
+			"fromNode": "9cfd457cb46a2a32",
+			"fromSide": "right",
+			"toNode": "db4e74f437be80c0",
+			"toSide": "left"
+		},
+		{
+			"id": "721942855b69cce5",
+			"fromNode": "c10fc32197561eb3",
+			"fromSide": "right",
+			"toNode": "02c2a449c98c81d1",
+			"toSide": "left"
+		},
+		{
+			"id": "00b620fb34d47b13",
+			"fromNode": "a80b7309c5885c1d",
+			"fromSide": "right",
+			"toNode": "524a42dac6f66ae2",
+			"toSide": "left"
+		},
+		{
+			"id": "bb7df64ada7dd364",
+			"fromNode": "524a42dac6f66ae2",
+			"fromSide": "bottom",
+			"toNode": "e658611feb3ce163",
+			"toSide": "top"
+		},
+		{
+			"id": "dd9922bbc0ac74b1",
+			"fromNode": "524a42dac6f66ae2",
+			"fromSide": "right",
+			"toNode": "866bd07381c7634d",
+			"toSide": "left"
+		},
+		{
+			"id": "5fc403471061097d",
+			"fromNode": "d7180225d9c240e9",
+			"fromSide": "right",
+			"toNode": "7e866d3e036a9da6",
+			"toSide": "left"
+		},
+		{
+			"id": "a9f99a4737178d0b",
+			"fromNode": "7e866d3e036a9da6",
+			"fromSide": "bottom",
+			"toNode": "5294f043d702fc97",
+			"toSide": "top"
+		},
+		{
+			"id": "c853201f1631735f",
+			"fromNode": "7e866d3e036a9da6",
+			"fromSide": "right",
+			"toNode": "866bd07381c7634d",
+			"toSide": "left"
+		},
+		{
+			"id": "3cea8f6b8bea944d",
+			"fromNode": "db4e74f437be80c0",
+			"fromSide": "right",
+			"toNode": "a80b7309c5885c1d",
+			"toSide": "left"
+		},
+		{
+			"id": "95d29863e505c74d",
+			"fromNode": "db4e74f437be80c0",
+			"fromSide": "right",
+			"toNode": "d7180225d9c240e9",
+			"toSide": "left"
+		},
+		{
+			"id": "a7f29017ef8c5b69",
+			"fromNode": "95032757af05c751",
+			"fromSide": "right",
+			"toNode": "82b13c42af18311a",
+			"toSide": "left"
+		},
+		{
+			"id": "ddb704bb16a3c3af",
+			"fromNode": "82b13c42af18311a",
+			"fromSide": "bottom",
+			"toNode": "9942c3c1b7bc56ef",
+			"toSide": "top"
+		},
+		{
+			"id": "c21ba14ec1a34ae6",
+			"fromNode": "82b13c42af18311a",
+			"fromSide": "right",
+			"toNode": "b9ca5b26c08ad3ca",
+			"toSide": "left"
+		},
+		{
+			"id": "e084f46a5a5ec6a8",
+			"fromNode": "866bd07381c7634d",
+			"fromSide": "right",
+			"toNode": "95032757af05c751",
+			"toSide": "left"
+		},
+		{
+			"id": "859b8fb03b6aac08",
+			"fromNode": "6aa4fee689b0850e",
+			"fromSide": "right",
+			"toNode": "5db5453d5e418e41",
+			"toSide": "left"
+		},
+		{
+			"id": "e11708f7ab6e3e5f",
+			"fromNode": "72f295eb468b88df",
+			"fromSide": "right",
+			"toNode": "4db5c0800ab97640",
+			"toSide": "left"
+		},
+		{
+			"id": "ddcc8c4582a00a0f",
+			"fromNode": "4203b2e8863a28e8",
+			"fromSide": "right",
+			"toNode": "c16f2323128c1e57",
+			"toSide": "left"
+		},
+		{
+			"id": "3ada86a6263146b8",
+			"fromNode": "a0f1d922606f5aea",
+			"fromSide": "right",
+			"toNode": "f40d97414a07a975",
+			"toSide": "left"
+		},
+		{
+			"id": "0051a6ad25f6b6f3",
+			"fromNode": "866bd07381c7634d",
+			"fromSide": "right",
+			"toNode": "6aa4fee689b0850e",
+			"toSide": "left"
+		},
+		{
+			"id": "25a358cc97b0163a",
+			"fromNode": "866bd07381c7634d",
+			"fromSide": "right",
+			"toNode": "72f295eb468b88df",
+			"toSide": "left"
+		},
+		{
+			"id": "6d2db5b59c75831d",
+			"fromNode": "866bd07381c7634d",
+			"fromSide": "right",
+			"toNode": "4203b2e8863a28e8",
+			"toSide": "left"
+		},
+		{
+			"id": "7f779f73ebf5fdc3",
+			"fromNode": "866bd07381c7634d",
+			"fromSide": "right",
+			"toNode": "a0f1d922606f5aea",
+			"toSide": "left"
+		},
+		{
+			"id": "d0e9b466caaae24a",
+			"fromNode": "7fd20afed77aeb20",
+			"fromSide": "right",
+			"toNode": "439fa58156a7ffd7",
+			"toSide": "left"
+		},
+		{
+			"id": "ab6607a4310fe918",
+			"fromNode": "439fa58156a7ffd7",
+			"fromSide": "bottom",
+			"toNode": "b548666cde8a5286",
+			"toSide": "top"
+		},
+		{
+			"id": "f48d2141d8e8d357",
+			"fromNode": "439fa58156a7ffd7",
+			"fromSide": "right",
+			"toNode": "1d73c1dfe070b521",
+			"toSide": "left"
+		},
+		{
+			"id": "f3a08f6037e4b57c",
+			"fromNode": "b9ca5b26c08ad3ca",
+			"fromSide": "right",
+			"toNode": "7fd20afed77aeb20",
+			"toSide": "left"
+		},
+		{
+			"id": "a47f88a5e934d25f",
+			"fromNode": "8d0542324daa66d0",
+			"fromSide": "right",
+			"toNode": "4fc450a76819ce9b",
+			"toSide": "left"
+		},
+		{
+			"id": "b265d4ebc4f95343",
+			"fromNode": "b9ca5b26c08ad3ca",
+			"fromSide": "right",
+			"toNode": "8d0542324daa66d0",
+			"toSide": "left"
+		},
+		{
+			"id": "f14e521690ed082e",
+			"fromNode": "cf4f104c892d96a2",
+			"fromSide": "right",
+			"toNode": "f662fe41c18195d9",
+			"toSide": "left"
+		},
+		{
+			"id": "87d5ae8714595533",
+			"fromNode": "b9ca5b26c08ad3ca",
+			"fromSide": "right",
+			"toNode": "cf4f104c892d96a2",
+			"toSide": "left"
+		},
+		{
+			"id": "a1b5061c8b4ac92c",
+			"fromNode": "2dca3134f9316542",
+			"fromSide": "right",
+			"toNode": "0e885b638e238af5",
+			"toSide": "left"
+		},
+		{
+			"id": "382899bab2f1d00e",
+			"fromNode": "0e885b638e238af5",
+			"fromSide": "bottom",
+			"toNode": "a9db3c9604552084",
+			"toSide": "top"
+		},
+		{
+			"id": "e2d5feeed98e598c",
+			"fromNode": "0e885b638e238af5",
+			"fromSide": "right",
+			"toNode": "221c94d0d983af14",
+			"toSide": "left"
+		},
+		{
+			"id": "53bf10e21010212a",
+			"fromNode": "1d73c1dfe070b521",
+			"fromSide": "right",
+			"toNode": "2dca3134f9316542",
+			"toSide": "left"
+		},
+		{
+			"id": "05ba403d54bc03df",
+			"fromNode": "73471990bd24bc9e",
+			"fromSide": "right",
+			"toNode": "c4e7e62f47957529",
+			"toSide": "left"
+		},
+		{
+			"id": "0f009fe7c979ac69",
+			"fromNode": "c4e7e62f47957529",
+			"fromSide": "bottom",
+			"toNode": "2a8e38a213487a38",
+			"toSide": "top"
+		},
+		{
+			"id": "c6b5c830e31c4e80",
+			"fromNode": "1d73c1dfe070b521",
+			"fromSide": "right",
+			"toNode": "73471990bd24bc9e",
+			"toSide": "left"
+		},
+		{
+			"id": "282e64271159c3fd",
+			"fromNode": "bd5e96e5b6522d6d",
+			"fromSide": "right",
+			"toNode": "998476b0c5073f66",
+			"toSide": "left"
+		},
+		{
+			"id": "d75984bf8022c699",
+			"fromNode": "1d73c1dfe070b521",
+			"fromSide": "right",
+			"toNode": "bd5e96e5b6522d6d",
+			"toSide": "left"
+		},
+		{
+			"id": "2e1e2554acd4a37e",
+			"fromNode": "89b469e29c55bcde",
+			"fromSide": "right",
+			"toNode": "9de77d6f0ba44b35",
+			"toSide": "left"
+		},
+		{
+			"id": "fa464bf42382d5d8",
+			"fromNode": "9de77d6f0ba44b35",
+			"fromSide": "bottom",
+			"toNode": "20b359d8ea9e9ad8",
+			"toSide": "top"
+		},
+		{
+			"id": "dcce0d2176edb593",
+			"fromNode": "ca22b6c7298211af",
+			"fromSide": "right",
+			"toNode": "9864014a53632364",
+			"toSide": "left"
+		},
+		{
+			"id": "773928f8bbf5ad88",
+			"fromNode": "9864014a53632364",
+			"fromSide": "bottom",
+			"toNode": "30b14b954bf9fb59",
+			"toSide": "top"
+		},
+		{
+			"id": "09ffd46acd99805e",
+			"fromNode": "221c94d0d983af14",
+			"fromSide": "right",
+			"toNode": "89b469e29c55bcde",
+			"toSide": "left"
+		},
+		{
+			"id": "6bd24273c1ef604f",
+			"fromNode": "221c94d0d983af14",
+			"fromSide": "right",
+			"toNode": "ca22b6c7298211af",
+			"toSide": "left"
+		},
+		{
+			"id": "6cba861936235103",
+			"fromNode": "1707072660258460",
+			"fromSide": "right",
+			"toNode": "53944d9af5f6e084",
+			"toSide": "left"
+		},
+		{
+			"id": "e28e8285892f352f",
+			"fromNode": "2c8c71e7b9d48989",
+			"fromSide": "right",
+			"toNode": "f557a201c872a503",
+			"toSide": "left"
+		},
+		{
+			"id": "a3c418660baa5a20",
+			"fromNode": "78bccacec117ccae",
+			"fromSide": "right",
+			"toNode": "53944d9af5f6e084",
+			"toSide": "left"
+		},
+		{
+			"id": "4bfa641bb2fad2d5",
+			"fromNode": "59958ff782d1043b",
+			"fromSide": "right",
+			"toNode": "2dca3134f9316542",
+			"toSide": "left"
+		},
+		{
+			"id": "e8443bae4549f4c2",
+			"fromNode": "453e08519504f7e5",
+			"fromSide": "right",
+			"toNode": "cc5031af0dd86889",
+			"toSide": "left"
+		},
+		{
+			"id": "41cae0840f46b6fe",
+			"fromNode": "c1fe6dd6a0898e5e",
+			"fromSide": "right",
+			"toNode": "c450b98a54d6cb08",
+			"toSide": "left"
+		},
+		{
+			"id": "4f4c77a19cee937f",
+			"fromNode": "be4851ced54e0bce",
+			"fromSide": "right",
+			"toNode": "c450b98a54d6cb08",
+			"toSide": "left"
+		},
+		{
+			"id": "5d9a3ce3af80896d",
+			"fromNode": "e606de7f8caefd41",
+			"fromSide": "right",
+			"toNode": "f65a564c5ef40b76",
+			"toSide": "left"
+		},
+		{
+			"id": "6f61a5b839dcb68a",
+			"fromNode": "fe5223ad4965e289",
+			"fromSide": "right",
+			"toNode": "941d4919352d70a7",
+			"toSide": "left"
+		},
+		{
+			"id": "9ffa274539dfa0e5",
+			"fromNode": "03eb90c85775915a",
+			"fromSide": "right",
+			"toNode": "2b0d5a7b6e2b4745",
+			"toSide": "left"
+		},
+		{
+			"id": "71c8c612d6ff454e",
+			"fromNode": "b9c13181aff0133b",
+			"fromSide": "right",
+			"toNode": "5e4864f64bd6bdf4",
+			"toSide": "left"
+		},
+		{
+			"id": "bbed68ab63dd38a9",
+			"fromNode": "39f2027befd35995",
+			"fromSide": "right",
+			"toNode": "ba1e12b8eb1a08b2",
+			"toSide": "left"
+		},
+		{
+			"id": "af7203fb150fdb3f",
+			"fromNode": "25bc6154b11962ae",
+			"fromSide": "right",
+			"toNode": "95032757af05c751",
+			"toSide": "left"
+		},
+		{
+			"id": "0d14cbbf1385e21b",
+			"fromNode": "b8cf85900b92286a",
+			"fromSide": "right",
+			"toNode": "95032757af05c751",
+			"toSide": "left"
+		},
+		{
+			"id": "e4dc3fb01dd960f0",
+			"fromNode": "8d31ad8541b5fdc1",
+			"fromSide": "right",
+			"toNode": "95032757af05c751",
+			"toSide": "left"
+		}
+	],
+	"metadata": {
+		"version": "1.0-1.0",
+		"frontmatter": {}
+	}
+}

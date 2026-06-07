@@ -8,6 +8,9 @@ Index: 40
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-Someone in the [[Sadrith Mora]] [[Mages Guild]] told me that [[Reynel Uvirith]] headed to [[Vivec]] by way of the [[guild guide]]. They didn't know or wouldn't tell me where she was headed there. I'll have to ask around.
+
+Someone in the [[Sadrith Mora]] [[Mages Guild]] told me that [[Reynel Uvirith]] headed to [[Vivec]] by way of the [[guild guide]]. They didn't know or wouldn't tell me where she was headed there. I'll have to ask around. ^obsidian-esp-canvas-bc9e1a732f

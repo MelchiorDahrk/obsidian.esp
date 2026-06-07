@@ -19,6 +19,9 @@ Function0: Global
 Variable0: ABtv_GalosRetired = 2
 Function1: Journal
 Variable1: OAAB_TVos_GalosMouth = 10
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-Welcome back to [[Tel Vos]], %PCName. I trust that you received my [[message]] then? Couriers are expensive -- particularly those willing to trek into the wastes of [[Molag Amur]] -- but I considered the matter of enough importance to warrant it. Since you are here, I assume you are willing to [[help me]] select [[a new mouth for Aryon]]?
+
+Welcome back to [[Tel Vos]], %PCName. I trust that you received my [[message]] then? Couriers are expensive -- particularly those willing to trek into the wastes of [[Molag Amur]] -- but I considered the matter of enough importance to warrant it. Since you are here, I assume you are willing to [[help me]] select [[a new mouth for Aryon]]? ^obsidian-esp-canvas-afaf959339

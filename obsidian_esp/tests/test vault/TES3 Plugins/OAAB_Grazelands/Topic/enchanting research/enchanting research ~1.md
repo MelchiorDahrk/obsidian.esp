@@ -22,9 +22,6 @@ Function2: Dead
 Variable2: milyn faram = 0
 Function3: Journal
 Variable3: OAAB_TVos_GalosLetter >= 10
-canvas:
-  - "[[A Lesson in Thieving.canvas]]"
 ---
 
-
-I'm still waiting for you to [[deliver a letter]] to Milyn Faram. ^obsidian-esp-canvas-5c18441ac2
+I'm still waiting for you to [[deliver a letter]] to Milyn Faram.
