@@ -462,7 +462,7 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 
 			if (milestoneNodeId) {
 				for (const entryId of topicLayout.rootEntryIds) {
-					if (!entryCanFollowPhaseMilestone(entryId, segment.families, canvasContext, scope.questIds)) {
+					if (!entryCanFollowPhaseMilestone(entryId, segment.families, canvasContext, phaseValue, scope.questIds)) {
 						continue;
 					}
 
@@ -550,6 +550,7 @@ function entryCanFollowPhaseMilestone(
 	entryId: string,
 	families: BranchFamily[],
 	context: CanvasLayoutContext,
+	phaseValue: number,
 	questIds: string[],
 ): boolean {
 	const entryRecords = families.flatMap((family) => family.records).filter(
@@ -559,15 +560,20 @@ function entryCanFollowPhaseMilestone(
 		return true;
 	}
 
-	return entryRecords.some((record) => recordHasSelectedQuestJournalCondition(record, questIds));
+	return entryRecords.some((record) => recordCanRunAtPhase(record, phaseValue, questIds));
 }
 
-function recordHasSelectedQuestJournalCondition(record: DialogueRecord, questIds: string[]): boolean {
-	return record.conditions.some(
+function recordCanRunAtPhase(record: DialogueRecord, phaseValue: number, questIds: string[]): boolean {
+	const selectedQuestJournalConditions = record.conditions.filter(
 		(condition) => condition.kind === 'journal'
 			&& condition.questId !== undefined
 			&& questIds.includes(condition.questId),
 	);
+	if (selectedQuestJournalConditions.length === 0) {
+		return false;
+	}
+
+	return selectedQuestJournalConditions.every((condition) => journalConditionMatches(phaseValue, condition));
 }
 
 function addPhaseMilestone(
@@ -1438,23 +1444,25 @@ function connectChoiceTransitions(context: CanvasLayoutContext, records: Dialogu
 
 	const connected = new Set<string>();
 	for (const anchor of context.choiceTransitionAnchors) {
-		const targetRecord = resolveChoiceTransitionTarget(anchor, orderedRecordsByTopic);
-		if (!targetRecord) {
+		const targetRecords = resolveChoiceTransitionTargets(anchor, orderedRecordsByTopic);
+		if (targetRecords.length === 0) {
 			continue;
 		}
 
-		const entryNodeId = context.recordEntryNodeIds.get(targetRecord.id);
-		if (!entryNodeId) {
-			continue;
-		}
+		for (const targetRecord of targetRecords) {
+			const entryNodeId = context.recordEntryNodeIds.get(targetRecord.id);
+			if (!entryNodeId) {
+				continue;
+			}
 
-		const connectionKey = `${anchor.nodeId}:${entryNodeId}:${anchor.choiceValue}`;
-		if (connected.has(connectionKey)) {
-			continue;
-		}
+			const connectionKey = `${anchor.nodeId}:${entryNodeId}:${anchor.choiceValue}`;
+			if (connected.has(connectionKey)) {
+				continue;
+			}
 
-		addEdge(context, connectionKey, anchor.nodeId, 'right', entryNodeId, 'left');
-		connected.add(connectionKey);
+			addEdge(context, connectionKey, anchor.nodeId, 'right', entryNodeId, 'left');
+			connected.add(connectionKey);
+		}
 	}
 }
 
@@ -1485,7 +1493,7 @@ function resolveChoiceDerivedPhaseAnchors(records: DialogueRecord[]): DialogueRe
 		changed = false;
 		for (const record of records) {
 			for (const choiceValue of record.choiceTargets) {
-				const targetRecord = resolveChoiceTransitionTarget(
+				const targetRecords = resolveChoiceTransitionTargets(
 					{
 						topic: record.topic,
 						choiceValue,
@@ -1494,12 +1502,14 @@ function resolveChoiceDerivedPhaseAnchors(records: DialogueRecord[]): DialogueRe
 					},
 					orderedRecordsByTopic,
 				);
-				if (!targetRecord || targetRecord.phaseAnchor >= record.phaseAnchor) {
-					continue;
-				}
+				for (const targetRecord of targetRecords) {
+					if (targetRecord.phaseAnchor >= record.phaseAnchor) {
+						continue;
+					}
 
-				record.phaseAnchor = targetRecord.phaseAnchor;
-				changed = true;
+					record.phaseAnchor = targetRecord.phaseAnchor;
+					changed = true;
+				}
 			}
 		}
 	}
@@ -1507,11 +1517,12 @@ function resolveChoiceDerivedPhaseAnchors(records: DialogueRecord[]): DialogueRe
 	return records;
 }
 
-function resolveChoiceTransitionTarget(
+function resolveChoiceTransitionTargets(
 	anchor: ChoiceTransitionAnchor,
 	orderedRecordsByTopic: Map<string, DialogueRecord[]>,
-): DialogueRecord | null {
+): DialogueRecord[] {
 	const topicRecords = orderedRecordsByTopic.get(anchor.topic) ?? [];
+	const targetRecords: DialogueRecord[] = [];
 	for (const candidate of topicRecords) {
 		if (!candidate.choiceValues.includes(anchor.choiceValue)) {
 			continue;
@@ -1523,11 +1534,11 @@ function resolveChoiceTransitionTarget(
 				&& conditionsCanFollowChoice(sourceRecord, candidate, anchor.choiceValue)
 			))
 		) {
-			return candidate;
+			targetRecords.push(candidate);
 		}
 	}
 
-	return null;
+	return targetRecords;
 }
 
 function orderTopicRecordsByInfoSequence(records: DialogueRecord[]): DialogueRecord[] {
@@ -2791,24 +2802,48 @@ function determinePhaseAnchor(
 	phaseIndices: number[],
 	questIds: string[],
 ): number {
+	const conditionAnchor = determineJournalConditionPhaseAnchor(conditions, phaseIndices, questIds);
+	if (conditions.some((condition) => condition.kind === 'choice') && conditionAnchor !== null) {
+		return conditionAnchor;
+	}
+
 	const journalResult = firstJournalResult(resultActions, questIds);
 	if (journalResult !== null) {
 		return previousPhaseBefore(journalResult, phaseIndices);
 	}
 
+	if (conditionAnchor !== null) {
+		return conditionAnchor;
+	}
+
+	return phaseIndices[0] ?? 0;
+}
+
+function determineJournalConditionPhaseAnchor(
+	conditions: Condition[],
+	phaseIndices: number[],
+	questIds: string[],
+): number | null {
 	const journalConditions = conditions.filter(
 		(condition) => condition.kind === 'journal'
 			&& condition.value !== undefined
 			&& condition.questId !== undefined
 			&& questIds.includes(condition.questId),
 	);
+	const lowerBoundCondition = journalConditions.find(
+		(condition) => condition.operator === '=' || condition.operator === '>=' || condition.operator === '>',
+	);
+	if (lowerBoundCondition?.value !== undefined) {
+		return nearestPhaseAtOrBelow(lowerBoundCondition.value, phaseIndices);
+	}
+
 	for (const condition of journalConditions) {
-		if (condition.operator === '=' || condition.operator === '>=' || condition.operator === '>') {
-			return nearestPhaseAtOrBelow(condition.value as number, phaseIndices);
+		if (condition.value !== undefined) {
+			return nearestPhaseAtOrBelow(condition.value, phaseIndices);
 		}
 	}
 
-	return phaseIndices[0] ?? 0;
+	return null;
 }
 
 function nearestPhaseAtOrBelow(value: number, phaseIndices: number[]): number {
