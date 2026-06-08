@@ -8,6 +8,9 @@ Index: 0
 Quest Name: true
 Finished: false
 Restart: false
+canvas:
+  - "[[A Lesson in Thieving.canvas]]"
 ---
 
-A Lesson in Thieving
+
+A Lesson in Thieving ^obsidian-esp-canvas-03c9eae1d8

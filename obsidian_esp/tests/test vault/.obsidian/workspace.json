@@ -13,15 +13,15 @@
             "state": {
               "type": "canvas",
               "state": {
-                "file": "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon.canvas",
+                "file": "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving.canvas",
                 "viewState": {
-                  "x": 11579.118852308018,
-                  "y": 405.79154224222566,
-                  "zoom": -2.828776159940739
+                  "x": 2877.8808260783844,
+                  "y": 141.15437530330786,
+                  "zoom": -1.190138711840812
                 }
               },
               "icon": "lucide-layout-dashboard",
-              "title": "A New Mouth for Master Aryon"
+              "title": "A Lesson in Thieving"
             }
           }
         ]
@@ -81,7 +81,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 336.5
+    "width": 423.5
   },
   "right": {
     "id": "3d4dc41390bb6ea2",
@@ -97,6 +97,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "TES3 Plugins/OAAB_Grazelands/Topic/The Final Lesson/The Final Lesson ~7 1.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -106,7 +107,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks"
+              "title": "Backlinks for The Final Lesson ~7 1"
             }
           },
           {
@@ -169,7 +170,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
+    "width": 200,
     "collapsed": true
   },
   "left-ribbon": {
@@ -185,13 +186,17 @@
   },
   "active": "ac6084e5332dbcef",
   "lastOpenFiles": [
-    "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 2/Greeting 2 ~6.md",
+    "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosLesson/OAAB_TVos_GalosLesson 100.md",
+    "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosLesson/OAAB_TVos_GalosLesson.md",
+    "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosLesson/OAAB_TVos_GalosLesson 120.md",
+    "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosLesson/OAAB_TVos_GalosLesson 110.md",
+    "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Topic/The Final Lesson/The Final Lesson ~0.md",
     "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 2/Greeting 2 ~3.md",
-    "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosMouth/OAAB_TVos_GalosMouth 100.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/a new mouth for Aryon/a new mouth for Aryon ~2.md",
-    "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon - generated.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon - Copy.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Topic/The Final Lesson/The Final Lesson ~7.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/The Final Lesson/The Final Lesson ~8.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/The Final Lesson/The Final Lesson.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/The Final Lesson/The Final Lesson ~9.md",
     "TES3 Plugins/OAAB_Grazelands/Quests",
     "TES3 Plugins/OAAB_Grazelands/Voice/Thief/Thief.md",
     "TES3 Plugins/OAAB_Grazelands/Voice/Idle/Idle.md",
@@ -210,11 +215,6 @@
     "TES3 Plugins/OAAB_Grazelands/Topic/my trade/my trade.md",
     "TES3 Plugins/OAAB_Grazelands/Topic/mushroom roots from Tel Vos/mushroom roots from Tel Vos.md",
     "TES3 Plugins/OAAB_Grazelands/Topic/much to atone for/much to atone for.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/martial arts/martial arts.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/little secret/little secret.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/latest rumors/latest rumors.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/items wandering off/items wandering off.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/go free/go free.md",
     "TES3 Plugins/OAAB_Grazelands/base.base",
     "TES3 Plugins/OAAB_Grazelands/Voice/Thief",
     "TES3 Plugins/OAAB_Grazelands/Voice/Idle",
@@ -224,12 +224,13 @@
     "TES3 Plugins/OAAB_Grazelands/Voice",
     "TES3 Plugins/OAAB_Grazelands/Topic/work",
     "TES3 Plugins/OAAB_Grazelands/Topic/the incident",
-    "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon - modified.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon - generated.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/Enchanted Quill Acquaintances.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon - new.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon - Copy.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/The Final Door.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving_generated.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving - Copy.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/Waxing Pathetic Scamps.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/A New [[Mouth]] for [[Master Aryon]].canvas"
+    "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving - Copy.canvas"
   ]
 }

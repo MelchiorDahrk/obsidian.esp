@@ -8,6 +8,9 @@ Index: 100
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[A Lesson in Thieving.canvas]]"
 ---
 
-I obtained a copy of "[[The Final Lesson]]" for Galos Mathendis. He thanked me and gave me something he enchanted as a [[reward]].
+
+I obtained a copy of "[[The Final Lesson]]" for Galos Mathendis. He thanked me and gave me something he enchanted as a [[reward]]. ^obsidian-esp-canvas-98d55eccde

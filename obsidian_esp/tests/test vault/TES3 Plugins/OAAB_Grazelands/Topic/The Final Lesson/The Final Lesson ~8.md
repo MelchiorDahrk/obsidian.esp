@@ -2,8 +2,8 @@
 Source:
 Type: Topic
 Topic: The Final Lesson
-DiagID: 12336262243276218478
-PrevID: 19188109433145025843
+DiagID: 19188109433145025843
+PrevID: 849918242760523379
 Disposition: 0
 ID: galos mathendis
 Race:
@@ -14,15 +14,10 @@ Rank:
 Cell:
 PC Faction:
 PC Rank:
-Result: |
-  Player->RemoveItem bookskill_enchant5 1
-  Journal "OAAB_TVos_GalosLesson" 100
 Function0: Journal
 Variable0: OAAB_TVos_GalosTallow = 100
-Function1: Item
-Variable1: bookskill_enchant5 >= 1
-Function2: Function
-Variable2: Choice = 3
+Function1: Function
+Variable1: Choice = 2
 ---
 
-What? Have you been reading my notes? Well... thank you, %PCName.
+Disappointing. Return if you change your mind. Otherwise I'll find someone else to help.

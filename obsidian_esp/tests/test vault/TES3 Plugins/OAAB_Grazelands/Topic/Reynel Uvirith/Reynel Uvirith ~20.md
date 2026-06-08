@@ -15,7 +15,7 @@ Cell:
 PC Faction:
 PC Rank:
 Function0: Journal
-Variable0: OAAB_TVos_GalosMouth >= 70
+Variable0: OAAB_TVos_GalosMouth = 100
 canvas:
   - "[[A New Mouth for Master Aryon.canvas]]"
 ---

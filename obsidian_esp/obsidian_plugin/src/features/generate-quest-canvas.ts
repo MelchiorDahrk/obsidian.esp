@@ -390,7 +390,6 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 	const relevantRecordIds = resolvePropagatedRelevantRecords(allRecords, directRelevant, scope.questIds);
 	const relevantRecords = allRecords.filter(
 		(record) => relevantRecordIds.has(record.id)
-			&& isRelevantToQuest(record, effectiveOwnership, scope.questIds)
 			&& !hasOnlyJournalResultsForOtherQuests(record, scope.questIds),
 	);
 
@@ -2828,20 +2827,24 @@ function resolvePropagatedRelevantRecords(
 		changed = false;
 
 		for (const record of allRecords) {
-			if (relevant.has(record.id) || record.choiceTargets.length === 0 || hasOnlyJournalResultsForOtherQuests(record, questIds)) {
+			if (record.choiceTargets.length === 0 || hasOnlyJournalResultsForOtherQuests(record, questIds)) {
 				continue;
 			}
 
 			const topicRecords = recordsByTopic.get(record.topic) ?? [];
-			const leadsToRelevant = topicRecords.some(
-				(candidate) => relevant.has(candidate.id)
-					&& record.choiceTargets.some((value) => (
-						candidate.choiceValues.includes(value)
-							&& conditionsCanFollowChoice(record, candidate, value)
-					)),
-			);
+			if (relevant.has(record.id)) {
+				for (const candidate of resolveChoiceTargetRecords(record, topicRecords)) {
+					if (hasOnlyJournalResultsForOtherQuests(candidate, questIds) || relevant.has(candidate.id)) {
+						continue;
+					}
 
-			if (leadsToRelevant) {
+					relevant.add(candidate.id);
+					changed = true;
+				}
+				continue;
+			}
+
+			if (recordLeadsToRelevantRecord(record, topicRecords, relevant)) {
 				relevant.add(record.id);
 				changed = true;
 			}
@@ -2849,6 +2852,37 @@ function resolvePropagatedRelevantRecords(
 	}
 
 	return relevant;
+}
+
+function recordLeadsToRelevantRecord(
+	record: DialogueRecord,
+	topicRecords: DialogueRecord[],
+	relevant: Set<string>,
+): boolean {
+	return resolveChoiceTargetRecords(record, topicRecords).some((candidate) => relevant.has(candidate.id));
+}
+
+function resolveChoiceTargetRecords(
+	sourceRecord: DialogueRecord,
+	topicRecords: DialogueRecord[],
+): DialogueRecord[] {
+	const targetRecords: DialogueRecord[] = [];
+	for (const candidate of topicRecords) {
+		if (candidate.id === sourceRecord.id) {
+			continue;
+		}
+
+		if (
+			sourceRecord.choiceTargets.some((value) => (
+				candidate.choiceValues.includes(value)
+					&& conditionsCanFollowChoice(sourceRecord, candidate, value)
+			))
+		) {
+			targetRecords.push(candidate);
+		}
+	}
+
+	return targetRecords;
 }
 
 function resolveEffectiveQuestOwnership(allRecords: DialogueRecord[]): Map<string, string[]> {
@@ -3287,18 +3321,6 @@ function firstChoiceValue(conditions: Condition[]): number | null {
 		return null;
 	}
 	return Math.min(...choiceValues);
-}
-
-function isRelevantToQuest(
-	record: DialogueRecord,
-	effectiveOwnership: Map<string, string[]>,
-	questIds: string[],
-): boolean {
-	const activeQuestIds = new Set(questIds);
-	return (
-		(effectiveOwnership.get(record.id) ?? []).some((questId) => activeQuestIds.has(questId))
-			|| record.questReferences.some((questId) => activeQuestIds.has(questId))
-	);
 }
 
 function hasOnlyJournalResultsForOtherQuests(record: DialogueRecord, questIds: string[]): boolean {
