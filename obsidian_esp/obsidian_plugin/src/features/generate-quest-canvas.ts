@@ -32,8 +32,9 @@ const TOPIC_SEGMENT_GAP_X = 1920;
 const FOLLOWUP_GROUP_GAP_X = 500;
 const CLUSTER_GAP_Y = 140;
 const DENSE_VARIANT_GAP_Y = 64;
-const BRANCH_GROUP_GAP_Y = 300;
+const BRANCH_COLLISION_GAP_Y = 80;
 const FINAL_NODE_GAP_Y = 24;
+const INTRODUCER_ORIGIN_X = -GATE_GAP_X;
 const MIN_HORIZONTAL_EDGE_GAP_X = 75;
 const MAX_COMPACT_EDGE_GAP_X = 180;
 const ADD_TOPIC_GAP_X = 100;
@@ -499,6 +500,11 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 	compactHorizontalConnectionLayout(canvasContext);
 	separateOverlappingBranchGroups(canvasContext);
 	resolveCanvasNodeOverlaps(canvasContext);
+	balanceChoiceTargetRecordClusters(canvasContext);
+	resolveCanvasNodeOverlaps(canvasContext);
+	compactHorizontalConnectionLayout(canvasContext);
+	resolveCanvasNodeOverlaps(canvasContext);
+	normalizeCanvasOrigin(canvasContext);
 
 	const relatedFiles = new Map<string, TFile>();
 	const fileNodeTargets = new Map<string, FileNodeTarget>();
@@ -705,13 +711,14 @@ function layoutBranchFamily(
 			DIALOGUE_COLOR,
 			record.canvasSubpath,
 		);
+		const gateY = Math.round(recordY + Math.max(0, (dialogueHeight - gateHeight) / 2));
 		const gateId = gateText.length > 0
 			? addTextNode(
 				context,
 				`gate:${record.file.path}`,
 				gateText,
 				gateX,
-				recordY,
+				gateY,
 				GATE_WIDTH,
 				GATE_COLOR,
 			)
@@ -1027,9 +1034,9 @@ function arrangeAnchoredChildLayouts(
 	}
 
 	const desiredOffsets = orderedLayouts.map((item, index) => {
-		const height = heights[index] ?? 0;
 		const minimumTop = cumulativeMinimumTops[index] ?? 0;
-		return item.anchorY - height / 2 - minimumTop;
+		const mainLaneOffset = item.layout.mainLaneCenterY - item.layout.topY;
+		return item.anchorY - mainLaneOffset - minimumTop;
 	});
 	const compactOffsets = compactIncreasingOffsets(desiredOffsets);
 
@@ -1507,22 +1514,24 @@ function connectAddTopicTransitions(context: CanvasLayoutContext, records: Dialo
 				continue;
 			}
 
-			const targetRecord = resolveAddTopicTransitionTarget(sourceRecord, action.targetTopic, orderedRecordsByTopic);
-			if (!targetRecord) {
+			const targetRecords = resolveAddTopicTransitionTargets(sourceRecord, action.targetTopic, orderedRecordsByTopic);
+			if (targetRecords.length === 0) {
 				continue;
 			}
 
 			const sourceNodeId = createNodeId(`dialogue:${sourceRecord.file.path}`);
-			const targetNodeId = context.recordEntryNodeIds.get(targetRecord.id);
-			if (!targetNodeId) {
-				continue;
-			}
+			for (const targetRecord of targetRecords) {
+				const targetNodeId = context.recordEntryNodeIds.get(targetRecord.id);
+				if (!targetNodeId) {
+					continue;
+				}
 
-			transitions.push({
-				sourceRecord,
-				sourceNodeId,
-				targetNodeId,
-			});
+				transitions.push({
+					sourceRecord,
+					sourceNodeId,
+					targetNodeId,
+				});
+			}
 		}
 	}
 
@@ -1540,13 +1549,27 @@ function connectAddTopicTransitions(context: CanvasLayoutContext, records: Dialo
 	placeAddTopicSourcesBeforeTargets(context, transitions);
 }
 
-function resolveAddTopicTransitionTarget(
+function resolveAddTopicTransitionTargets(
 	sourceRecord: DialogueRecord,
 	targetTopic: string,
 	orderedRecordsByTopic: Map<string, DialogueRecord[]>,
-): DialogueRecord | null {
+): DialogueRecord[] {
 	const targetRecords = orderedRecordsByTopic.get(normalizeTopicKey(targetTopic)) ?? [];
-	return targetRecords.find((candidate) => conditionsCanFollowAddTopic(sourceRecord, candidate)) ?? null;
+	const candidates = targetRecords.filter((candidate) => conditionsCanFollowAddTopic(sourceRecord, candidate));
+	if (candidates.length <= 1) {
+		return candidates;
+	}
+
+	const scoredCandidates = candidates.map((candidate) => ({
+		candidate,
+		score: scoreAddTopicTransitionTarget(sourceRecord, candidate),
+	}));
+	const bestScore = Math.max(...scoredCandidates.map((item) => item.score));
+	const bestCandidates = scoredCandidates
+		.filter((item) => item.score === bestScore)
+		.map((item) => item.candidate);
+
+	return bestScore > 0 ? bestCandidates : [candidates[0] as DialogueRecord];
 }
 
 function placeAddTopicSourcesBeforeTargets(context: CanvasLayoutContext, transitions: AddTopicTransition[]): void {
@@ -1613,12 +1636,16 @@ function separateOverlappingBranchGroups(context: CanvasLayoutContext): void {
 					continue;
 				}
 
-				const desiredLowerTopY = upper.bottomY + BRANCH_GROUP_GAP_Y;
-				if (lower.topY >= desiredLowerTopY) {
+				const overlap = measureBranchGroupLockedOverlap(
+					context,
+					upper.group,
+					lower.group,
+					BRANCH_COLLISION_GAP_Y,
+				);
+				if (overlap <= 0) {
 					continue;
 				}
 
-				const overlap = desiredLowerTopY - lower.topY;
 				const upperShift = -Math.ceil(overlap / 2);
 				const lowerShift = Math.floor(overlap / 2);
 				shiftBranchGroup(context, upper.group, upperShift);
@@ -1802,6 +1829,263 @@ function branchGroupsOverlapHorizontally(left: BranchGroupBounds, right: BranchG
 	return left.leftX < right.rightX && right.leftX < left.rightX;
 }
 
+function measureBranchGroupLockedOverlap(
+	context: CanvasLayoutContext,
+	upperGroup: BranchSeparationGroup,
+	lowerGroup: BranchSeparationGroup,
+	gapY: number,
+): number {
+	const lockedGroups = [...buildLockedVerticalGroups(context).values()];
+	const upperLockedGroups = lockedGroups.filter((group) => lockedGroupTouchesBranchGroup(group, upperGroup));
+	const lowerLockedGroups = lockedGroups.filter((group) => lockedGroupTouchesBranchGroup(group, lowerGroup));
+	let overlap = 0;
+
+	for (const upperLockedGroup of upperLockedGroups) {
+		for (const lowerLockedGroup of lowerLockedGroups) {
+			if (
+				upperLockedGroup.id === lowerLockedGroup.id ||
+				!lockedGroupsOverlapHorizontally(upperLockedGroup, lowerLockedGroup) ||
+				upperLockedGroup.topY > lowerLockedGroup.topY
+			) {
+				continue;
+			}
+
+			overlap = Math.max(overlap, upperLockedGroup.bottomY + gapY - lowerLockedGroup.topY);
+		}
+	}
+
+	return overlap;
+}
+
+function lockedGroupTouchesBranchGroup(
+	lockedGroup: LockedVerticalGroup,
+	branchGroup: BranchSeparationGroup,
+): boolean {
+	return lockedGroup.nodes.some((node) => branchGroup.nodeIds.has(node.id));
+}
+
+interface RecordCluster {
+	entryId: string;
+	nodeIds: Set<string>;
+	topY: number;
+	bottomY: number;
+	leftX: number;
+	rightX: number;
+}
+
+interface ChoiceTargetCluster {
+	entryId: string;
+	cluster: RecordCluster;
+	category: 'choice' | 'journal';
+	choiceValue: number;
+	anchors: Array<{ sourceNode: CanvasNode; targetNode: CanvasNode }>;
+}
+
+function balanceChoiceTargetRecordClusters(context: CanvasLayoutContext): void {
+	for (let pass = 0; pass < 3; pass += 1) {
+		const clustersByEntryId = buildRecordClustersByEntryId(context);
+		const clusterItemsByColumn = new Map<number, ChoiceTargetCluster[]>();
+
+		for (const edge of context.edges) {
+			if (edge.fromSide !== 'right' || edge.toSide !== 'left') {
+				continue;
+			}
+
+			const sourceNode = findCanvasNode(context, edge.fromNode);
+			const targetNode = findCanvasNode(context, edge.toNode);
+			if (!sourceNode || !targetNode || !isGateNode(targetNode)) {
+				continue;
+			}
+
+			const targetCluster = clustersByEntryId.get(targetNode.id);
+			if (!targetCluster) {
+				continue;
+			}
+
+			const choiceValue = parseChoiceNodeValue(sourceNode);
+			const category = isChoiceNode(sourceNode) ? 'choice' : isJournalFileNode(sourceNode) ? 'journal' : null;
+			if (category === null) {
+				continue;
+			}
+
+			const columnKey = recordClusterColumnKey(targetCluster);
+			const columnItems = clusterItemsByColumn.get(columnKey) ?? [];
+			let item = columnItems.find((candidate) => candidate.entryId === targetNode.id);
+			if (!item) {
+				item = {
+					entryId: targetNode.id,
+					cluster: targetCluster,
+					category,
+					choiceValue: choiceValue ?? Number.MAX_SAFE_INTEGER,
+					anchors: [],
+				};
+				columnItems.push(item);
+			}
+
+			if (item.category !== 'choice' && category === 'choice') {
+				item.category = 'choice';
+			}
+			item.choiceValue = Math.min(item.choiceValue, choiceValue ?? Number.MAX_SAFE_INTEGER);
+			item.anchors.push({ sourceNode, targetNode });
+			clusterItemsByColumn.set(columnKey, columnItems);
+		}
+
+		let changed = false;
+		const orderedColumns = [...clusterItemsByColumn.entries()].sort((left, right) => left[0] - right[0]);
+		for (const [, columnItems] of orderedColumns) {
+			if (columnItems.length === 0) {
+				continue;
+			}
+
+			const orderedItems = columnItems.sort(
+				(left, right) => compareRoutedClusterCategories(left.category, right.category)
+					|| left.choiceValue - right.choiceValue
+					|| left.cluster.topY - right.cluster.topY,
+			);
+			let nextTopY = Number.NEGATIVE_INFINITY;
+			for (const item of orderedItems) {
+				const targetNode = item.anchors[0]?.targetNode;
+				if (!targetNode) {
+					continue;
+				}
+
+				const desiredAnchorY = item.category === 'choice'
+					? averageNumbers(item.anchors.map((anchor) => edgeEndpoint(anchor.sourceNode, 'right').y))
+					: edgeEndpoint(targetNode, 'left').y;
+				const targetOffsetY = edgeEndpoint(targetNode, 'left').y - item.cluster.topY;
+				const desiredTopY = desiredAnchorY - targetOffsetY;
+				const nextTop = Math.max(desiredTopY, nextTopY);
+				const deltaY = Math.round(nextTop - item.cluster.topY);
+				if (deltaY !== 0) {
+					shiftRecordCluster(context, item.cluster, deltaY);
+					changed = true;
+				}
+				nextTopY = item.cluster.bottomY + CLUSTER_GAP_Y;
+			}
+		}
+
+		if (!changed) {
+			return;
+		}
+	}
+}
+
+function recordClusterColumnKey(cluster: RecordCluster): number {
+	return Math.round(cluster.leftX / 240) * 240;
+}
+
+function compareRoutedClusterCategories(left: 'choice' | 'journal', right: 'choice' | 'journal'): number {
+	if (left === right) {
+		return 0;
+	}
+
+	return left === 'choice' ? -1 : 1;
+}
+
+function buildRecordClustersByEntryId(context: CanvasLayoutContext): Map<string, RecordCluster> {
+	const outgoingEdgesByNodeId = new Map<string, CanvasEdge[]>();
+	for (const edge of context.edges) {
+		const outgoingEdges = outgoingEdgesByNodeId.get(edge.fromNode) ?? [];
+		outgoingEdges.push(edge);
+		outgoingEdgesByNodeId.set(edge.fromNode, outgoingEdges);
+	}
+
+	const clustersByEntryId = new Map<string, RecordCluster>();
+	for (const node of context.nodes) {
+		if (!isGateNode(node)) {
+			continue;
+		}
+
+		const nodeIds = collectRecordClusterNodeIds(context, node.id, outgoingEdgesByNodeId);
+		clustersByEntryId.set(node.id, measureRecordCluster(context, node.id, nodeIds));
+	}
+
+	return clustersByEntryId;
+}
+
+function collectRecordClusterNodeIds(
+	context: CanvasLayoutContext,
+	entryId: string,
+	outgoingEdgesByNodeId: Map<string, CanvasEdge[]>,
+): Set<string> {
+	const nodeIds = new Set<string>();
+	const queue = [entryId];
+
+	while (queue.length > 0) {
+		const nodeId = queue.shift();
+		if (!nodeId || nodeIds.has(nodeId)) {
+			continue;
+		}
+
+		const node = findCanvasNode(context, nodeId);
+		if (!node) {
+			continue;
+		}
+
+		nodeIds.add(nodeId);
+		for (const edge of outgoingEdgesByNodeId.get(nodeId) ?? []) {
+			const targetNode = findCanvasNode(context, edge.toNode);
+			if (!targetNode) {
+				continue;
+			}
+
+			if (isGateNode(node) && isDialogueFileNode(targetNode) && edge.fromSide === 'right' && edge.toSide === 'left') {
+				queue.push(targetNode.id);
+			} else if (isDialogueFileNode(node) && edge.fromSide === 'bottom' && edge.toSide === 'top') {
+				queue.push(targetNode.id);
+			} else if (isDialogueFileNode(node) && isChoiceNode(targetNode) && edge.fromSide === 'right' && edge.toSide === 'left') {
+				queue.push(targetNode.id);
+			}
+		}
+	}
+
+	return nodeIds;
+}
+
+function measureRecordCluster(
+	context: CanvasLayoutContext,
+	entryId: string,
+	nodeIds: Set<string>,
+): RecordCluster {
+	const nodes = context.nodes.filter((node) => nodeIds.has(node.id));
+	return {
+		entryId,
+		nodeIds,
+		topY: Math.min(...nodes.map((node) => node.y)),
+		bottomY: Math.max(...nodes.map((node) => node.y + node.height)),
+		leftX: Math.min(...nodes.map((node) => node.x)),
+		rightX: Math.max(...nodes.map((node) => node.x + node.width)),
+	};
+}
+
+function shiftRecordCluster(context: CanvasLayoutContext, cluster: RecordCluster, deltaY: number): void {
+	for (const node of context.nodes) {
+		if (cluster.nodeIds.has(node.id)) {
+			node.y += deltaY;
+		}
+	}
+
+	cluster.topY += deltaY;
+	cluster.bottomY += deltaY;
+}
+
+function parseChoiceNodeValue(node: CanvasNode): number | null {
+	const match = (node.text ?? '').match(/\bChoice\s+(-?\d+)/);
+	return match?.[1] ? Number.parseInt(match[1], 10) : null;
+}
+
+function averageNumbers(values: number[]): number {
+	if (values.length === 0) {
+		return 0;
+	}
+
+	return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function findCanvasNode(context: CanvasLayoutContext, nodeId: string): CanvasNode | undefined {
+	return context.nodes.find((node) => node.id === nodeId);
+}
+
 function shiftBranchGroup(context: CanvasLayoutContext, group: BranchSeparationGroup, deltaY: number): void {
 	if (deltaY === 0) {
 		return;
@@ -1870,7 +2154,7 @@ function resolveChoiceTransitionTargets(
 	orderedRecordsByTopic: Map<string, DialogueRecord[]>,
 ): DialogueRecord[] {
 	const topicRecords = orderedRecordsByTopic.get(anchor.topic) ?? [];
-	const targetRecords: DialogueRecord[] = [];
+	const targetRecords: Array<{ record: DialogueRecord; score: number }> = [];
 	for (const candidate of topicRecords) {
 		if (!candidate.choiceValues.includes(anchor.choiceValue)) {
 			continue;
@@ -1882,11 +2166,25 @@ function resolveChoiceTransitionTargets(
 				&& conditionsCanFollowChoice(sourceRecord, candidate, anchor.choiceValue)
 			))
 		) {
-			targetRecords.push(candidate);
+			const score = Math.max(
+				...anchor.sourceRecords.map((sourceRecord) => scoreChoiceTransitionTarget(sourceRecord, candidate)),
+			);
+			targetRecords.push({ record: candidate, score });
 		}
 	}
 
-	return targetRecords;
+	if (targetRecords.length <= 1) {
+		return targetRecords.map((target) => target.record);
+	}
+
+	const bestScore = Math.max(...targetRecords.map((target) => target.score));
+	if (bestScore <= 0) {
+		return targetRecords.map((target) => target.record);
+	}
+
+	return targetRecords
+		.filter((target) => target.score === bestScore)
+		.map((target) => target.record);
 }
 
 function orderTopicRecordsByInfoSequence(records: DialogueRecord[]): DialogueRecord[] {
@@ -2023,6 +2321,70 @@ function conditionsCanFollowAddTopic(sourceRecord: DialogueRecord, candidate: Di
 	return true;
 }
 
+function scoreAddTopicTransitionTarget(sourceRecord: DialogueRecord, candidate: DialogueRecord): number {
+	const knownJournalValues = collectKnownJournalValuesAfterResult(sourceRecord);
+	const knownItemValues = collectKnownItemValues(sourceRecord.conditions);
+	let score = countMatchingSpeakerConditions(sourceRecord.speakerConditions, candidate.speakerConditions);
+
+	for (const condition of candidate.conditions) {
+		if (
+			condition.kind === 'journal'
+			&& condition.questId !== undefined
+			&& condition.value !== undefined
+		) {
+			const knownValue = knownJournalValues.get(condition.questId);
+			if (knownValue !== undefined && journalConditionMatches(knownValue, condition)) {
+				score += 1;
+			}
+		}
+
+		if (
+			condition.kind === 'item'
+			&& condition.questId !== undefined
+			&& condition.value !== undefined
+		) {
+			const knownValue = knownItemValues.get(condition.questId);
+			if (knownValue !== undefined && numericConditionMatches(knownValue, condition)) {
+				score += 1;
+			}
+		}
+	}
+
+	return score;
+}
+
+function scoreChoiceTransitionTarget(sourceRecord: DialogueRecord, candidate: DialogueRecord): number {
+	const knownJournalValues = collectKnownJournalValuesAfterResult(sourceRecord);
+	const knownItemValues = collectKnownItemValues(sourceRecord.conditions);
+	let score = countMatchingSpeakerConditions(sourceRecord.speakerConditions, candidate.speakerConditions);
+
+	for (const condition of candidate.conditions) {
+		if (
+			condition.kind === 'journal'
+			&& condition.questId !== undefined
+			&& condition.value !== undefined
+		) {
+			const knownValue = knownJournalValues.get(condition.questId);
+			if (knownValue !== undefined && journalConditionMatches(knownValue, condition)) {
+				score += 1;
+			}
+		}
+
+		if (
+			condition.kind === 'item'
+			&& condition.questId !== undefined
+			&& condition.value !== undefined
+		) {
+			const knownValue = knownItemValues.get(condition.questId);
+			if (knownValue !== undefined && numericConditionMatches(knownValue, condition)) {
+				score += 1;
+			}
+		}
+	}
+
+	return score;
+}
+
 function speakerConditionsAreCompatible(sourceConditions: Condition[], candidateConditions: Condition[]): boolean {
 	const sourceValuesByLabel = new Map<string, string>();
 	for (const condition of sourceConditions) {
@@ -2046,6 +2408,32 @@ function speakerConditionsAreCompatible(sourceConditions: Condition[], candidate
 	}
 
 	return true;
+}
+
+function countMatchingSpeakerConditions(sourceConditions: Condition[], candidateConditions: Condition[]): number {
+	const sourceValuesByLabel = new Map<string, string>();
+	for (const condition of sourceConditions) {
+		const parsed = parseSpeakerConditionDisplayText(condition.displayText);
+		if (!parsed) {
+			continue;
+		}
+		sourceValuesByLabel.set(parsed.label, parsed.value.toLowerCase());
+	}
+
+	let count = 0;
+	for (const condition of candidateConditions) {
+		const parsed = parseSpeakerConditionDisplayText(condition.displayText);
+		if (!parsed) {
+			continue;
+		}
+
+		const sourceValue = sourceValuesByLabel.get(parsed.label);
+		if (sourceValue !== undefined && sourceValue === parsed.value.toLowerCase()) {
+			count += 1;
+		}
+	}
+
+	return count;
 }
 
 function parseSpeakerConditionDisplayText(displayText: string): { label: string; value: string } | null {
@@ -2419,6 +2807,27 @@ function shiftLockedGroup(group: LockedVerticalGroup, deltaX: number, deltaY: nu
 	group.rightX += deltaX;
 	group.topY += deltaY;
 	group.bottomY += deltaY;
+}
+
+function normalizeCanvasOrigin(context: CanvasLayoutContext): void {
+	if (context.nodes.length === 0) {
+		return;
+	}
+
+	const minimumX = Math.min(...context.nodes.map((node) => node.x));
+	const targetX = context.nodes.some((node) => isAddTopicResultNode(node)) ? INTRODUCER_ORIGIN_X : 0;
+	const deltaX = targetX - minimumX;
+	if (deltaX === 0) {
+		return;
+	}
+
+	for (const node of context.nodes) {
+		node.x += deltaX;
+	}
+}
+
+function isAddTopicResultNode(node: CanvasNode): boolean {
+	return node.type === 'text' && (node.text ?? '').startsWith('AddTopic ');
 }
 
 async function writeCanvasPlan(
@@ -3089,9 +3498,11 @@ function resolveAddTopicTargetRecords(
 			continue;
 		}
 
-		const targetRecord = resolveAddTopicTransitionTarget(sourceRecord, action.targetTopic, recordsByNormalizedTopic);
-		if (targetRecord && !targetRecords.some((candidate) => candidate.id === targetRecord.id)) {
-			targetRecords.push(targetRecord);
+		const resolvedTargets = resolveAddTopicTransitionTargets(sourceRecord, action.targetTopic, recordsByNormalizedTopic);
+		for (const targetRecord of resolvedTargets) {
+			if (!targetRecords.some((candidate) => candidate.id === targetRecord.id)) {
+				targetRecords.push(targetRecord);
+			}
 		}
 	}
 	return targetRecords;
