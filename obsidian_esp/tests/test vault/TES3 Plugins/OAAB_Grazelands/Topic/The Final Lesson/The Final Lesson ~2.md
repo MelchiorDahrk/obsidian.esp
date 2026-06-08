@@ -21,6 +21,9 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosLesson = 100
 Function1: Function
 Variable1: Choice = 6
+canvas:
+  - "[[A Lesson in Thieving.canvas]]"
 ---
 
-You've certainly earned it. Here you are. I found this creature wandering around the Southern Tower and managed to kill it and trap its soul. Some type of scaly [[rat]]. It might have wandered up from the passages below the tower -- but I haven't [[seen anything]] like it around here before.
+
+You've certainly earned it. Here you are. I found this creature wandering around the Southern Tower and managed to kill it and trap its soul. Some type of scaly [[rat]]. It might have wandered up from the passages below the tower -- but I haven't [[seen anything]] like it around here before. ^obsidian-esp-canvas-f6235181be

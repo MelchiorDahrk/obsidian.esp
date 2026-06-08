@@ -21,9 +21,6 @@ Function0: Global
 Variable0: ABtv_NoticeBedBandits = 1
 Function1: Function
 Variable1: Choice = 1
-canvas:
-  - "[[Bed Bandits.canvas]]"
 ---
 
-
-Actually yes. I spoke with the ashlander scout in the tradehouse about bandit hideouts in the area. She told me about a cavern named "Pinsun" south along the coast from here. Right along the shipping lanes from [[Sadrith Mora]]. I think the [[bed bandits]] will be there. ^obsidian-esp-canvas-6927f57718
+Actually yes. I spoke with the ashlander scout in the tradehouse about bandit hideouts in the area. She told me about a cavern named "Pinsun" south along the coast from here. Right along the shipping lanes from [[Sadrith Mora]]. I think the [[bed bandits]] will be there.

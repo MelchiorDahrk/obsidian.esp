@@ -18,9 +18,6 @@ Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem >= 10
 Function1: Journal
 Variable1: OAAB_TVos_AshlanderEbony < 100
-canvas:
-  - "[[Let The Ebony Flow.canvas]]"
 ---
 
-
-It's none of my [[business]]. ^obsidian-esp-canvas-1d66f2bed6
+It's none of my [[business]].

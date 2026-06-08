@@ -25,9 +25,6 @@ Function1: Function
 Variable1: Choice = 3
 Function2: Function
 Variable2: PcStrength >= 75
-canvas:
-  - "[[Bed Bandits.canvas]]"
 ---
 
-
-What? Please don't hurt me! Here, take this and leave! ^obsidian-esp-canvas-119a78152b
+What? Please don't hurt me! Here, take this and leave!

@@ -13,15 +13,15 @@
             "state": {
               "type": "canvas",
               "state": {
-                "file": "TES3 Plugins/OAAB_Grazelands/Quests/Conserving Water.canvas",
+                "file": "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving - modified.canvas",
                 "viewState": {
-                  "x": 4077.5,
-                  "y": -16,
-                  "zoom": -1.9027949689080708
+                  "x": 4508.390204414154,
+                  "y": 806.312629679215,
+                  "zoom": -1.8674686382881036
                 }
               },
               "icon": "lucide-layout-dashboard",
-              "title": "Conserving Water"
+              "title": "A Lesson in Thieving - modified"
             }
           }
         ]
@@ -184,12 +184,13 @@
       "bases:Create new base": false
     }
   },
-  "active": "fe7c426b0a2d30eb",
+  "active": "ac6084e5332dbcef",
   "lastOpenFiles": [
-    "TES3 Plugins/OAAB_Grazelands/Quests/Conserving Water 1.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving - modified.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving - Copy.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/The Final Door.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/Conserving Water.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/Bed Bandits.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/Let The Ebony Flow.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests",
     "TES3 Plugins/OAAB_Grazelands/Voice/Thief/Thief.md",
     "TES3 Plugins/OAAB_Grazelands/Voice/Idle/Idle.md",
@@ -225,12 +226,11 @@
     "TES3 Plugins/OAAB_Grazelands/Voice",
     "TES3 Plugins/OAAB_Grazelands/Topic/work",
     "TES3 Plugins/OAAB_Grazelands/Topic/the incident",
+    "TES3 Plugins/OAAB_Grazelands/Quests/Conserving Water 1.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/Bed Bandits.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/Let The Ebony Flow.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/MV_OutcastAshlanders.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon - modified.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon - generated.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/Enchanted Quill Acquaintances.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon - new.canvas"
+    "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon - modified.canvas"
   ]
 }

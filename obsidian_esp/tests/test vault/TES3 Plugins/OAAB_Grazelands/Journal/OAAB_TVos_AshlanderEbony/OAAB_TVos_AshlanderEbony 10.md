@@ -8,9 +8,6 @@ Index: 10
 Quest Name: false
 Finished: false
 Restart: false
-canvas:
-  - "[[Let The Ebony Flow.canvas]]"
 ---
 
-
-I agreed to speak to Gulakhan Ashibaal at the [[Zainab]] Camp on behalf of Turedus Talanian. He wishes to ensure that the ashlander [[ebony]] flows through [[Tel Vos]] as part of their trade deal with [[House Hlaalu]]. ^obsidian-esp-canvas-b40b11c4e3
+I agreed to speak to Gulakhan Ashibaal at the [[Zainab]] Camp on behalf of Turedus Talanian. He wishes to ensure that the ashlander [[ebony]] flows through [[Tel Vos]] as part of their trade deal with [[House Hlaalu]].

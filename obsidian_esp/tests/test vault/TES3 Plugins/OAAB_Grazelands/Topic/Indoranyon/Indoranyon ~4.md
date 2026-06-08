@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosIndoranyon = 10
 Function1: Function
 Variable1: Choice = 1
+canvas:
+  - "[[The Final Door.canvas]]"
 ---
 
-I... uh. Yes, but I picked the lock to the ruins.
+
+I... uh. Yes, but I picked the lock to the ruins. ^obsidian-esp-canvas-2a02472351

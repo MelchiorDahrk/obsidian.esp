@@ -22,9 +22,6 @@ Function0: Global
 Variable0: ABtv_NoticeBedBandits = 1
 Function1: Function
 Variable1: Choice = 3
-canvas:
-  - "[[Bed Bandits.canvas]]"
 ---
 
-
-I'll call for the guards if you try anything. Get out of my house! ^obsidian-esp-canvas-400c62b3a3
+I'll call for the guards if you try anything. Get out of my house!

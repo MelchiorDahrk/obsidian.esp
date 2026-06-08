@@ -16,9 +16,6 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_AshlanderEbony >= 20
-canvas:
-  - "[[Let The Ebony Flow.canvas]]"
 ---
 
-
-We have already spoken of this. We will trade with [[House Hlaalu]] in [[Vos]]. We do not wish to lose warriors in the fire lands. ^obsidian-esp-canvas-d21b4ab3b3
+We have already spoken of this. We will trade with [[House Hlaalu]] in [[Vos]]. We do not wish to lose warriors in the fire lands.

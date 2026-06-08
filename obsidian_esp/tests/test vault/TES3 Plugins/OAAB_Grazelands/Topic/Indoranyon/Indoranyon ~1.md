@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosIndoranyon = 10
 Function1: Function
 Variable1: Choice = 20
+canvas:
+  - "[[The Final Door.canvas]]"
 ---
 
-There weren't any candles in the propylon chamber.
+
+There weren't any candles in the propylon chamber. ^obsidian-esp-canvas-badd66da1f

@@ -17,9 +17,6 @@ PC Rank:
 Result: Journal "OAAB_TVos_AshlanderEbony" 20
 Function0: Journal
 Variable0: OAAB_TVos_AshlanderEbony = 10
-canvas:
-  - "[[Let The Ebony Flow.canvas]]"
 ---
 
-
-You speak wisdom. I am glad that you chose to visit us again, %PCName. The [[Zainab]] are not pack [[guar]] for [[House Hlaalu]]. We will demand that all [[ebony trade]] take place in [[Vos]] to save our warriors the trip through the fire lands. ^obsidian-esp-canvas-0c96a04e0a
+You speak wisdom. I am glad that you chose to visit us again, %PCName. The [[Zainab]] are not pack [[guar]] for [[House Hlaalu]]. We will demand that all [[ebony trade]] take place in [[Vos]] to save our warriors the trip through the fire lands.

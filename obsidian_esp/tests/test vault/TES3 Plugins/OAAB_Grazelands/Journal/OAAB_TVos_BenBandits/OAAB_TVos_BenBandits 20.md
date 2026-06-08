@@ -8,9 +8,6 @@ Index: 20
 Quest Name: false
 Finished: false
 Restart: false
-canvas:
-  - "[[Bed Bandits.canvas]]"
 ---
 
-
-I found Menus Felas's bed in Pinsun. I don't have the means to bring it back to him. But I should let him know. ^obsidian-esp-canvas-b9ac185bed
+I found Menus Felas's bed in Pinsun. I don't have the means to bring it back to him. But I should let him know.

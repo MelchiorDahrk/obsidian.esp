@@ -3291,13 +3291,19 @@ function determinePhaseAnchor(
 	questIds: string[],
 ): number {
 	const conditionAnchor = determineJournalConditionPhaseAnchor(conditions, phaseIndices, questIds);
-	if (conditions.some((condition) => condition.kind === 'choice') && conditionAnchor !== null) {
-		return conditionAnchor;
+	const journalResult = firstJournalResultAction(resultActions, questIds);
+	if (journalResult?.targetJournalIndex !== undefined) {
+		const resultAnchor = previousPhaseBefore(journalResult.targetJournalIndex, phaseIndices);
+		if (
+			!conditions.some((condition) => condition.kind === 'choice')
+			|| journalResultCanRunBeforeTarget(conditions, journalResult)
+		) {
+			return resultAnchor;
+		}
 	}
 
-	const journalResult = firstJournalResult(resultActions, questIds);
-	if (journalResult !== null) {
-		return previousPhaseBefore(journalResult, phaseIndices);
+	if (conditionAnchor !== null && conditions.some((condition) => condition.kind === 'choice')) {
+		return conditionAnchor;
 	}
 
 	if (conditionAnchor !== null) {
@@ -3305,6 +3311,49 @@ function determinePhaseAnchor(
 	}
 
 	return phaseIndices[0] ?? 0;
+}
+
+function journalResultCanRunBeforeTarget(conditions: Condition[], resultAction: ResultAction): boolean {
+	if (
+		resultAction.targetQuestId === undefined
+		|| resultAction.targetJournalIndex === undefined
+	) {
+		return true;
+	}
+
+	const targetQuestConditions = conditions.filter(
+		(condition) => condition.kind === 'journal'
+			&& condition.questId === resultAction.targetQuestId
+			&& condition.value !== undefined,
+	);
+	if (targetQuestConditions.length === 0) {
+		return true;
+	}
+
+	return targetQuestConditions.every(
+		(condition) => journalConditionAllowsValueBeforeTarget(condition, resultAction.targetJournalIndex as number),
+	);
+}
+
+function journalConditionAllowsValueBeforeTarget(condition: Condition, targetJournalIndex: number): boolean {
+	if (condition.value === undefined) {
+		return true;
+	}
+
+	switch (condition.operator) {
+		case '=':
+		case '==':
+			return condition.value < targetJournalIndex;
+		case '>':
+		case '>=':
+			return condition.value < targetJournalIndex;
+		case '<':
+		case '<=':
+			return targetJournalIndex > PRE_JOURNAL_PHASE;
+		case '!=':
+		default:
+			return condition.value !== PRE_JOURNAL_PHASE || targetJournalIndex > PRE_JOURNAL_PHASE + 1;
+	}
 }
 
 function determineJournalConditionPhaseAnchor(
@@ -3457,7 +3506,12 @@ function computeFamilyPriority(phaseAnchor: number, progressionTarget: number | 
 }
 
 function firstJournalResult(resultActions: ResultAction[], questIds: string[]): number | null {
+	return firstJournalResultAction(resultActions, questIds)?.targetJournalIndex ?? null;
+}
+
+function firstJournalResultAction(resultActions: ResultAction[], questIds: string[]): ResultAction | null {
 	let earliestTarget: number | null = null;
+	let earliestAction: ResultAction | null = null;
 	for (const action of resultActions) {
 		if (
 			action.kind === 'journal-set'
@@ -3465,12 +3519,13 @@ function firstJournalResult(resultActions: ResultAction[], questIds: string[]): 
 			&& action.targetQuestId !== undefined
 			&& questIds.includes(action.targetQuestId)
 		) {
-			earliestTarget = earliestTarget === null
-				? action.targetJournalIndex
-				: Math.min(earliestTarget, action.targetJournalIndex);
+			if (earliestTarget === null || action.targetJournalIndex < earliestTarget) {
+				earliestTarget = action.targetJournalIndex;
+				earliestAction = action;
+			}
 		}
 	}
-	return earliestTarget;
+	return earliestAction;
 }
 
 function addFileNode(

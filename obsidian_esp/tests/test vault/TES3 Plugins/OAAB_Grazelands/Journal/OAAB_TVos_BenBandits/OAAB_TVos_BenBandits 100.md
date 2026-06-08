@@ -8,9 +8,6 @@ Index: 100
 Quest Name: false
 Finished: true
 Restart: false
-canvas:
-  - "[[Bed Bandits.canvas]]"
 ---
 
-
-Menus Felas thanked me for finding his bed. He plans to make arrangement to have a new one delivered. ^obsidian-esp-canvas-7195b464a5
+Menus Felas thanked me for finding his bed. He plans to make arrangement to have a new one delivered.

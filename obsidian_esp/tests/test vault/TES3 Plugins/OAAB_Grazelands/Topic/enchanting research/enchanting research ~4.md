@@ -17,6 +17,9 @@ PC Rank:
 Result: AddTopic "The Final Lesson"
 Function0: Journal
 Variable0: OAAB_TVos_GalosTallow = 100
+canvas:
+  - "[[A Lesson in Thieving.canvas]]"
 ---
 
-There's a book I [[need]] to supplement my research. It's called "[[The Final Lesson]]".
+
+There's a book I [[need]] to supplement my research. It's called "[[The Final Lesson]]". ^obsidian-esp-canvas-c8c44e63af

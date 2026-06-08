@@ -8,9 +8,6 @@ Index: 20
 Quest Name: false
 Finished: false
 Restart: false
-canvas:
-  - "[[Let The Ebony Flow.canvas]]"
 ---
 
-
-Ashibaal agreed with my reasoning for the [[Zainab]] to conduct their [[ebony trade]] with [[House Hlaalu]] in [[Vos]]. I should [[report]] back to Turedus Talanian. ^obsidian-esp-canvas-046b92bda4
+Ashibaal agreed with my reasoning for the [[Zainab]] to conduct their [[ebony trade]] with [[House Hlaalu]] in [[Vos]]. I should [[report]] back to Turedus Talanian.

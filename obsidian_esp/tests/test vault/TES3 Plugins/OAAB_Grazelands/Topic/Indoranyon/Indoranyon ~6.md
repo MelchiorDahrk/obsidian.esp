@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_GalosIndoranyon = 30
+canvas:
+  - "[[The Final Door.canvas]]"
 ---
 
-Please don't use the [[scroll]] until you're on top of the ruins of [[Indoranyon]], %PCName. You'll just complicate things if you mess this up.
+
+Please don't use the [[scroll]] until you're on top of the ruins of [[Indoranyon]], %PCName. You'll just complicate things if you mess this up. ^obsidian-esp-canvas-5ca0bb411d

@@ -23,9 +23,6 @@ Function1: Journal
 Variable1: OAAB_TVos_AshlanderEbony < 10
 Function2: Function
 Variable2: Choice = 1
-canvas:
-  - "[[Let The Ebony Flow.canvas]]"
 ---
 
-
-Good. After you have spoken to the Gulakhan, [[report]] back to me. ^obsidian-esp-canvas-56c902f439
+Good. After you have spoken to the Gulakhan, [[report]] back to me.

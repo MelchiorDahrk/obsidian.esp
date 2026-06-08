@@ -8,6 +8,9 @@ Index: 40
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[The Final Door.canvas]]"
 ---
 
-Galos and Milyn met me at [[Indoranyon]]. They discussed the next steps for Galos' [[enchanting research]]. He asked me to come back to his chambers in [[Tel Vos]] in one week. And he would have something for me. I don't understand what is going on and the two wizards wouldn't explain it to me.
+
+Galos and Milyn met me at [[Indoranyon]]. They discussed the next steps for Galos' [[enchanting research]]. He asked me to come back to his chambers in [[Tel Vos]] in one week. And he would have something for me. I don't understand what is going on and the two wizards wouldn't explain it to me. ^obsidian-esp-canvas-f505036958

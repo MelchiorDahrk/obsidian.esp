@@ -17,6 +17,9 @@ PC Rank:
 Result: Choice "Where is Telvon?" 30 "What color was the candle wax?" 20 "Was the door locked?" 1
 Function0: Journal
 Variable0: OAAB_TVos_GalosIndoranyon = 10
+canvas:
+  - "[[The Final Door.canvas]]"
 ---
 
-It's a [[Dunmer]] [[stronghold]] here in the [[Grazelands]]. What about it?
+
+It's a [[Dunmer]] [[stronghold]] here in the [[Grazelands]]. What about it? ^obsidian-esp-canvas-e719913e6d

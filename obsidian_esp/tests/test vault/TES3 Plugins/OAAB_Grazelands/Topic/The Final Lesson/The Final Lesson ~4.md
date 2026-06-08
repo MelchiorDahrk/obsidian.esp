@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosLesson = 10
 Function1: Item
 Variable1: bookskill_enchant5 = 0
+canvas:
+  - "[[A Lesson in Thieving.canvas]]"
 ---
 
-I hope you haven't gotten into too much trouble trying to obtain a copy of "[[The Final Lesson]]" for me. [[House Telvanni]] is fairly forgiving of transgressions if you [[make amends]].
+
+I hope you haven't gotten into too much trouble trying to obtain a copy of "[[The Final Lesson]]" for me. [[House Telvanni]] is fairly forgiving of transgressions if you [[make amends]]. ^obsidian-esp-canvas-54cde53f81
