@@ -36,6 +36,7 @@ const BRANCH_GROUP_GAP_Y = 300;
 const FINAL_NODE_GAP_Y = 24;
 const MIN_HORIZONTAL_EDGE_GAP_X = 75;
 const MAX_COMPACT_EDGE_GAP_X = 180;
+const ADD_TOPIC_GAP_X = 100;
 const PRE_JOURNAL_PHASE = 0;
 const NUMERIC_OPERATOR_PATTERN = '(<=|>=|==|!=|=|<|>)';
 const KNOWN_FRONTMATTER_KEYS = new Set([
@@ -185,6 +186,12 @@ interface ChoiceTransitionAnchor {
 	choiceValue: number;
 	nodeId: string;
 	sourceRecords: DialogueRecord[];
+}
+
+interface AddTopicTransition {
+	sourceRecord: DialogueRecord;
+	sourceNodeId: string;
+	targetNodeId: string;
 }
 
 interface TopicLayoutResult {
@@ -486,6 +493,7 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 	}
 
 	connectChoiceTransitions(canvasContext, phaseAnchoredRecords);
+	connectAddTopicTransitions(canvasContext, phaseAnchoredRecords);
 	connectJournalConditionMilestones(canvasContext, phaseAnchoredRecords, scope.journalMilestones, scope.questIds);
 	connectScriptedMilestones(canvasContext, phaseGraph.orderedPhases);
 	compactHorizontalConnectionLayout(canvasContext);
@@ -1489,6 +1497,78 @@ function connectChoiceTransitions(context: CanvasLayoutContext, records: Dialogu
 	}
 }
 
+function connectAddTopicTransitions(context: CanvasLayoutContext, records: DialogueRecord[]): void {
+	const orderedRecordsByTopic = groupRecordsByNormalizedTopic(records);
+	const transitions: AddTopicTransition[] = [];
+
+	for (const sourceRecord of records) {
+		for (const action of sourceRecord.resultActions) {
+			if (action.kind !== 'add-topic' || !action.targetTopic) {
+				continue;
+			}
+
+			const targetRecord = resolveAddTopicTransitionTarget(sourceRecord, action.targetTopic, orderedRecordsByTopic);
+			if (!targetRecord) {
+				continue;
+			}
+
+			const sourceNodeId = createNodeId(`dialogue:${sourceRecord.file.path}`);
+			const targetNodeId = context.recordEntryNodeIds.get(targetRecord.id);
+			if (!targetNodeId) {
+				continue;
+			}
+
+			transitions.push({
+				sourceRecord,
+				sourceNodeId,
+				targetNodeId,
+			});
+		}
+	}
+
+	for (const transition of transitions) {
+		addEdge(
+			context,
+			`${transition.sourceNodeId}:${transition.targetNodeId}:add-topic`,
+			transition.sourceNodeId,
+			'right',
+			transition.targetNodeId,
+			'left',
+		);
+	}
+
+	placeAddTopicSourcesBeforeTargets(context, transitions);
+}
+
+function resolveAddTopicTransitionTarget(
+	sourceRecord: DialogueRecord,
+	targetTopic: string,
+	orderedRecordsByTopic: Map<string, DialogueRecord[]>,
+): DialogueRecord | null {
+	const targetRecords = orderedRecordsByTopic.get(normalizeTopicKey(targetTopic)) ?? [];
+	return targetRecords.find((candidate) => conditionsCanFollowAddTopic(sourceRecord, candidate)) ?? null;
+}
+
+function placeAddTopicSourcesBeforeTargets(context: CanvasLayoutContext, transitions: AddTopicTransition[]): void {
+	const lockedGroups = buildLockedVerticalGroups(context);
+	const groupByNodeId = buildLockedGroupByNodeId(lockedGroups);
+
+	for (const transition of transitions) {
+		const sourceGroup = groupByNodeId.get(transition.sourceNodeId);
+		const targetGroup = groupByNodeId.get(transition.targetNodeId);
+		if (!sourceGroup || !targetGroup || sourceGroup.id === targetGroup.id) {
+			continue;
+		}
+
+		const maximumSourceRightX = targetGroup.leftX - ADD_TOPIC_GAP_X;
+		if (sourceGroup.rightX <= maximumSourceRightX) {
+			continue;
+		}
+
+		shiftLockedGroup(sourceGroup, maximumSourceRightX - sourceGroup.rightX, 0);
+	}
+}
+
 interface BranchSeparationGroup {
 	id: string;
 	nodeIds: Set<string>;
@@ -1857,6 +1937,50 @@ function conditionsCanFollowChoice(sourceRecord: DialogueRecord, candidate: Dial
 		candidateChoiceConditions.length > 0
 		&& candidateChoiceConditions.some((condition) => condition.choiceValue !== choiceValue)
 	) {
+		return false;
+	}
+
+	if (!speakerConditionsAreCompatible(sourceRecord.speakerConditions, candidate.speakerConditions)) {
+		return false;
+	}
+
+	const knownJournalValues = collectKnownJournalValuesAfterResult(sourceRecord);
+	for (const condition of candidate.conditions) {
+		if (
+			condition.kind !== 'journal'
+			|| condition.questId === undefined
+			|| condition.value === undefined
+		) {
+			continue;
+		}
+
+		const knownValue = knownJournalValues.get(condition.questId);
+		if (knownValue !== undefined && !journalConditionMatches(knownValue, condition)) {
+			return false;
+		}
+	}
+
+	const knownItemValues = collectKnownItemValues(sourceRecord.conditions);
+	for (const condition of candidate.conditions) {
+		if (
+			condition.kind !== 'item'
+			|| condition.questId === undefined
+			|| condition.value === undefined
+		) {
+			continue;
+		}
+
+		const knownValue = knownItemValues.get(condition.questId);
+		if (knownValue !== undefined && !numericConditionMatches(knownValue, condition)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+function conditionsCanFollowAddTopic(sourceRecord: DialogueRecord, candidate: DialogueRecord): boolean {
+	if (candidate.type !== 'Topic' || candidate.conditions.some((condition) => condition.kind === 'choice')) {
 		return false;
 	}
 
@@ -2814,12 +2938,12 @@ function parseResultActions(resultText: string, questIds: string[]): ResultActio
 			continue;
 		}
 
-		const addTopicMatch = line.match(/^AddTopic\s+"([^"]+)"/i);
-		if (addTopicMatch) {
+		const addTopicTarget = parseAddTopicTarget(line);
+		if (addTopicTarget) {
 			actions.push({
 				kind: 'add-topic',
-				displayText: `AddTopic "[[${addTopicMatch[1]}]]"`,
-				targetTopic: addTopicMatch[1],
+				displayText: `AddTopic "[[${addTopicTarget}]]"`,
+				targetTopic: addTopicTarget,
 			});
 			continue;
 		}
@@ -2838,6 +2962,16 @@ function parseResultActions(resultText: string, questIds: string[]): ResultActio
 	}
 
 	return actions;
+}
+
+function parseAddTopicTarget(line: string): string | null {
+	const match = line.match(/^AddTopic\s+(.+)$/i);
+	if (!match) {
+		return null;
+	}
+
+	const target = stripQuotes(match[1] ?? '').trim();
+	return target.length > 0 ? stripWikilinkSyntax(target) : null;
 }
 
 function parseChoiceResults(line: string): ResultAction[] {
@@ -2864,13 +2998,20 @@ function resolvePropagatedRelevantRecords(
 ): Set<string> {
 	const relevant = new Set<string>(directRelevant);
 	const recordsByTopic = groupRecordsByTopic(allRecords);
+	const recordsByNormalizedTopic = groupRecordsByNormalizedTopic(allRecords);
 
 	let changed = true;
 	while (changed) {
 		changed = false;
 
 		for (const record of allRecords) {
-			if (record.choiceTargets.length === 0 || hasOnlyJournalResultsForOtherQuests(record, questIds)) {
+			if (
+				record.choiceTargets.length === 0
+				&& !record.resultActions.some((action) => action.kind === 'add-topic')
+			) {
+				continue;
+			}
+			if (hasOnlyJournalResultsForOtherQuests(record, questIds)) {
 				continue;
 			}
 
@@ -2884,10 +3025,18 @@ function resolvePropagatedRelevantRecords(
 					relevant.add(candidate.id);
 					changed = true;
 				}
+				for (const candidate of resolveAddTopicTargetRecords(record, recordsByNormalizedTopic)) {
+					if (hasOnlyJournalResultsForOtherQuests(candidate, questIds) || relevant.has(candidate.id)) {
+						continue;
+					}
+
+					relevant.add(candidate.id);
+					changed = true;
+				}
 				continue;
 			}
 
-			if (recordLeadsToRelevantRecord(record, topicRecords, relevant)) {
+			if (recordLeadsToRelevantRecord(record, topicRecords, recordsByNormalizedTopic, relevant)) {
 				relevant.add(record.id);
 				changed = true;
 			}
@@ -2900,9 +3049,11 @@ function resolvePropagatedRelevantRecords(
 function recordLeadsToRelevantRecord(
 	record: DialogueRecord,
 	topicRecords: DialogueRecord[],
+	recordsByNormalizedTopic: Map<string, DialogueRecord[]>,
 	relevant: Set<string>,
 ): boolean {
-	return resolveChoiceTargetRecords(record, topicRecords).some((candidate) => relevant.has(candidate.id));
+	return resolveChoiceTargetRecords(record, topicRecords).some((candidate) => relevant.has(candidate.id))
+		|| resolveAddTopicTargetRecords(record, recordsByNormalizedTopic).some((candidate) => relevant.has(candidate.id));
 }
 
 function resolveChoiceTargetRecords(
@@ -2925,6 +3076,24 @@ function resolveChoiceTargetRecords(
 		}
 	}
 
+	return targetRecords;
+}
+
+function resolveAddTopicTargetRecords(
+	sourceRecord: DialogueRecord,
+	recordsByNormalizedTopic: Map<string, DialogueRecord[]>,
+): DialogueRecord[] {
+	const targetRecords: DialogueRecord[] = [];
+	for (const action of sourceRecord.resultActions) {
+		if (action.kind !== 'add-topic' || !action.targetTopic) {
+			continue;
+		}
+
+		const targetRecord = resolveAddTopicTransitionTarget(sourceRecord, action.targetTopic, recordsByNormalizedTopic);
+		if (targetRecord && !targetRecords.some((candidate) => candidate.id === targetRecord.id)) {
+			targetRecords.push(targetRecord);
+		}
+	}
 	return targetRecords;
 }
 
@@ -3476,6 +3645,21 @@ function groupRecordsByTopic(records: DialogueRecord[]): Map<string, DialogueRec
 	return grouped;
 }
 
+function groupRecordsByNormalizedTopic(records: DialogueRecord[]): Map<string, DialogueRecord[]> {
+	const grouped = new Map<string, DialogueRecord[]>();
+	for (const record of records) {
+		const topicKey = normalizeTopicKey(record.topic);
+		const topicRecords = grouped.get(topicKey) ?? [];
+		topicRecords.push(record);
+		grouped.set(topicKey, topicRecords);
+	}
+
+	for (const [topicKey, topicRecords] of grouped) {
+		grouped.set(topicKey, orderTopicRecordsByInfoSequence(topicRecords));
+	}
+	return grouped;
+}
+
 function firstChoiceValue(conditions: Condition[]): number | null {
 	const choiceValues = conditions
 		.filter((condition) => condition.kind === 'choice' && condition.choiceValue !== undefined)
@@ -3670,6 +3854,13 @@ function normalizeQuestNameKey(text: string | null): string | null {
 		.replace(/[^a-z0-9]+/g, ' ')
 		.trim();
 	return normalized.length > 0 ? normalized : null;
+}
+
+function normalizeTopicKey(text: string): string {
+	return stripWikilinkSyntax(stripQuotes(text))
+		.toLowerCase()
+		.replace(/\s+/g, ' ')
+		.trim();
 }
 
 function stripWikilinkSyntax(text: string): string {

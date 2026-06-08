@@ -8,6 +8,9 @@ Index: 0
 Quest Name: true
 Finished: false
 Restart: false
+canvas:
+  - "[[Let The Ebony Flow.canvas]]"
 ---
 
-Let The Ebony Flow
+
+Let The Ebony Flow ^obsidian-esp-canvas-3cb6101353

@@ -20,6 +20,9 @@ Function1: Journal
 Variable1: OAAB_TVos_AshlanderEbony < 10
 Function2: Function
 Variable2: Choice = 2
+canvas:
+  - "[[Let The Ebony Flow.canvas]]"
 ---
 
-I will consider making other arrangements.
+
+I will consider making other arrangements. ^obsidian-esp-canvas-7a88317fee

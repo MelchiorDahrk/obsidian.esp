@@ -8,6 +8,9 @@ Index: 10
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[Bed Bandits.canvas]]"
 ---
 
-Menus Felas in [[Vos]] has asked me to find his missing bed. He believes that it is somewhere in the bandit cave of Pinsun. The cave is south down the coast from [[Vos]].
+
+Menus Felas in [[Vos]] has asked me to find his missing bed. He believes that it is somewhere in the bandit cave of Pinsun. The cave is south down the coast from [[Vos]]. ^obsidian-esp-canvas-4597284e07

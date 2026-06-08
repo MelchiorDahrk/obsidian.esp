@@ -19,9 +19,6 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosMouth <= 50
 Function1: Function
 Variable1: Choice = 2
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-So I get your leavings now that you're done with the position? ^obsidian-esp-canvas-4ebb6aa977
+So I get your leavings now that you're done with the position?

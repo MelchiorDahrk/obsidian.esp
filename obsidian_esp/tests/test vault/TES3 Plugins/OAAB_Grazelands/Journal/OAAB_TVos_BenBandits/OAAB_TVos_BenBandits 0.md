@@ -8,6 +8,9 @@ Index: 0
 Quest Name: true
 Finished: false
 Restart: false
+canvas:
+  - "[[Bed Bandits.canvas]]"
 ---
 
-Bed Bandits
+
+Bed Bandits ^obsidian-esp-canvas-51b54e99b8

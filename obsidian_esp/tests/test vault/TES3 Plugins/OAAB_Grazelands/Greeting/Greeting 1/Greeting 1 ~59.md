@@ -23,6 +23,9 @@ Function1: Journal
 Variable1: OAAB_TVos_ConservatoryWater >= 20
 Function2: Global
 Variable2: Random100 <= 66
+canvas:
+  - "[[Conserving Water.canvas]]"
 ---
 
-My retainers tell me that the water in my conservatory shut off AGAIN. Do you know anything about this, %PCName?
+
+My retainers tell me that the water in my conservatory shut off AGAIN. Do you know anything about this, %PCName? ^obsidian-esp-canvas-760fe429e2

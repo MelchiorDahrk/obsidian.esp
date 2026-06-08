@@ -20,9 +20,6 @@ Function1: Not ID
 Variable1: ulyno uvirith = 1
 Function2: Journal
 Variable2: OAAB_TVos_GalosMouth >= 20
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-No Uvirith's from [[House Telvanni]] here in [[Vivec]], %PCRank. ^obsidian-esp-canvas-7e18a916e3
+No Uvirith's from [[House Telvanni]] here in [[Vivec]], %PCRank.

@@ -19,9 +19,6 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosMouth <= 50
 Function1: Function
 Variable1: Choice = 3
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-It's too late, I've already set things in motion to leave [[House Telvanni]]. I have aspirations and I believe that I can go far in [[House Redoran]]. ^obsidian-esp-canvas-7ffc26ff03
+It's too late, I've already set things in motion to leave [[House Telvanni]]. I have aspirations and I believe that I can go far in [[House Redoran]].

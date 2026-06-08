@@ -16,6 +16,9 @@ PC Faction: Telvanni
 PC Rank:
 Function1: Journal
 Variable1: OAAB_TVos_AshlanderEbony = 10
+canvas:
+  - "[[Let The Ebony Flow.canvas]]"
 ---
 
-After you have spoken to the Gulakhan, [[report]] back to me.
+
+After you have spoken to the Gulakhan, [[report]] back to me. ^obsidian-esp-canvas-1bdd9dc174

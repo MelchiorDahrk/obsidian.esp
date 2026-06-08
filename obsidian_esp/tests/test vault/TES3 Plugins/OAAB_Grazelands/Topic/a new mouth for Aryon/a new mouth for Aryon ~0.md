@@ -21,9 +21,6 @@ Result: |
   AddTopic "enchanting research"
 Function0: Journal
 Variable0: OAAB_TVos_GalosMouth = 60
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-That's good [[news]], %PCName. I already let Aryon know about my [[plan]] and he approved the arrangement. I found a few extra soul gems lying around. Please take them. Oh, and if you have more time, I could use some help with my [[enchanting research]]. I'm sure some of the results will be worthy rewards for your efforts. ^obsidian-esp-canvas-54bdce3f0f
+That's good [[news]], %PCName. I already let Aryon know about my [[plan]] and he approved the arrangement. I found a few extra soul gems lying around. Please take them. Oh, and if you have more time, I could use some help with my [[enchanting research]]. I'm sure some of the results will be worthy rewards for your efforts.

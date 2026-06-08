@@ -21,6 +21,9 @@ Function1: Journal
 Variable1: OAAB_TVos_ConservatoryWater = 0
 Function2: Function
 Variable2: Choice = 2
+canvas:
+  - "[[Conserving Water.canvas]]"
 ---
 
-With that attitude, you'll fit right into [[House Telvanni]].
+
+With that attitude, you'll fit right into [[House Telvanni]]. ^obsidian-esp-canvas-9a6d57bdf5

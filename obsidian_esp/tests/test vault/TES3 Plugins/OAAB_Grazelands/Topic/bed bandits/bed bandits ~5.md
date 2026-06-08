@@ -22,6 +22,9 @@ Function0: Global
 Variable0: ABtv_NoticeBedBandits = 1
 Function1: Function
 Variable1: Choice = 2
+canvas:
+  - "[[Bed Bandits.canvas]]"
 ---
 
-May the [[Four Corners]] curse you. N'wah!
+
+May the [[Four Corners]] curse you. N'wah! ^obsidian-esp-canvas-63a47952c4

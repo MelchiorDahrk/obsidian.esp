@@ -18,9 +18,6 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosMouth = 50
 Function1: Not ID
 Variable1: ulyno uvirith = 1
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-I don't know who you're talking about. ^obsidian-esp-canvas-b3ed8d392a
+I don't know who you're talking about.

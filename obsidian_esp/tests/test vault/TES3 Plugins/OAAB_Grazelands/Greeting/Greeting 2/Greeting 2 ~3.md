@@ -21,9 +21,6 @@ Function1: Function
 Variable1: Choice = 7
 Function2: Dead
 Variable2: bolvyn venim = 0
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-Ulyno is sure that she can curry favor with one of the councilors to be my advocate. But I admit that I have doubts. ^obsidian-esp-canvas-abca693ee7
+Ulyno is sure that she can curry favor with one of the councilors to be my advocate. But I admit that I have doubts.

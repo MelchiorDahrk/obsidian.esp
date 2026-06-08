@@ -22,9 +22,6 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosLesson = 100
 Function1: Function
 Variable1: Choice = 5
-canvas:
-  - "[[A Lesson in Thieving.canvas]]"
 ---
 
-
-I'd be happy to. Here, let's look at something you may have missed in this book. [Galos teaches you some things about enchanting from "[[The Final Lesson]]"]. ^obsidian-esp-canvas-809dba7ed5
+I'd be happy to. Here, let's look at something you may have missed in this book. [Galos teaches you some things about enchanting from "[[The Final Lesson]]"].

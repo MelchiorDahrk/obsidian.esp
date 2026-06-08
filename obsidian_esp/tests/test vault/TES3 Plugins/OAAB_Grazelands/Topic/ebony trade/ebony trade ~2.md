@@ -17,6 +17,9 @@ PC Rank:
 Result: Choice "The Zainab are not pack guars to haul ebony through Molag Amur, you should demand that you deliver only to Hlaalu boats in Vos." 1
 Function0: Journal
 Variable0: OAAB_TVos_AshlanderEbony = 10
+canvas:
+  - "[[Let The Ebony Flow.canvas]]"
 ---
 
-Why are you speaking to me about [[ebony]]? I have already agreed to make [[House Hlaalu]] our partner.
+
+Why are you speaking to me about [[ebony]]? I have already agreed to make [[House Hlaalu]] our partner. ^obsidian-esp-canvas-07d1f891c8

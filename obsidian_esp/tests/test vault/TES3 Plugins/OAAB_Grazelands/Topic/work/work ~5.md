@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: town_Tel_Vos >= 35
 Function1: Journal
 Variable1: OAAB_TVos_AshlanderEbony < 10
+canvas:
+  - "[[Let The Ebony Flow.canvas]]"
 ---
 
-[[House Hlaalu]] sent an agent to the [[Zainab]] Camp after we established our own trade relationship with the ashlanders. My sources tell me that the Hlaalu are interested in ashlander [[ebony]]. Aryon isn't trying to undermine the deal, but he wishes to ensure that the [[ebony trade]] will flow through [[Tel Vos]]. It'd be good for commerce. If you're interested, I [[need]] you to visit the [[Zainab]] agin and speak to their Gulakhan, Ashibaal.
+
+[[House Hlaalu]] sent an agent to the [[Zainab]] Camp after we established our own trade relationship with the ashlanders. My sources tell me that the Hlaalu are interested in ashlander [[ebony]]. Aryon isn't trying to undermine the deal, but he wishes to ensure that the [[ebony trade]] will flow through [[Tel Vos]]. It'd be good for commerce. If you're interested, I [[need]] you to visit the [[Zainab]] agin and speak to their Gulakhan, Ashibaal. ^obsidian-esp-canvas-7a1a495a8d

@@ -8,9 +8,6 @@ Index: 120
 Quest Name: false
 Finished: true
 Restart: false
-canvas:
-  - "[[A Lesson in Thieving.canvas]]"
 ---
 
-
-Galos gave me a soul gem filled with something called a "Verminoth". He mentioned that he thought it might have wandered up from passages below the tower. ^obsidian-esp-canvas-88d800fe12
+Galos gave me a soul gem filled with something called a "Verminoth". He mentioned that he thought it might have wandered up from passages below the tower.

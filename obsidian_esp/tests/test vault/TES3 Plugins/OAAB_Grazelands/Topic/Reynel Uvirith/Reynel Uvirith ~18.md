@@ -20,9 +20,6 @@ Function1: Not ID
 Variable1: neloth = 1
 Function2: Journal
 Variable2: OAAB_TVos_GalosMouth >= 20
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-Most of the Uvirith famiy are back on [[the mainland]]. No one here in [[Sadrith Mora]] that I know of. ^obsidian-esp-canvas-c5507f0a23
+Most of the Uvirith famiy are back on [[the mainland]]. No one here in [[Sadrith Mora]] that I know of.

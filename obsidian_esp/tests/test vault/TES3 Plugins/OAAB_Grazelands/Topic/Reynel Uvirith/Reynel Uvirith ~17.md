@@ -17,9 +17,6 @@ PC Rank:
 Result: Journal OAAB_TVos_GalosMouth 30
 Function0: Journal
 Variable0: OAAB_TVos_GalosMouth = 20
-canvas:
-  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-
-A redhaired Telvanni noblewoman? Aye, a lady arrived with that description recently. She didn't leave from the docks, though. So if she's no longer here, as you say, then I reckon she must've used the [[Mages Guild]] service. Not like she was going to hike anywhere in that fancy purple robe of 'er's. ^obsidian-esp-canvas-951d0e99d4
+A redhaired Telvanni noblewoman? Aye, a lady arrived with that description recently. She didn't leave from the docks, though. So if she's no longer here, as you say, then I reckon she must've used the [[Mages Guild]] service. Not like she was going to hike anywhere in that fancy purple robe of 'er's.
