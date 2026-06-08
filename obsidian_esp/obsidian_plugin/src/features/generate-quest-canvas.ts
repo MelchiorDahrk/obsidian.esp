@@ -37,6 +37,7 @@ const FINAL_NODE_GAP_Y = 24;
 const MIN_HORIZONTAL_EDGE_GAP_X = 75;
 const MAX_COMPACT_EDGE_GAP_X = 180;
 const PRE_JOURNAL_PHASE = 0;
+const NUMERIC_OPERATOR_PATTERN = '(<=|>=|==|!=|=|<|>)';
 const KNOWN_FRONTMATTER_KEYS = new Set([
 	'Source',
 	'Type',
@@ -89,6 +90,7 @@ interface JournalMilestone {
 	questId: string;
 	questTitle: string;
 	index: number;
+	finished: boolean;
 	file: TFile;
 	summary: string;
 	canvasSubpath: string | null;
@@ -99,9 +101,11 @@ interface Condition {
 	displayText: string;
 	questId?: string;
 	value?: number;
-	operator?: string;
+	operator?: NumericOperator;
 	choiceValue?: number;
 }
+
+type NumericOperator = '<=' | '>=' | '<' | '>' | '=' | '==' | '!=';
 
 interface ResultAction {
 	kind:
@@ -482,6 +486,7 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 	}
 
 	connectChoiceTransitions(canvasContext, phaseAnchoredRecords);
+	connectJournalConditionMilestones(canvasContext, phaseAnchoredRecords, scope.journalMilestones, scope.questIds);
 	connectScriptedMilestones(canvasContext, phaseGraph.orderedPhases);
 	compactHorizontalConnectionLayout(canvasContext);
 	separateOverlappingBranchGroups(canvasContext);
@@ -573,6 +578,32 @@ function recordCanRunAtPhase(record: DialogueRecord, phaseValue: number, questId
 	}
 
 	return selectedQuestJournalConditions.every((condition) => journalConditionMatches(phaseValue, condition));
+}
+
+function connectJournalConditionMilestones(
+	context: CanvasLayoutContext,
+	records: DialogueRecord[],
+	milestones: JournalMilestone[],
+	questIds: string[],
+): void {
+	for (const record of records) {
+		const entryNodeId = context.recordEntryNodeIds.get(record.id);
+		if (!entryNodeId) {
+			continue;
+		}
+
+		for (const phaseValue of linkedJournalConditionPhases(record.conditions, milestones, questIds)) {
+			const phaseNodeId = context.phaseNodeIds.get(phaseValue);
+			if (!phaseNodeId) {
+				continue;
+			}
+			if (nodeCanReach(context, phaseNodeId, entryNodeId)) {
+				continue;
+			}
+
+			addEdge(context, `${phaseNodeId}:${entryNodeId}`, phaseNodeId, 'right', entryNodeId, 'left');
+		}
+	}
 }
 
 function addPhaseMilestone(
@@ -1971,6 +2002,10 @@ function numericConditionMatches(value: number, condition: Condition): boolean {
 			return value < condition.value;
 		case '>':
 			return value > condition.value;
+		case '!=':
+			return value !== condition.value;
+		case '==':
+			return value === condition.value;
 		case '=':
 		default:
 			return value === condition.value;
@@ -2543,6 +2578,7 @@ function toJournalMilestone(document: MarkdownDocument): JournalMilestone | null
 		questId,
 		questTitle: extractQuestTitle([document]) ?? questId,
 		index,
+		finished: getBooleanValue(document.frontmatter, 'Finished'),
 		file: document.file,
 		summary: firstSentence(document.body),
 		canvasSubpath: document.canvasBodySubpath,
@@ -2682,7 +2718,7 @@ function parseJournalCondition(rawFunction: string, rawVariable: string, questId
 		return null;
 	}
 
-	const journalMatch = rawVariable.match(/([^\s]+)\s*(<=|>=|=|<|>)\s*(-?\d+)/);
+	const journalMatch = rawVariable.match(new RegExp(`([^\\s]+)\\s*${NUMERIC_OPERATOR_PATTERN}\\s*(-?\\d+)`));
 	if (!journalMatch) {
 		return {
 			kind: 'journal',
@@ -2692,7 +2728,7 @@ function parseJournalCondition(rawFunction: string, rawVariable: string, questId
 	}
 
 	const journalQuestId = journalMatch[1] ?? matchingQuestId;
-	const journalOperator = journalMatch[2] ?? '=';
+	const journalOperator = normalizeNumericOperator(journalMatch[2]);
 	const journalValue = journalMatch[3] ?? '0';
 
 	return {
@@ -2723,14 +2759,14 @@ function parseChoiceCondition(rawFunction: string, rawVariable: string): Conditi
 	};
 }
 
-function parseNumericVariableCondition(rawVariable: string): { id: string; operator: string; value: number } | null {
-	const variableMatch = rawVariable.match(/([^\s]+)\s*(<=|>=|=|<|>)\s*(-?\d+)/);
+function parseNumericVariableCondition(rawVariable: string): { id: string; operator: NumericOperator; value: number } | null {
+	const variableMatch = rawVariable.match(new RegExp(`([^\\s]+)\\s*${NUMERIC_OPERATOR_PATTERN}\\s*(-?\\d+)`));
 	if (!variableMatch) {
 		return null;
 	}
 
 	const id = variableMatch[1];
-	const operator = variableMatch[2];
+	const operator = normalizeNumericOperator(variableMatch[2]);
 	const value = variableMatch[3];
 	if (id === undefined || operator === undefined || value === undefined) {
 		return null;
@@ -2741,6 +2777,13 @@ function parseNumericVariableCondition(rawVariable: string): { id: string; opera
 		operator,
 		value: Number.parseInt(value, 10),
 	};
+}
+
+function normalizeNumericOperator(operator: string | undefined): NumericOperator {
+	if (operator === '<=' || operator === '>=' || operator === '<' || operator === '>' || operator === '==' || operator === '!=') {
+		return operator;
+	}
+	return '=';
 }
 
 function parseResultActions(resultText: string, questIds: string[]): ResultAction[] {
@@ -3106,23 +3149,100 @@ function determineJournalConditionPhaseAnchor(
 			&& condition.questId !== undefined
 			&& questIds.includes(condition.questId),
 	);
-	const lowerBoundCondition = journalConditions.find(
-		(condition) => condition.operator === '=' || condition.operator === '>=' || condition.operator === '>',
+	if (journalConditions.length === 0) {
+		return conditions.some((condition) => condition.kind === 'journal') ? phaseIndices[0] ?? 0 : null;
+	}
+
+	const matchingPhases = phaseIndices.filter(
+		(phaseValue) => journalConditions.every((condition) => journalConditionMatches(phaseValue, condition)),
 	);
-	if (lowerBoundCondition?.value !== undefined) {
-		return nearestPhaseAtOrBelow(lowerBoundCondition.value, phaseIndices);
+	if (matchingPhases.length > 0) {
+		return matchingPhases[0] ?? phaseIndices[0] ?? 0;
 	}
 
-	for (const condition of journalConditions) {
-		if (
-			condition.value !== undefined
-			&& (condition.operator === '=' || condition.operator === '>=' || condition.operator === '>')
-		) {
-			return nearestPhaseAtOrBelow(condition.value, phaseIndices);
+	return nearestPhaseForJournalCondition(journalConditions[0], phaseIndices);
+}
+
+function linkedJournalConditionPhases(
+	conditions: Condition[],
+	milestones: JournalMilestone[],
+	questIds: string[],
+): number[] {
+	const journalConditions = conditions.filter(
+		(condition) => condition.kind === 'journal'
+			&& condition.value !== undefined
+			&& condition.questId !== undefined
+			&& questIds.includes(condition.questId),
+	);
+	if (journalConditions.length === 0) {
+		return [];
+	}
+
+	const conditionsByQuest = groupJournalConditionsByQuest(journalConditions);
+	const matchingMilestones = milestones
+		.filter((milestone) => milestone.index > 0)
+		.filter((milestone) => {
+			const questConditions = conditionsByQuest.get(milestone.questId);
+			return questConditions !== undefined
+				&& questConditions.every((condition) => journalConditionMatches(milestone.index, condition));
+		})
+		.sort(compareJournalMilestones);
+	const firstMatching = matchingMilestones[0];
+	if (!firstMatching) {
+		return [];
+	}
+	if (!firstMatching.finished) {
+		return [firstMatching.index];
+	}
+
+	return uniqueNumbers(matchingMilestones
+		.filter((milestone) => milestone.finished)
+		.map((milestone) => milestone.index));
+}
+
+function groupJournalConditionsByQuest(conditions: Condition[]): Map<string, Condition[]> {
+	const conditionsByQuest = new Map<string, Condition[]>();
+	for (const condition of conditions) {
+		if (condition.questId === undefined) {
+			continue;
 		}
+
+		const questConditions = conditionsByQuest.get(condition.questId) ?? [];
+		questConditions.push(condition);
+		conditionsByQuest.set(condition.questId, questConditions);
+	}
+	return conditionsByQuest;
+}
+
+function compareJournalMilestones(left: JournalMilestone, right: JournalMilestone): number {
+	const byIndex = left.index - right.index;
+	if (byIndex !== 0) {
+		return byIndex;
 	}
 
-	return journalConditions.length > 0 ? phaseIndices[0] ?? 0 : null;
+	return left.file.path.localeCompare(right.file.path);
+}
+
+function nearestPhaseForJournalCondition(condition: Condition | undefined, phaseIndices: number[]): number | null {
+	if (!condition || condition.value === undefined) {
+		return phaseIndices[0] ?? 0;
+	}
+
+	switch (condition.operator) {
+		case '>':
+			return firstPhaseAbove(condition.value, phaseIndices) ?? nearestPhaseAtOrBelow(condition.value, phaseIndices);
+		case '>=':
+		case '=':
+		case '==':
+			return firstPhaseAtOrAbove(condition.value, phaseIndices) ?? nearestPhaseAtOrBelow(condition.value, phaseIndices);
+		case '<':
+			return lastPhaseBelow(condition.value, phaseIndices) ?? phaseIndices[0] ?? condition.value;
+		case '<=':
+			return nearestPhaseAtOrBelow(condition.value, phaseIndices);
+		case '!=':
+		default:
+			return nearestPhaseAtOrBelow(condition.value, phaseIndices);
+	}
 }
 
 function nearestPhaseAtOrBelow(value: number, phaseIndices: number[]): number {
@@ -3131,6 +3251,19 @@ function nearestPhaseAtOrBelow(value: number, phaseIndices: number[]): number {
 		return eligible[eligible.length - 1] ?? phaseIndices[0] ?? value;
 	}
 	return phaseIndices[0] ?? value;
+}
+
+function firstPhaseAtOrAbove(value: number, phaseIndices: number[]): number | null {
+	return phaseIndices.find((phaseValue) => phaseValue >= value) ?? null;
+}
+
+function firstPhaseAbove(value: number, phaseIndices: number[]): number | null {
+	return phaseIndices.find((phaseValue) => phaseValue > value) ?? null;
+}
+
+function lastPhaseBelow(value: number, phaseIndices: number[]): number | null {
+	const lower = phaseIndices.filter((phaseValue) => phaseValue < value);
+	return lower[lower.length - 1] ?? null;
 }
 
 function previousPhaseBefore(value: number, phaseIndices: number[]): number {
@@ -3271,6 +3404,36 @@ function addEdge(
 		toSide,
 	});
 	context.edgeIds.add(edgeId);
+}
+
+function nodeCanReach(context: CanvasLayoutContext, fromNode: string, toNode: string): boolean {
+	const outgoingEdgesByNode = new Map<string, CanvasEdge[]>();
+	for (const edge of context.edges) {
+		const outgoingEdges = outgoingEdgesByNode.get(edge.fromNode) ?? [];
+		outgoingEdges.push(edge);
+		outgoingEdgesByNode.set(edge.fromNode, outgoingEdges);
+	}
+
+	const queue = [fromNode];
+	const visited = new Set<string>();
+	while (queue.length > 0) {
+		const currentNode = queue.shift();
+		if (currentNode === undefined || visited.has(currentNode)) {
+			continue;
+		}
+		if (currentNode === toNode) {
+			return true;
+		}
+
+		visited.add(currentNode);
+		for (const edge of outgoingEdgesByNode.get(currentNode) ?? []) {
+			if (!visited.has(edge.toNode)) {
+				queue.push(edge.toNode);
+			}
+		}
+	}
+
+	return false;
 }
 
 function renderConditionBlock(conditions: Condition[]): string {
@@ -3543,6 +3706,10 @@ function getStringValue(frontmatter: Record<string, FrontmatterValue>, key: stri
 		return value[0];
 	}
 	return undefined;
+}
+
+function getBooleanValue(frontmatter: Record<string, FrontmatterValue>, key: string): boolean {
+	return getStringValue(frontmatter, key)?.toLowerCase() === 'true';
 }
 
 function isDialogueType(value: string): value is DialogueType {
