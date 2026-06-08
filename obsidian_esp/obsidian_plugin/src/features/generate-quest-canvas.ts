@@ -505,6 +505,7 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 	compactHorizontalConnectionLayout(canvasContext);
 	resolveCanvasNodeOverlaps(canvasContext);
 	normalizeCanvasOrigin(canvasContext);
+	enforceGateDialogueCenterAlignment(canvasContext);
 
 	const relatedFiles = new Map<string, TFile>();
 	const fileNodeTargets = new Map<string, FileNodeTarget>();
@@ -1878,6 +1879,7 @@ interface ChoiceTargetCluster {
 	cluster: RecordCluster;
 	category: 'choice' | 'journal';
 	choiceValue: number;
+	sourceCenterY: number;
 	anchors: Array<{ sourceNode: CanvasNode; targetNode: CanvasNode }>;
 }
 
@@ -1917,6 +1919,7 @@ function balanceChoiceTargetRecordClusters(context: CanvasLayoutContext): void {
 					cluster: targetCluster,
 					category,
 					choiceValue: choiceValue ?? Number.MAX_SAFE_INTEGER,
+					sourceCenterY: edgeEndpoint(sourceNode, 'right').y,
 					anchors: [],
 				};
 				columnItems.push(item);
@@ -1927,6 +1930,7 @@ function balanceChoiceTargetRecordClusters(context: CanvasLayoutContext): void {
 			}
 			item.choiceValue = Math.min(item.choiceValue, choiceValue ?? Number.MAX_SAFE_INTEGER);
 			item.anchors.push({ sourceNode, targetNode });
+			item.sourceCenterY = averageNumbers(item.anchors.map((anchor) => edgeEndpoint(anchor.sourceNode, 'right').y));
 			clusterItemsByColumn.set(columnKey, columnItems);
 		}
 
@@ -1938,7 +1942,8 @@ function balanceChoiceTargetRecordClusters(context: CanvasLayoutContext): void {
 			}
 
 			const orderedItems = columnItems.sort(
-				(left, right) => compareRoutedClusterCategories(left.category, right.category)
+				(left, right) => left.sourceCenterY - right.sourceCenterY
+					|| compareRoutedClusterCategories(left.category, right.category)
 					|| left.choiceValue - right.choiceValue
 					|| left.cluster.topY - right.cluster.topY,
 			);
@@ -1954,7 +1959,8 @@ function balanceChoiceTargetRecordClusters(context: CanvasLayoutContext): void {
 					: edgeEndpoint(targetNode, 'left').y;
 				const targetOffsetY = edgeEndpoint(targetNode, 'left').y - item.cluster.topY;
 				const desiredTopY = desiredAnchorY - targetOffsetY;
-				const nextTop = Math.max(desiredTopY, nextTopY);
+				const shouldCompactToPrevious = item.category === 'journal' && Number.isFinite(nextTopY);
+				const nextTop = shouldCompactToPrevious ? nextTopY : Math.max(desiredTopY, nextTopY);
 				const deltaY = Math.round(nextTop - item.cluster.topY);
 				if (deltaY !== 0) {
 					shiftRecordCluster(context, item.cluster, deltaY);
@@ -2823,6 +2829,23 @@ function normalizeCanvasOrigin(context: CanvasLayoutContext): void {
 
 	for (const node of context.nodes) {
 		node.x += deltaX;
+	}
+}
+
+function enforceGateDialogueCenterAlignment(context: CanvasLayoutContext): void {
+	const nodeById = new Map(context.nodes.map((node) => [node.id, node]));
+	for (const edge of context.edges) {
+		if (edge.fromSide !== 'right' || edge.toSide !== 'left') {
+			continue;
+		}
+
+		const gateNode = nodeById.get(edge.fromNode);
+		const dialogueNode = nodeById.get(edge.toNode);
+		if (!gateNode || !dialogueNode || !isGateNode(gateNode) || !isDialogueFileNode(dialogueNode)) {
+			continue;
+		}
+
+		gateNode.y = Math.round(dialogueNode.y + dialogueNode.height / 2 - gateNode.height / 2);
 	}
 }
 
