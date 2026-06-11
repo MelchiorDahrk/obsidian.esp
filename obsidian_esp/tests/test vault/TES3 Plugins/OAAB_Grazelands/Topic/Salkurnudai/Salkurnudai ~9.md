@@ -24,6 +24,9 @@ Function1: Function
 Variable1: Choice = 3
 Function2: Journal
 Variable2: OAAB_TVos_HauntedLantern < 30
+canvas:
+  - "[[The Eerie Lantern.canvas]]"
 ---
 
-Very well, %PCName. You are now tasked with guiding the soul of the [[Salkurnudai]] hunter back to the otherworld. You must hold the lantern from here to your [[destination]]. Do not set it down, even for a moment, or the ancestor will be lost. Your [[destination]] is the burial caverns of [[Molaguradan]]. It now lies under the tower of the Telvanni lord in [[Tel Vos]]. You will find a river of lava falling into a dark hole. Follow that path.
+
+Very well, %PCName. You are now tasked with guiding the soul of the [[Salkurnudai]] hunter back to the otherworld. You must hold the lantern from here to your [[destination]]. Do not set it down, even for a moment, or the ancestor will be lost. Your [[destination]] is the burial caverns of [[Molaguradan]]. It now lies under the tower of the Telvanni lord in [[Tel Vos]]. You will find a river of lava falling into a dark hole. Follow that path. ^obsidian-esp-canvas-f4641d667e

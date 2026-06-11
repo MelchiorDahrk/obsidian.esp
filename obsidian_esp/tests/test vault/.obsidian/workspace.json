@@ -13,15 +13,15 @@
             "state": {
               "type": "canvas",
               "state": {
-                "file": "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving - modified.canvas",
+                "file": "TES3 Plugins/OAAB_Grazelands/Quests/The Eerie Lantern - modified.canvas",
                 "viewState": {
-                  "x": 4508.390204414154,
-                  "y": 806.312629679215,
-                  "zoom": -1.8674686382881036
+                  "x": 4993.130344898949,
+                  "y": -1546.1586874035265,
+                  "zoom": -3.0122988914382622
                 }
               },
               "icon": "lucide-layout-dashboard",
-              "title": "A Lesson in Thieving - modified"
+              "title": "The Eerie Lantern - modified"
             }
           }
         ]
@@ -186,11 +186,18 @@
   },
   "active": "ac6084e5332dbcef",
   "lastOpenFiles": [
+    "TES3 Plugins/OAAB_Grazelands/Quests/The Eerie Lantern.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/The Eerie Lantern - modified.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 1/Greeting 1 ~1645.md",
+    "TES3 Plugins/OAAB_Grazelands/Quests/The Domain of Living Fire - modified.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/The Domain of Living Fire.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving - modified.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving - Copy.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/The Final Door.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/Conserving Water.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/Root of the Problem.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Topic/rat catcher/rat catcher ~5.md",
+    "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_MolaguradanMonarch/OAAB_TVos_MolaguradanMonarch.md",
+    "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_MolaguradanMonarch/OAAB_TVos_MolaguradanMonarch 0.md",
+    "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_MolaguradanMonarch/OAAB_TVos_MolaguradanMonarch 100.md",
+    "TES3 Plugins/OAAB_Grazelands/Topic/Molaguradan/Molaguradan ~3.md",
     "TES3 Plugins/OAAB_Grazelands/Quests",
     "TES3 Plugins/OAAB_Grazelands/Voice/Thief/Thief.md",
     "TES3 Plugins/OAAB_Grazelands/Voice/Idle/Idle.md",
@@ -211,12 +218,6 @@
     "TES3 Plugins/OAAB_Grazelands/Topic/much to atone for/much to atone for.md",
     "TES3 Plugins/OAAB_Grazelands/Topic/martial arts/martial arts.md",
     "TES3 Plugins/OAAB_Grazelands/Topic/little secret/little secret.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/latest rumors/latest rumors.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/items wandering off/items wandering off.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/go free/go free.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/ghost lantern/ghost lantern.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/enchanting research/enchanting research.md",
-    "TES3 Plugins/OAAB_Grazelands/Topic/ebony trade/ebony trade.md",
     "TES3 Plugins/OAAB_Grazelands/base.base",
     "TES3 Plugins/OAAB_Grazelands/Voice/Thief",
     "TES3 Plugins/OAAB_Grazelands/Voice/Idle",
@@ -226,11 +227,9 @@
     "TES3 Plugins/OAAB_Grazelands/Voice",
     "TES3 Plugins/OAAB_Grazelands/Topic/work",
     "TES3 Plugins/OAAB_Grazelands/Topic/the incident",
-    "TES3 Plugins/OAAB_Grazelands/Quests/Conserving Water 1.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/Bed Bandits.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/Let The Ebony Flow.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/MV_OutcastAshlanders.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/Enchanted Quill Acquaintances.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving - new3.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/A New Mouth for Master Aryon - modified.canvas"
+    "TES3 Plugins/OAAB_Grazelands/Quests/A Lesson in Thieving - modified.canvas"
   ]
 }

@@ -20,6 +20,9 @@ Function1: Function
 Variable1: Choice = 1
 Function2: Journal
 Variable2: OAAB_TVos_RootOfTheProblem < 100
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-I have no solution nor do I know if one even exists. Perhaps you could ask some of the other villagers. They're mostly here in the village; except for the egg miners -- but we rarely see [[roots]] in the egg mine. I respectfully ask that you do not bring this up to [[Master Aryon]]. We do not wish to appear ungrateful for his protection.
+
+I have no solution nor do I know if one even exists. Perhaps you could ask some of the other villagers. They're mostly here in the village; except for the egg miners -- but we rarely see [[roots]] in the egg mine. I respectfully ask that you do not bring this up to [[Master Aryon]]. We do not wish to appear ungrateful for his protection. ^obsidian-esp-canvas-24d476668c

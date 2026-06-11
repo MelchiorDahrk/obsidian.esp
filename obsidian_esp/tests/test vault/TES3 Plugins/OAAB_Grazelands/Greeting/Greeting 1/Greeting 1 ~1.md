@@ -17,9 +17,6 @@ PC Rank:
 Result: Goodbye
 Function0: Journal
 Variable0: OAAB_TVos_GalosIndoranyon = 40
-canvas:
-  - "[[The Final Door.canvas]]"
 ---
 
-
-I don't have time to talk right now, %PCName. Too much [[work]] to do. ^obsidian-esp-canvas-90cc37bae0
+I don't have time to talk right now, %PCName. Too much [[work]] to do.

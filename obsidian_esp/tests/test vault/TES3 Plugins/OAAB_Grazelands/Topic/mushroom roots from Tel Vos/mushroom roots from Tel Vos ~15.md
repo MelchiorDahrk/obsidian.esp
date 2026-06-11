@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem = 120
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-Dreynos told me about how you helped him with the root problem. I doubt we can collect enough [[kwama]] poison to completely eradicate them. And I don't know that I want to. But we may be able to use it on smaller intrusions in sensitive areas. Thank you for helping our village.
+
+Dreynos told me about how you helped him with the root problem. I doubt we can collect enough [[kwama]] poison to completely eradicate them. And I don't know that I want to. But we may be able to use it on smaller intrusions in sensitive areas. Thank you for helping our village. ^obsidian-esp-canvas-623aea8964

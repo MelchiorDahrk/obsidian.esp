@@ -8,6 +8,9 @@ Index: 110
 Quest Name: false
 Finished: true
 Restart: false
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-I refused to help Dreynos with his root problem.
+
+I refused to help Dreynos with his root problem. ^obsidian-esp-canvas-75ee604d70

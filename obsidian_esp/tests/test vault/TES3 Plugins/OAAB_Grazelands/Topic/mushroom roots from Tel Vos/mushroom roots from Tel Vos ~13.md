@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem >= 10
 Function1: Journal
 Variable1: OAAB_TVos_RootOfTheProblem < 100
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-[[Vos]]? Yes, the town will be fine. The [[roots]] won't damage the foundations.
+
+[[Vos]]? Yes, the town will be fine. The [[roots]] won't damage the foundations. ^obsidian-esp-canvas-9e0a068751

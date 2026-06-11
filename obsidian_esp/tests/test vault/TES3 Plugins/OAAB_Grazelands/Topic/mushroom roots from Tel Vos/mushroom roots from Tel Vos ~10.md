@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem >= 10
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-The chapel has sustained a lot of damage due to the [[roots]]. But at least it doesn't willingly smash my holy icons like the Ashlander savages! I give thanks for [[Master Aryon]] every day in my prayers to Almsivi.
+
+The chapel has sustained a lot of damage due to the [[roots]]. But at least it doesn't willingly smash my holy icons like the Ashlander savages! I give thanks for [[Master Aryon]] every day in my prayers to Almsivi. ^obsidian-esp-canvas-fc332a68e0

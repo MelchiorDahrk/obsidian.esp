@@ -19,9 +19,6 @@ Function0: Global
 Variable0: ABtv_ConservatoryWater = 1
 Function1: Journal
 Variable1: OAAB_TVos_ConservatoryWater = 10
-canvas:
-  - "[[Conserving Water.canvas]]"
 ---
 
-
-One of my retainers informed me that the water is functioning in my conservatory again. I assume that you had something to do with it? ^obsidian-esp-canvas-6bb10ef415
+One of my retainers informed me that the water is functioning in my conservatory again. I assume that you had something to do with it?

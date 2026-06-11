@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_Molaguradan >= 30
+canvas:
+  - "[[The Domain of Living Fire.canvas]]"
 ---
 
-Thank you again for informing me of the ashlanders' desire to regain access to [[Molaguradan]].
+
+Thank you again for informing me of the ashlanders' desire to regain access to [[Molaguradan]]. ^obsidian-esp-canvas-00a63e2674

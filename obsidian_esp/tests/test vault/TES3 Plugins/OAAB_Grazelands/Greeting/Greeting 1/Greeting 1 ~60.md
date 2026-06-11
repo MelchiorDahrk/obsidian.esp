@@ -23,9 +23,6 @@ Function1: Journal
 Variable1: OAAB_TVos_ConservatoryWater >= 20
 Function2: Global
 Variable2: Random100 <= 100
-canvas:
-  - "[[Conserving Water.canvas]]"
 ---
 
-
-Nothing irritates me more than the same thing breaking multiple times, %PCName. Do you understand what I am saying? Why don't you go check that valve again? ^obsidian-esp-canvas-8386fd6d1f
+Nothing irritates me more than the same thing breaking multiple times, %PCName. Do you understand what I am saying? Why don't you go check that valve again?

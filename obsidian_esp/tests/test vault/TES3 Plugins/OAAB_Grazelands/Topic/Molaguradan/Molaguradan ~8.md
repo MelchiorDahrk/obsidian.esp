@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_Molaguradan >= 10
 Function1: Journal
 Variable1: OAAB_TVos_Molaguradan < 20
+canvas:
+  - "[[The Domain of Living Fire.canvas]]"
 ---
 
-Yes, I was aware that there was an old ashlander burial site under this hill. Why do you bring it up?
+
+Yes, I was aware that there was an old ashlander burial site under this hill. Why do you bring it up? ^obsidian-esp-canvas-db89fdc350

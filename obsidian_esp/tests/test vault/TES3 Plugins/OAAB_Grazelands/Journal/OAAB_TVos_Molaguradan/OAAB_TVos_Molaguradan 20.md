@@ -8,6 +8,9 @@ Index: 20
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[The Domain of Living Fire.canvas]]"
 ---
 
-Aryon thanked me for telling him about the ashlanders' interest in accessing [[Molaguradan]] underneath [[Tel Vos]].
+
+Aryon thanked me for telling him about the ashlanders' interest in accessing [[Molaguradan]] underneath [[Tel Vos]]. ^obsidian-esp-canvas-30643af72a

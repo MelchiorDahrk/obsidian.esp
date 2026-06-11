@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem >= 10
 Function1: Journal
 Variable1: OAAB_TVos_RootOfTheProblem < 100
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-Not my problem. Aryon grabbing [[Tel Vos]] has been great for [[business]].
+
+Not my problem. Aryon grabbing [[Tel Vos]] has been great for [[business]]. ^obsidian-esp-canvas-cdd981f447

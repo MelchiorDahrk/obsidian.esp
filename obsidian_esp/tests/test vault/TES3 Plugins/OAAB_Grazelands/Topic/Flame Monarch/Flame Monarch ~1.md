@@ -27,6 +27,9 @@ Function1: Item
 Variable1: ABtv_w_BlackSword = 1
 Function2: Journal
 Variable2: OAAB_TVos_Molaguradan < 100
+canvas:
+  - "[[The Domain of Living Fire.canvas]]"
 ---
 
-That blade is remarkable -- perhaps you will let me study it one day. With that, I believe you have succeeded in slaying the [[Flame Monarch]]. Thank you for your assistance. In return, I offer discounted rates from all of my retainers' services and these [[potions]]. I had something else in mind for them, but I think they will make an adequate [[reward]] instead.
+
+That blade is remarkable -- perhaps you will let me study it one day. With that, I believe you have succeeded in slaying the [[Flame Monarch]]. Thank you for your assistance. In return, I offer discounted rates from all of my retainers' services and these [[potions]]. I had something else in mind for them, but I think they will make an adequate [[reward]] instead. ^obsidian-esp-canvas-2e62480a61

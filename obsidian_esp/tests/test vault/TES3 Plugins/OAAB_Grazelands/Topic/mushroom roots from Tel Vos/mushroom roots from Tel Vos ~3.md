@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem >= 20
 Function1: Journal
 Variable1: OAAB_TVos_RootOfTheProblem < 100
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-Here in town, the [[roots]] are a problem -- they even blocked Runethyne's door once. But we rarely see them in the egg mine. And when we do, they wither and retreat quickly. I've never been able to figure it out, but you could talk to my wife, Ibanu, about it. She ventures deeper into the colony than I do. She should be in [[Sinarralit Egg Mine]] right now.
+
+Here in town, the [[roots]] are a problem -- they even blocked Runethyne's door once. But we rarely see them in the egg mine. And when we do, they wither and retreat quickly. I've never been able to figure it out, but you could talk to my wife, Ibanu, about it. She ventures deeper into the colony than I do. She should be in [[Sinarralit Egg Mine]] right now. ^obsidian-esp-canvas-ec964600d9

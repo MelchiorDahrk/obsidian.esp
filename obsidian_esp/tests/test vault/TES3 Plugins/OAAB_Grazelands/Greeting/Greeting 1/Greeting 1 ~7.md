@@ -19,9 +19,6 @@ Result: |
   Choice "[Continue listening.]" 1
 Function0: Global
 Variable0: ABtv_GalosAnchored = 10
-canvas:
-  - "[[The Final Door.canvas]]"
 ---
 
-
-Ah, Milyn, I'm glad you could make it. See, it's just as I described. A key is required. Just like with my experiment. ^obsidian-esp-canvas-fa22ded4ad
+Ah, Milyn, I'm glad you could make it. See, it's just as I described. A key is required. Just like with my experiment.

@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_HauntedLantern = 22
 Function1: Item
 Variable1: ABtv_light_AshlLanternGhost < 1
+canvas:
+  - "[[The Eerie Lantern.canvas]]"
 ---
 
-Why have you not brought the [[ghost lantern]] back with you?
+
+Why have you not brought the [[ghost lantern]] back with you? ^obsidian-esp-canvas-e37786ed67

@@ -16,9 +16,6 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_GalosIndoranyon = 10
-canvas:
-  - "[[The Final Door.canvas]]"
 ---
 
-
-Please find the ashlander scout in Varo Tradehouse and ask her the [[questions]] I gave you. In order, %PCName. In order! ^obsidian-esp-canvas-52800927b2
+Please find the ashlander scout in Varo Tradehouse and ask her the [[questions]] I gave you. In order, %PCName. In order!

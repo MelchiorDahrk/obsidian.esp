@@ -8,6 +8,9 @@ Index: 10
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[The Domain of Living Fire.canvas]]"
 ---
 
-While talking to an Ashlander Wise Woman, I learned that the ashlander tribes might be interested in having access to the caverns below [[Tel Vos]], which they refer to as "[[Molaguradan]]". The lord of [[Tel Vos]] may be interested in this information. Perhaps I can make it worth my while...
+
+While talking to an Ashlander Wise Woman, I learned that the ashlander tribes might be interested in having access to the caverns below [[Tel Vos]], which they refer to as "[[Molaguradan]]". The lord of [[Tel Vos]] may be interested in this information. Perhaps I can make it worth my while... ^obsidian-esp-canvas-5975016a91

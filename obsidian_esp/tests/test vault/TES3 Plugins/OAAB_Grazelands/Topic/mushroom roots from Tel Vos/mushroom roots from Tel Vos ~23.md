@@ -21,6 +21,9 @@ Function1: Function
 Variable1: Choice = 6
 Function2: Function
 Variable2: PcSpeechcraft < 70
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-I don't have much to offer, but there's a [[Dwemer artifact]] which I unearthed in the fields. I hope that's enough?
+
+I don't have much to offer, but there's a [[Dwemer artifact]] which I unearthed in the fields. I hope that's enough? ^obsidian-esp-canvas-1c4dfcbef4

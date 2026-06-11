@@ -21,6 +21,9 @@ Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem = 30
 Function1: Function
 Variable1: Choice = 8
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-Okay, okay. I was saving this for a rainy day, but I'll give you my last [[skooma]] if you'll get the [[kwama]] poison for me. I'm desperate.
+
+Okay, okay. I was saving this for a rainy day, but I'll give you my last [[skooma]] if you'll get the [[kwama]] poison for me. I'm desperate. ^obsidian-esp-canvas-f07fba7fa0

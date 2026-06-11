@@ -26,6 +26,9 @@ Function4: Not Class
 Variable4: Guard = 1
 Function5: Global
 Variable5: Random100 <= 50
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-I've grown accustomed to hearing the groan of the [[roots]] growing around my house at night. Do I wish they would stop breaking through my wall? Of course, but what are we supposed to do about it?
+
+I've grown accustomed to hearing the groan of the [[roots]] growing around my house at night. Do I wish they would stop breaking through my wall? Of course, but what are we supposed to do about it? ^obsidian-esp-canvas-5731341339

@@ -22,6 +22,9 @@ Function2: Not ID
 Variable2: ferise varo = 1
 Function3: Not ID
 Variable3: smokey morth = 1
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-[[Sinarralit Egg Mine]] is south of [[Vos]]. If you head out through the western gate of the village, then take the southern paths at the first two intersections, and then head east at the third. You'll find the mine entrance at the end of that short path.
+
+[[Sinarralit Egg Mine]] is south of [[Vos]]. If you head out through the western gate of the village, then take the southern paths at the first two intersections, and then head east at the third. You'll find the mine entrance at the end of that short path. ^obsidian-esp-canvas-2e4b2c9b88

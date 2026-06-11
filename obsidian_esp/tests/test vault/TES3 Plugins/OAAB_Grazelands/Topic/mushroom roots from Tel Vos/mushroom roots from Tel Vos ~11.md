@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem >= 10
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-Bah. The Villagers can deal with the [[roots]]. If they were smart, they'd let Aryon grow them house pods.
+
+Bah. The Villagers can deal with the [[roots]]. If they were smart, they'd let Aryon grow them house pods. ^obsidian-esp-canvas-914779a500

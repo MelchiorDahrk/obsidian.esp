@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem = 10
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-My house is a wreck. Please bring me any [[news]] of a possible solution for the mushroom menace.
+
+My house is a wreck. Please bring me any [[news]] of a possible solution for the mushroom menace. ^obsidian-esp-canvas-ccb6176d0e

@@ -26,6 +26,9 @@ Function4: Not Class
 Variable4: Guard = 1
 Function5: Global
 Variable5: Random100 <= 100
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-We deal with [[roots]] every day here in the village. They uproot [[wickwheat]] in our fields, smash in our walls, but you know I've never heard of them being a problem in the egg mines. Maybe the [[kwama]] eat them. Ha!
+
+We deal with [[roots]] every day here in the village. They uproot [[wickwheat]] in our fields, smash in our walls, but you know I've never heard of them being a problem in the egg mines. Maybe the [[kwama]] eat them. Ha! ^obsidian-esp-canvas-fdc8b17171

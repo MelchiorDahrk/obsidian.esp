@@ -24,9 +24,6 @@ Function1: Journal
 Variable1: OAAB_TVos_ConservatoryWater = 10
 Function2: Function
 Variable2: Choice = 3
-canvas:
-  - "[[Conserving Water.canvas]]"
 ---
 
-
-The workers never informed me that they installed a valve... thank you for your help, %PCName. It was quite... providential that you came around and solved this issue for me. I believe that a proper thanks is in order. Normally I prefer to give a choice in rewards, but I happened to have this nearby and I think it suits the situation admirably. ^obsidian-esp-canvas-30c5a9c10a
+The workers never informed me that they installed a valve... thank you for your help, %PCName. It was quite... providential that you came around and solved this issue for me. I believe that a proper thanks is in order. Normally I prefer to give a choice in rewards, but I happened to have this nearby and I think it suits the situation admirably.

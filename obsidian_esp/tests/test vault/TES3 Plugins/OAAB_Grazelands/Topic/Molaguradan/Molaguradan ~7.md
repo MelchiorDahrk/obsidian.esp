@@ -21,6 +21,9 @@ Function1: Journal
 Variable1: OAAB_TVos_Molaguradan < 20
 Function2: Function
 Variable2: Choice = 2
+canvas:
+  - "[[The Domain of Living Fire.canvas]]"
 ---
 
-I hope that conversation was worth your trip up here, %PCName.
+
+I hope that conversation was worth your trip up here, %PCName. ^obsidian-esp-canvas-d58a8928f3

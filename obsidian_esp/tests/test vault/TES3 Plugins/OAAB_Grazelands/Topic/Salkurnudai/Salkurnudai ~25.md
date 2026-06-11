@@ -18,6 +18,9 @@ Function0: Item
 Variable0: ABtv_light_AshlLanternGhost < 1
 Function1: Journal
 Variable1: OAAB_TVos_HauntedLantern = 20
+canvas:
+  - "[[The Eerie Lantern.canvas]]"
 ---
 
-I do not know that name. [[Talk]] to a wise woman, they walk the ancestral trail.
+
+I do not know that name. [[Talk]] to a wise woman, they walk the ancestral trail. ^obsidian-esp-canvas-74bad9644c

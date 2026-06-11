@@ -21,6 +21,9 @@ Function0: Journal
 Variable0: OAAB_TVos_HauntedLantern = 20
 Function1: Function
 Variable1: Choice = 5
+canvas:
+  - "[[The Eerie Lantern.canvas]]"
 ---
 
-Please retrieve it and come back here so that we may speak.
+
+Please retrieve it and come back here so that we may speak. ^obsidian-esp-canvas-6e06d51d5f

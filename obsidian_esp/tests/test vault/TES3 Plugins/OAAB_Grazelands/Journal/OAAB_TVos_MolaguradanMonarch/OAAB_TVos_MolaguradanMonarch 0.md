@@ -8,6 +8,9 @@ Index: 0
 Quest Name: true
 Finished: false
 Restart: false
+canvas:
+  - "[[The Domain of Living Fire.canvas]]"
 ---
 
-The Domain of Living Fire
+
+The Domain of Living Fire ^obsidian-esp-canvas-1cd59f8fe4

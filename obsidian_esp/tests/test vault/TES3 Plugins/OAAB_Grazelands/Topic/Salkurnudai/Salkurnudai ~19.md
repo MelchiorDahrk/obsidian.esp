@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_HauntedLantern = 22
 Function1: Item
 Variable1: ABtv_light_AshlLanternGhost >= 1
+canvas:
+  - "[[The Eerie Lantern.canvas]]"
 ---
 
-Thank you for bringing the lantern back. Now I will tell you about the man you met.
+
+Thank you for bringing the lantern back. Now I will tell you about the man you met. ^obsidian-esp-canvas-d6006da93b

@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem >= 10
 Function1: Journal
 Variable1: OAAB_TVos_RootOfTheProblem <= 20
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-In the village, the [[roots]] break through walls with ease. But they seem weaker here in the egg mine. Some frail tendrils may break through the loose rock, but they quickly wither. I've noticed that the vapors coming from the poisonous acid pools are particularly capable at repelling the [[roots]].
+
+In the village, the [[roots]] break through walls with ease. But they seem weaker here in the egg mine. Some frail tendrils may break through the loose rock, but they quickly wither. I've noticed that the vapors coming from the poisonous acid pools are particularly capable at repelling the [[roots]]. ^obsidian-esp-canvas-fc95cabd96

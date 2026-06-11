@@ -26,6 +26,9 @@ Function4: Not Class
 Variable4: Guard = 1
 Function5: Global
 Variable5: Random100 <= 75
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-Hetwoman Kaushad says that we should be grateful for [[Master Aryon]]'s protection from Ashlander raiders. And we are, but the [[roots]] really are a nuisance.
+
+Hetwoman Kaushad says that we should be grateful for [[Master Aryon]]'s protection from Ashlander raiders. And we are, but the [[roots]] really are a nuisance. ^obsidian-esp-canvas-8f33b3ae80

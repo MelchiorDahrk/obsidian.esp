@@ -22,6 +22,9 @@ Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem = 30
 Function1: Function
 Variable1: Choice = 10
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-Oh this is such a relief, %PCName. I have high hopes that this will [[work]]. I expect that it may take up to a week for the acid to do its [[work]]. Come back and talk to me and I'll have something for you to show my thanks.
+
+Oh this is such a relief, %PCName. I have high hopes that this will [[work]]. I expect that it may take up to a week for the acid to do its [[work]]. Come back and talk to me and I'll have something for you to show my thanks. ^obsidian-esp-canvas-bf3efe299c

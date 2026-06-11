@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem = 0
 Function1: Function
 Variable1: Choice = 2
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-[[Master Aryon]] offered to grow us some, but we prefer the old Velothi style. It's part of our heritage, %PCName. Surely you can understand.
+
+[[Master Aryon]] offered to grow us some, but we prefer the old Velothi style. It's part of our heritage, %PCName. Surely you can understand. ^obsidian-esp-canvas-b4e6ef13c2

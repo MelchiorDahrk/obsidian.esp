@@ -20,6 +20,9 @@ Function1: Not ID
 Variable1: aryon = 1
 Function2: Journal
 Variable2: OAAB_TVos_RootOfTheProblem < 100
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-The town is still standing. I do not believe [[Master Aryon]] would let the [[roots]] destroy it -- and if they did, the villagers could always be housed in mushroom pods.
+
+The town is still standing. I do not believe [[Master Aryon]] would let the [[roots]] destroy it -- and if they did, the villagers could always be housed in mushroom pods. ^obsidian-esp-canvas-386f6dfc54

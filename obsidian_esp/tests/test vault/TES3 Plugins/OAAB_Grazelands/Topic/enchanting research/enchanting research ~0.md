@@ -21,9 +21,6 @@ Function1: Dead
 Variable1: hairan mannanalit = 0
 Function2: Journal
 Variable2: OAAB_TVos_GalosIndoranyon = 0
-canvas:
-  - "[[The Final Door.canvas]]"
 ---
 
-
-I've heard that there is an ashlander scout staying at the Varo Tradehouse in [[Vos]]. I'd like you to speak with her about [[Indoranyon]] if you have the time. ^obsidian-esp-canvas-5c862c3fa4
+I've heard that there is an ashlander scout staying at the Varo Tradehouse in [[Vos]]. I'd like you to speak with her about [[Indoranyon]] if you have the time.

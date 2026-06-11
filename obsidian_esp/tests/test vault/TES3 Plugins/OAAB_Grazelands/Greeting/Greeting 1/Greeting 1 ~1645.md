@@ -16,4 +16,7 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_HauntedLantern = 10
+canvas:
+  - "[[The Eerie Lantern.canvas]]"
 ---
+

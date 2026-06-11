@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem = 0
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-Watch your step around the [[wickwheat]], [[outlander]]. These plants are my livelihood, thank you. If only those [[mushroom [[roots]] from Tel Vos]] would be as considerate.
+
+Watch your step around the [[wickwheat]], [[outlander]]. These plants are my livelihood, thank you. If only those [[mushroom [[roots]] from Tel Vos]] would be as considerate. ^obsidian-esp-canvas-a875a29514

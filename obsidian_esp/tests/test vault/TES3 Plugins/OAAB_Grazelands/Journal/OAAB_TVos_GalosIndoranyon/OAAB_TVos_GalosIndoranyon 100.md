@@ -8,9 +8,6 @@ Index: 100
 Quest Name: false
 Finished: true
 Restart: false
-canvas:
-  - "[[The Final Door.canvas]]"
 ---
 
-
-When I returned to Galos' chambers, he was gone. I hope that his experiment was successful. I found an inscribed key on a carved medallion on the floor of his room. It had a small tag attached to it which simply read: [[Indoranyon]]. Perhaps this key can be used on the door there? ^obsidian-esp-canvas-a2cab9c4c3
+When I returned to Galos' chambers, he was gone. I hope that his experiment was successful. I found an inscribed key on a carved medallion on the floor of his room. It had a small tag attached to it which simply read: [[Indoranyon]]. Perhaps this key can be used on the door there?

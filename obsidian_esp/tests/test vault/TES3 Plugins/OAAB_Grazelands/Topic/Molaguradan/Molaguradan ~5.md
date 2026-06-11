@@ -25,6 +25,9 @@ Function2: Function
 Variable2: Choice = 1
 Function3: Journal
 Variable3: OAAB_TVos_MolaguradanMonarch = 100
+canvas:
+  - "[[The Domain of Living Fire.canvas]]"
 ---
 
-Is that so? Thank you for bringing me this information, %PCName. The fact that you thought to tell me shows that you anticipated I would find it valuable. Take this as [[compensation]] and with my thanks.
+
+Is that so? Thank you for bringing me this information, %PCName. The fact that you thought to tell me shows that you anticipated I would find it valuable. Take this as [[compensation]] and with my thanks. ^obsidian-esp-canvas-36f4ab6200

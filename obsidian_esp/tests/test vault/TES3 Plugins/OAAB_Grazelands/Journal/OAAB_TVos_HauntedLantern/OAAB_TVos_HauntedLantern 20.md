@@ -8,6 +8,9 @@ Index: 20
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[The Eerie Lantern.canvas]]"
 ---
 
-I followed the light and found a lone Ashlander standing on a hilltop. He spoke a language I did not understand, but he kept repeating a single word: "[[Salkurnudai]]". He disappeared into the darkness before I could attempt to communicate. One of the local ashlander tribes might know something about this lantern or that word.
+
+I followed the light and found a lone Ashlander standing on a hilltop. He spoke a language I did not understand, but he kept repeating a single word: "[[Salkurnudai]]". He disappeared into the darkness before I could attempt to communicate. One of the local ashlander tribes might know something about this lantern or that word. ^obsidian-esp-canvas-ce9956c599

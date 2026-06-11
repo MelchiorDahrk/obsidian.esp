@@ -25,6 +25,9 @@ Function2: Item
 Variable2: ABtv_light_AshlLanternGhost >= 1
 Function3: Journal
 Variable3: OAAB_TVos_HauntedLantern < 30
+canvas:
+  - "[[The Eerie Lantern.canvas]]"
 ---
 
-You met an ancestor, %PCName. A [[sacred]] and serious demonstration of favor. That lantern you found, we call it a [[ghost lantern]]. On occasion, our [[ancestors]] will walk the blessed lands of [[Sunna Guradan]] in flesh by their own volition. This land is pleasant for them and free of any mortal chill which they shun. Sometimes they long for the warm breeze of [[Red Mountain]] to touch their skin again.
+
+You met an ancestor, %PCName. A [[sacred]] and serious demonstration of favor. That lantern you found, we call it a [[ghost lantern]]. On occasion, our [[ancestors]] will walk the blessed lands of [[Sunna Guradan]] in flesh by their own volition. This land is pleasant for them and free of any mortal chill which they shun. Sometimes they long for the warm breeze of [[Red Mountain]] to touch their skin again. ^obsidian-esp-canvas-023ebf80de

@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem >= 10
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-Settled people always complain about their houses.
+
+Settled people always complain about their houses. ^obsidian-esp-canvas-88cd6aa7b5

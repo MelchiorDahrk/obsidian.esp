@@ -8,9 +8,6 @@ Index: 0
 Quest Name: true
 Finished: false
 Restart: false
-canvas:
-  - "[[The Final Door.canvas]]"
 ---
 
-
-The Final Door ^obsidian-esp-canvas-968c8679d6
+The Final Door

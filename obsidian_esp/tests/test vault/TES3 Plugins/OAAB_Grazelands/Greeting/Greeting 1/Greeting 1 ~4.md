@@ -23,9 +23,6 @@ Function0: Global
 Variable0: ABtv_GalosAnchored = 10
 Function1: Function
 Variable1: Choice = 3
-canvas:
-  - "[[The Final Door.canvas]]"
 ---
 
-
-My apologies, %PCName. I didn't mean to be rude, Milyn has been my research partner for a long time. But you have been instrumental to my [[enchanting research]]. I have reached the culmination of my studies with just one final step I must take. I must return to my chambers and prepare. Come to [[Tel Vos]] in one week's time. I don't have time to explain everything, but I will have something for you then. ^obsidian-esp-canvas-8a1e9c8343
+My apologies, %PCName. I didn't mean to be rude, Milyn has been my research partner for a long time. But you have been instrumental to my [[enchanting research]]. I have reached the culmination of my studies with just one final step I must take. I must return to my chambers and prepare. Come to [[Tel Vos]] in one week's time. I don't have time to explain everything, but I will have something for you then.

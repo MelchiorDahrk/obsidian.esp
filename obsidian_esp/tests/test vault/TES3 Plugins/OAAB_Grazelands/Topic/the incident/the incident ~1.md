@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_Molaguradan < 100
+canvas:
+  - "[[The Domain of Living Fire.canvas]]"
 ---
 
-I don't know if you've ventured down into the dungeon, but I wouldn't recommend it. Something foul took place down there and [[Master Aryon]] hasn't restarted the excavation since. There was a cave in and most of the contracting crew was killed.
+
+I don't know if you've ventured down into the dungeon, but I wouldn't recommend it. Something foul took place down there and [[Master Aryon]] hasn't restarted the excavation since. There was a cave in and most of the contracting crew was killed. ^obsidian-esp-canvas-17c524ee83

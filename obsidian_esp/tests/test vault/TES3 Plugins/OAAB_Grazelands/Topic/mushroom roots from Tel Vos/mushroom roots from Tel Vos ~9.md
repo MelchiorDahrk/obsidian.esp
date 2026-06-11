@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem >= 10
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-The [[roots]] in the village? Oh, that is nothing. You should see some Telvanni towns on [[the mainland]], [[outlander]].
+
+The [[roots]] in the village? Oh, that is nothing. You should see some Telvanni towns on [[the mainland]], [[outlander]]. ^obsidian-esp-canvas-bbba5642cd

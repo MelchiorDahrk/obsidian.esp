@@ -8,6 +8,9 @@ Index: 120
 Quest Name: false
 Finished: true
 Restart: false
+canvas:
+  - "[[The Eerie Lantern.canvas]]"
 ---
 
-I met with an ashlander Wise Woman who told me the man I encountered was an ashlander ancestor spirit. I decided not to help put the spirit of the [[Salkurnudai]] tribesman to rest and gave up the lantern.
+
+I met with an ashlander Wise Woman who told me the man I encountered was an ashlander ancestor spirit. I decided not to help put the spirit of the [[Salkurnudai]] tribesman to rest and gave up the lantern. ^obsidian-esp-canvas-cccb71fccf

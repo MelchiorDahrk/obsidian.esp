@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_HauntedLantern = 30
+canvas:
+  - "[[The Eerie Lantern.canvas]]"
 ---
 
-You have been tasked with taking a [[ghost lantern]] to [[Molaguradan]]. Do not set the lantern down for any reason until you have completed your quest.
+
+You have been tasked with taking a [[ghost lantern]] to [[Molaguradan]]. Do not set the lantern down for any reason until you have completed your quest. ^obsidian-esp-canvas-d5f5783aaf

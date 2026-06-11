@@ -21,6 +21,9 @@ Function0: Journal
 Variable0: OAAB_TVos_Molaguradan = 20
 Function1: Function
 Variable1: Choice = 10
+canvas:
+  - "[[The Domain of Living Fire.canvas]]"
 ---
 
-It has come to my attention that the excavation [[work]] underneath my tower has come to a halt due to the meddling of a very dangerous fire daedra known as a [[Flame Monarch]]. I can compensate you appropriately if you are willing to banish it.
+
+It has come to my attention that the excavation [[work]] underneath my tower has come to a halt due to the meddling of a very dangerous fire daedra known as a [[Flame Monarch]]. I can compensate you appropriately if you are willing to banish it. ^obsidian-esp-canvas-11c85fbc11

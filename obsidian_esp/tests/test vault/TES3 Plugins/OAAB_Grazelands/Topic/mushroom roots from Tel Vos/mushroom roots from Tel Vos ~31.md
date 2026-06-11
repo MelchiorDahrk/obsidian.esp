@@ -21,6 +21,9 @@ Function1: Item
 Variable1: AB_IngCrea_KwamaPoison < 3
 Function2: Global
 Variable2: ABtv_DreynosSkooma = 0
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-You say that [[kwama]] poison may be the secret to repelling the [[roots]]? What an unexpected [[discovery]]! Please bring me three samples of these cysts you describe. If it's as potent as Ibanu describes, it should make quick [[work]] of the intruders in my house.
+
+You say that [[kwama]] poison may be the secret to repelling the [[roots]]? What an unexpected [[discovery]]! Please bring me three samples of these cysts you describe. If it's as potent as Ibanu describes, it should make quick [[work]] of the intruders in my house. ^obsidian-esp-canvas-88aac4af6a

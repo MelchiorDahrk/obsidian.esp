@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_Molaguradan = 20
 Function1: Function
 Variable1: Choice = 20
+canvas:
+  - "[[The Domain of Living Fire.canvas]]"
 ---
 
-Very well. I will have to deal with it myself.
+
+Very well. I will have to deal with it myself. ^obsidian-esp-canvas-7762f84761

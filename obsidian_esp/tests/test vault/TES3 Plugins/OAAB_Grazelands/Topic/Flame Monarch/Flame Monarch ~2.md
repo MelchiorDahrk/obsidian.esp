@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_MolaguradanMonarch = 100
 Function1: Item
 Variable1: ABtv_w_BlackSword = 0
+canvas:
+  - "[[The Domain of Living Fire.canvas]]"
 ---
 
-You say you have banished the [[Flame Monarch]]? Bring me a token from his refuge to prove your deed. Powerful daedra are known to keep strong artifacts nearby.
+
+You say you have banished the [[Flame Monarch]]? Bring me a token from his refuge to prove your deed. Powerful daedra are known to keep strong artifacts nearby. ^obsidian-esp-canvas-7a6d12edb7

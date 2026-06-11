@@ -24,6 +24,9 @@ Function1: Function
 Variable1: Choice = 4
 Function2: Journal
 Variable2: OAAB_TVos_HauntedLantern < 30
+canvas:
+  - "[[The Eerie Lantern.canvas]]"
 ---
 
-I am disappointed by your [[decision]], but I will settle the spirit myself.
+
+I am disappointed by your [[decision]], but I will settle the spirit myself. ^obsidian-esp-canvas-a896964141

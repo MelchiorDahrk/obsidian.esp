@@ -23,6 +23,9 @@ Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem = 30
 Function1: Function
 Variable1: Choice = 9
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-Fine. You're no better than the raiders. Now get going!
+
+Fine. You're no better than the raiders. Now get going! ^obsidian-esp-canvas-f011d25a80

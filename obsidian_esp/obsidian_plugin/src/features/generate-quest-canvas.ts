@@ -14,10 +14,12 @@ const DIALOGUE_COLOR = '3';
 const GATE_COLOR = '4';
 const RESULT_COLOR = '5';
 const JOURNAL_COLOR = '6';
+const JUMP_COLOR = '2';
 const GATE_WIDTH = 385;
 const CHOICE_WIDTH = 320;
 const DIALOGUE_WIDTH = 440;
 const JOURNAL_WIDTH = 440;
+const JUMP_WIDTH = 128;
 const FILE_NODE_MIN_HEIGHT = 96;
 const FILE_NODE_PADDING_Y = 40;
 const TEXT_NODE_HORIZONTAL_PADDING = 48;
@@ -99,7 +101,7 @@ interface JournalMilestone {
 }
 
 interface Condition {
-	kind: 'speaker' | 'journal' | 'item' | 'choice' | 'other';
+	kind: 'speaker' | 'journal' | 'item' | 'variable' | 'choice' | 'other';
 	displayText: string;
 	questId?: string;
 	value?: number;
@@ -139,6 +141,7 @@ interface DialogueRecord {
 	resultActions: ResultAction[];
 	resultLines: string[];
 	phaseAnchor: number;
+	sourcePhaseAnchor: number;
 	directlyRelevant: boolean;
 	conditionQuestReferences: string[];
 	resultQuestReferences: string[];
@@ -148,6 +151,7 @@ interface DialogueRecord {
 	primaryChoiceValue: number | null;
 	choiceValues: number[];
 	choiceTargets: number[];
+	suppressChoiceTransitions?: boolean;
 }
 
 interface BranchFamily {
@@ -223,6 +227,13 @@ interface PhaseGraph {
 	mainTargets: Map<number, number | null>;
 }
 
+interface PendingPhaseEntryEdge {
+	phaseNodeId: string;
+	phaseValue: number;
+	entryId: string;
+	families: BranchFamily[];
+}
+
 interface CanvasNode {
 	id: string;
 	type: 'file' | 'text';
@@ -242,6 +253,7 @@ interface CanvasEdge {
 	fromSide: 'left' | 'right' | 'top' | 'bottom';
 	toNode: string;
 	toSide: 'left' | 'right' | 'top' | 'bottom';
+	label?: string;
 }
 
 interface CanvasBuildResult {
@@ -411,13 +423,18 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 
 	const milestoneIndices = uniqueNumbers(scope.journalMilestones.map((milestone) => milestone.index).filter((index) => index > 0));
 	const phaseIndices = milestoneIndices.length > 0 ? milestoneIndices : uniqueNumbers(scope.journalMilestones.map((milestone) => milestone.index));
-	const scopedRelevantRecords = relevantRecords.map((record) => ({
-		...record,
-		phaseAnchor: determinePhaseAnchor(record.conditions, record.resultActions, phaseIndices, scope.questIds),
-	}));
+	const scopedRelevantRecords = relevantRecords.map((record) => {
+		const phaseAnchor = determinePhaseAnchor(record.conditions, record.resultActions, phaseIndices, scope.questIds);
+		return {
+			...record,
+			phaseAnchor,
+			sourcePhaseAnchor: phaseAnchor,
+		};
+	});
 	const orderedRelevantRecords = assignDialogueInfoOrder(scopedRelevantRecords);
 	const phaseAnchoredRecords = resolveChoiceDerivedPhaseAnchors(orderedRelevantRecords);
-	const families = groupBranchFamilies(phaseAnchoredRecords, scope.questIds);
+	const canvasRecords = stripUnrelatedAddTopicChoices(phaseAnchoredRecords);
+	const families = groupBranchFamilies(canvasRecords, scope.questIds);
 	const warnings: string[] = [];
 	const canvasContext = createCanvasLayoutContext();
 	for (const document of scope.journalDocuments) {
@@ -428,6 +445,7 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 	}
 	const phaseGraph = buildPhaseGraph(phaseIndices, families);
 	const phaseXPositions = new Map<number, number>();
+	const pendingPhaseEntryEdges: PendingPhaseEntryEdge[] = [];
 
 	const milestonesByPhase = new Map<number, JournalMilestone[]>();
 	for (const milestone of scope.journalMilestones) {
@@ -476,7 +494,12 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 						continue;
 					}
 
-					addEdge(canvasContext, `${milestoneNodeId}:${entryId}`, milestoneNodeId, 'right', entryId, 'left');
+					pendingPhaseEntryEdges.push({
+						phaseNodeId: milestoneNodeId,
+						phaseValue,
+						entryId,
+						families: segment.families,
+					});
 				}
 			}
 			if (Number.isFinite(topicLayout.topY) && Number.isFinite(topicLayout.bottomY)) {
@@ -493,9 +516,11 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 		}
 	}
 
-	connectChoiceTransitions(canvasContext, phaseAnchoredRecords);
-	connectAddTopicTransitions(canvasContext, phaseAnchoredRecords);
-	connectJournalConditionMilestones(canvasContext, phaseAnchoredRecords, scope.journalMilestones, scope.questIds);
+	connectChoiceTransitions(canvasContext, canvasRecords);
+	routeJournalRangeChoiceTransitions(canvasContext, canvasRecords);
+	connectPendingPhaseEntryEdges(canvasContext, pendingPhaseEntryEdges);
+	connectJournalConditionMilestones(canvasContext, canvasRecords, scope.journalMilestones, scope.questIds);
+	connectAddTopicTransitions(canvasContext, canvasRecords);
 	connectScriptedMilestones(canvasContext, phaseGraph.orderedPhases);
 	compactHorizontalConnectionLayout(canvasContext);
 	separateOverlappingBranchGroups(canvasContext);
@@ -506,13 +531,14 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 	resolveCanvasNodeOverlaps(canvasContext);
 	normalizeCanvasOrigin(canvasContext);
 	enforceGateDialogueCenterAlignment(canvasContext);
+	resolveCanvasNodeOverlaps(canvasContext);
 
 	const relatedFiles = new Map<string, TFile>();
 	const fileNodeTargets = new Map<string, FileNodeTarget>();
 	for (const milestone of scope.journalDocuments) {
 		relatedFiles.set(milestone.file.path, milestone.file);
 	}
-	for (const record of phaseAnchoredRecords) {
+	for (const record of canvasRecords) {
 		relatedFiles.set(record.file.path, record.file);
 	}
 	for (const milestone of scope.journalMilestones) {
@@ -525,7 +551,7 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 			subpath: milestone.canvasSubpath,
 		});
 	}
-	for (const record of phaseAnchoredRecords) {
+	for (const record of canvasRecords) {
 		if (!record.canvasSubpath) {
 			continue;
 		}
@@ -595,13 +621,56 @@ function recordCanRunAtPhase(record: DialogueRecord, phaseValue: number, questId
 	return selectedQuestJournalConditions.every((condition) => journalConditionMatches(phaseValue, condition));
 }
 
+function connectPendingPhaseEntryEdges(context: CanvasLayoutContext, pendingEdges: PendingPhaseEntryEdge[]): void {
+	const orderedEdges = [...pendingEdges].sort(
+		(left, right) => Number(pendingPhaseEntryHasChoiceCondition(left, context))
+			- Number(pendingPhaseEntryHasChoiceCondition(right, context))
+			|| left.phaseValue - right.phaseValue
+			|| left.entryId.localeCompare(right.entryId),
+	);
+
+	for (const pendingEdge of orderedEdges) {
+		if (nodeCanReach(context, pendingEdge.phaseNodeId, pendingEdge.entryId)) {
+			continue;
+		}
+
+		addEdge(
+			context,
+			`${pendingEdge.phaseNodeId}:${pendingEdge.entryId}`,
+			pendingEdge.phaseNodeId,
+			'right',
+			pendingEdge.entryId,
+			'left',
+		);
+	}
+}
+
+function pendingPhaseEntryHasChoiceCondition(
+	pendingEdge: PendingPhaseEntryEdge,
+	context: CanvasLayoutContext,
+): boolean {
+	return pendingEdge.families
+		.flatMap((family) => family.records)
+		.some((record) => (
+			context.recordEntryNodeIds.get(record.id) === pendingEdge.entryId
+			&& record.conditions.some((condition) => condition.kind === 'choice')
+		));
+}
+
 function connectJournalConditionMilestones(
 	context: CanvasLayoutContext,
 	records: DialogueRecord[],
 	milestones: JournalMilestone[],
 	questIds: string[],
 ): void {
-	for (const record of records) {
+	const orderedRecords = [...records].sort((left, right) => (
+		Number(recordHasChoiceCondition(left)) - Number(recordHasChoiceCondition(right))
+		|| left.sourcePhaseAnchor - right.sourcePhaseAnchor
+		|| left.infoOrder - right.infoOrder
+		|| left.file.path.localeCompare(right.file.path)
+	));
+
+	for (const record of orderedRecords) {
 		const entryNodeId = context.recordEntryNodeIds.get(record.id);
 		if (!entryNodeId) {
 			continue;
@@ -619,6 +688,10 @@ function connectJournalConditionMilestones(
 			addEdge(context, `${phaseNodeId}:${entryNodeId}`, phaseNodeId, 'right', entryNodeId, 'left');
 		}
 	}
+}
+
+function recordHasChoiceCondition(record: DialogueRecord): boolean {
+	return record.conditions.some((condition) => condition.kind === 'choice');
 }
 
 function addPhaseMilestone(
@@ -1483,7 +1556,18 @@ function connectChoiceTransitions(context: CanvasLayoutContext, records: Dialogu
 
 	const connected = new Set<string>();
 	for (const anchor of context.choiceTransitionAnchors) {
-		const targetRecords = resolveChoiceTransitionTargets(anchor, orderedRecordsByTopic);
+		const sourceRecords = anchor.sourceRecords.filter((record) => !record.suppressChoiceTransitions);
+		if (sourceRecords.length === 0) {
+			continue;
+		}
+
+		const targetRecords = resolveChoiceTransitionTargets(
+			{
+				...anchor,
+				sourceRecords,
+			},
+			orderedRecordsByTopic,
+		);
 		if (targetRecords.length === 0) {
 			continue;
 		}
@@ -1503,6 +1587,105 @@ function connectChoiceTransitions(context: CanvasLayoutContext, records: Dialogu
 			connected.add(connectionKey);
 		}
 	}
+}
+
+function routeJournalRangeChoiceTransitions(context: CanvasLayoutContext, records: DialogueRecord[]): void {
+	const recordByEntryNodeId = new Map<string, DialogueRecord>();
+	for (const record of records) {
+		const entryNodeId = context.recordEntryNodeIds.get(record.id);
+		if (entryNodeId) {
+			recordByEntryNodeId.set(entryNodeId, record);
+		}
+	}
+
+	const sourcePhaseByChoiceNodeId = new Map<string, number>();
+	for (const anchor of context.choiceTransitionAnchors) {
+		const sourcePhases = anchor.sourceRecords.map((record) => record.sourcePhaseAnchor);
+		if (sourcePhases.length === 0) {
+			continue;
+		}
+		sourcePhaseByChoiceNodeId.set(anchor.nodeId, Math.min(...sourcePhases));
+	}
+
+	const incomingChoiceEdgesByTarget = new Map<string, Array<{ edge: CanvasEdge; sourcePhase: number }>>();
+	for (const edge of context.edges) {
+		if (edge.fromSide !== 'right' || edge.toSide !== 'left') {
+			continue;
+		}
+
+		const sourceNode = findCanvasNode(context, edge.fromNode);
+		if (!sourceNode || !isChoiceNode(sourceNode)) {
+			continue;
+		}
+
+		const targetRecord = recordByEntryNodeId.get(edge.toNode);
+		if (!targetRecord || !hasJournalRangeCondition(targetRecord)) {
+			continue;
+		}
+
+		const sourcePhase = sourcePhaseByChoiceNodeId.get(edge.fromNode);
+		if (sourcePhase === undefined) {
+			continue;
+		}
+
+		const targetEdges = incomingChoiceEdgesByTarget.get(edge.toNode) ?? [];
+		targetEdges.push({ edge, sourcePhase });
+		incomingChoiceEdgesByTarget.set(edge.toNode, targetEdges);
+	}
+
+	let jumpIndex = 1;
+	for (const [targetNodeId, incomingEdges] of incomingChoiceEdgesByTarget) {
+		if (incomingEdges.length <= 1) {
+			continue;
+		}
+
+		const lowestPhase = Math.min(...incomingEdges.map((item) => item.sourcePhase));
+		for (const item of incomingEdges.sort((left, right) => left.sourcePhase - right.sourcePhase || left.edge.id.localeCompare(right.edge.id))) {
+			if (item.sourcePhase === lowestPhase) {
+				continue;
+			}
+
+			const sourceNode = findCanvasNode(context, item.edge.fromNode);
+			const targetNode = findCanvasNode(context, targetNodeId);
+			if (!sourceNode || !targetNode) {
+				continue;
+			}
+
+			const jumpText = `Jump #${jumpIndex}`;
+			const jumpNodeId = addTextNode(
+				context,
+				`jump:${item.edge.fromNode}:${targetNodeId}:${jumpIndex}`,
+				jumpText,
+				Math.round((sourceNode.x + sourceNode.width + targetNode.x - JUMP_WIDTH) / 2),
+				Math.round(edgeEndpoint(sourceNode, 'right').y - measureTextHeight(jumpText, JUMP_WIDTH) / 2),
+				JUMP_WIDTH,
+				JUMP_COLOR,
+			);
+			jumpIndex += 1;
+
+			item.edge.toNode = jumpNodeId;
+			item.edge.toSide = 'left';
+			addEdge(context, `${jumpNodeId}:${targetNodeId}`, jumpNodeId, 'right', targetNodeId, 'left');
+		}
+	}
+}
+
+function hasJournalRangeCondition(record: DialogueRecord): boolean {
+	const journalConditionsByQuest = groupJournalConditionsByQuest(record.conditions.filter(
+		(condition) => condition.kind === 'journal'
+			&& condition.questId !== undefined
+			&& condition.value !== undefined,
+	));
+
+	for (const conditions of journalConditionsByQuest.values()) {
+		const hasLowerBound = conditions.some((condition) => condition.operator === '>=' || condition.operator === '>');
+		const hasUpperBound = conditions.some((condition) => condition.operator === '<=' || condition.operator === '<');
+		if (hasLowerBound && hasUpperBound) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 function connectAddTopicTransitions(context: CanvasLayoutContext, records: DialogueRecord[]): void {
@@ -1526,6 +1709,9 @@ function connectAddTopicTransitions(context: CanvasLayoutContext, records: Dialo
 				if (!targetNodeId) {
 					continue;
 				}
+				if (nodeCanReach(context, sourceNodeId, targetNodeId)) {
+					continue;
+				}
 
 				transitions.push({
 					sourceRecord,
@@ -1544,6 +1730,7 @@ function connectAddTopicTransitions(context: CanvasLayoutContext, records: Dialo
 			'right',
 			transition.targetNodeId,
 			'left',
+			'AddTopic',
 		);
 	}
 
@@ -2155,6 +2342,23 @@ function resolveChoiceDerivedPhaseAnchors(records: DialogueRecord[]): DialogueRe
 	return records;
 }
 
+function stripUnrelatedAddTopicChoices(records: DialogueRecord[]): DialogueRecord[] {
+	return records.map((record) => {
+		if (
+			record.directlyRelevant
+			|| !record.resultActions.some((action) => action.kind === 'add-topic')
+			|| !record.resultActions.some((action) => action.kind === 'choice-set')
+		) {
+			return record;
+		}
+
+		return {
+			...record,
+			suppressChoiceTransitions: true,
+		};
+	});
+}
+
 function resolveChoiceTransitionTargets(
 	anchor: ChoiceTransitionAnchor,
 	orderedRecordsByTopic: Map<string, DialogueRecord[]>,
@@ -2248,6 +2452,10 @@ function conditionsCanFollowChoice(sourceRecord: DialogueRecord, candidate: Dial
 		return false;
 	}
 
+	if (!numericConditionsAreCompatible(sourceRecord.conditions, candidate.conditions, ['item', 'variable'])) {
+		return false;
+	}
+
 	const knownJournalValues = collectKnownJournalValuesAfterResult(sourceRecord);
 	for (const condition of candidate.conditions) {
 		if (
@@ -2289,6 +2497,10 @@ function conditionsCanFollowAddTopic(sourceRecord: DialogueRecord, candidate: Di
 	}
 
 	if (!speakerConditionsAreCompatible(sourceRecord.speakerConditions, candidate.speakerConditions)) {
+		return false;
+	}
+
+	if (!numericConditionsAreCompatible(sourceRecord.conditions, candidate.conditions, ['item', 'variable'])) {
 		return false;
 	}
 
@@ -2454,6 +2666,140 @@ function parseSpeakerConditionDisplayText(displayText: string): { label: string;
 	};
 }
 
+function numericConditionsAreCompatible(
+	sourceConditions: Condition[],
+	candidateConditions: Condition[],
+	kinds: Array<Condition['kind']>,
+): boolean {
+	for (const sourceCondition of sourceConditions) {
+		if (!isStructuredNumericCondition(sourceCondition, kinds)) {
+			continue;
+		}
+
+		for (const candidateCondition of candidateConditions) {
+			if (!isStructuredNumericCondition(candidateCondition, kinds)) {
+				continue;
+			}
+			if (sourceCondition.kind !== candidateCondition.kind || sourceCondition.questId !== candidateCondition.questId) {
+				continue;
+			}
+			if (!numericConditionRangesOverlap(sourceCondition, candidateCondition)) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+function isStructuredNumericCondition(condition: Condition, kinds: Array<Condition['kind']>): boolean {
+	return kinds.includes(condition.kind)
+		&& condition.questId !== undefined
+		&& condition.value !== undefined
+		&& condition.operator !== undefined;
+}
+
+interface NumericConditionRange {
+	min: number;
+	minInclusive: boolean;
+	max: number;
+	maxInclusive: boolean;
+	excludedValues: number[];
+}
+
+function numericConditionRangesOverlap(left: Condition, right: Condition): boolean {
+	const leftRange = numericConditionRange(left);
+	const rightRange = numericConditionRange(right);
+	const min = Math.max(leftRange.min, rightRange.min);
+	const max = Math.min(leftRange.max, rightRange.max);
+	const minInclusive = numericRangeUsesInclusiveMin(leftRange, min)
+		&& numericRangeUsesInclusiveMin(rightRange, min);
+	const maxInclusive = numericRangeUsesInclusiveMax(leftRange, max)
+		&& numericRangeUsesInclusiveMax(rightRange, max);
+
+	if (min > max) {
+		return false;
+	}
+	if (min === max) {
+		if (!minInclusive || !maxInclusive) {
+			return false;
+		}
+		return !leftRange.excludedValues.includes(min) && !rightRange.excludedValues.includes(min);
+	}
+
+	return true;
+}
+
+function numericConditionRange(condition: Condition): NumericConditionRange {
+	const value = condition.value ?? 0;
+	switch (condition.operator) {
+		case '<=':
+			return {
+				min: Number.NEGATIVE_INFINITY,
+				minInclusive: false,
+				max: value,
+				maxInclusive: true,
+				excludedValues: [],
+			};
+		case '>=':
+			return {
+				min: value,
+				minInclusive: true,
+				max: Number.POSITIVE_INFINITY,
+				maxInclusive: false,
+				excludedValues: [],
+			};
+		case '<':
+			return {
+				min: Number.NEGATIVE_INFINITY,
+				minInclusive: false,
+				max: value,
+				maxInclusive: false,
+				excludedValues: [],
+			};
+		case '>':
+			return {
+				min: value,
+				minInclusive: false,
+				max: Number.POSITIVE_INFINITY,
+				maxInclusive: false,
+				excludedValues: [],
+			};
+		case '!=':
+			return {
+				min: Number.NEGATIVE_INFINITY,
+				minInclusive: false,
+				max: Number.POSITIVE_INFINITY,
+				maxInclusive: false,
+				excludedValues: [value],
+			};
+		case '==':
+		case '=':
+		default:
+			return {
+				min: value,
+				minInclusive: true,
+				max: value,
+				maxInclusive: true,
+				excludedValues: [],
+			};
+	}
+}
+
+function numericRangeUsesInclusiveMin(range: NumericConditionRange, min: number): boolean {
+	if (range.min === Number.NEGATIVE_INFINITY || range.min < min) {
+		return true;
+	}
+	return range.minInclusive;
+}
+
+function numericRangeUsesInclusiveMax(range: NumericConditionRange, max: number): boolean {
+	if (range.max === Number.POSITIVE_INFINITY || range.max > max) {
+		return true;
+	}
+	return range.maxInclusive;
+}
+
 function collectKnownJournalValuesAfterResult(record: DialogueRecord): Map<string, number> {
 	const knownValues = new Map<string, number>();
 	for (const condition of record.conditions) {
@@ -2565,6 +2911,12 @@ function compactHorizontalConnectionLayout(context: CanvasLayoutContext): void {
 			continue;
 		}
 
+		const fromNode = nodeById.get(edge.fromNode);
+		const toNode = nodeById.get(edge.toNode);
+		if (!fromNode || !toNode || isJumpNode(fromNode)) {
+			continue;
+		}
+
 		const fromGroup = groupByNodeId.get(edge.fromNode);
 		const toGroup = groupByNodeId.get(edge.toNode);
 		if (!fromGroup || !toGroup || fromGroup.id === toGroup.id) {
@@ -2671,6 +3023,10 @@ function isChoiceNode(node: CanvasNode): boolean {
 	return node.type === 'text' && /^".*"\s+-\s+Choice\s+-?\d+/.test(node.text ?? '');
 }
 
+function isJumpNode(node: CanvasNode): boolean {
+	return node.type === 'text' && /^Jump #\d+$/.test(node.text ?? '');
+}
+
 function isGateNode(node: CanvasNode): boolean {
 	return node.type === 'text' && !isChoiceNode(node);
 }
@@ -2759,8 +3115,23 @@ function buildLockedVerticalGroups(context: CanvasLayoutContext): Map<string, Lo
 		parentByNodeId.set(node.id, node.id);
 	}
 
+	const nodeById = new Map(context.nodes.map((node) => [node.id, node]));
 	for (const edge of context.edges) {
-		if (edge.fromSide === 'bottom' && edge.toSide === 'top') {
+		const fromNode = nodeById.get(edge.fromNode);
+		const toNode = nodeById.get(edge.toNode);
+		if (
+			edge.fromSide === 'bottom'
+			&& edge.toSide === 'top'
+		) {
+			union(edge.fromNode, edge.toNode);
+		} else if (
+			fromNode !== undefined
+			&& toNode !== undefined
+			&& isGateNode(fromNode)
+			&& isDialogueFileNode(toNode)
+			&& edge.fromSide === 'right'
+			&& edge.toSide === 'left'
+		) {
 			union(edge.fromNode, edge.toNode);
 		}
 	}
@@ -3167,6 +3538,7 @@ function toDialogueRecord(
 	);
 	const ownedQuestReferences = resultQuestReferences.length > 0 ? resultQuestReferences : conditionQuestReferences;
 	const directRelevance = ownedQuestReferences.some((questId) => questIds.includes(questId));
+	const phaseAnchor = determinePhaseAnchor(conditionEntries, resultActions, phaseIndices, questIds);
 
 	return {
 		id: createNodeId(`record:${document.file.path}`),
@@ -3182,7 +3554,8 @@ function toDialogueRecord(
 		nonSpeakerConditions: conditionEntries.filter((condition) => condition.kind !== 'speaker'),
 		resultActions,
 		resultLines: resultActions.map((action) => action.displayText),
-		phaseAnchor: determinePhaseAnchor(conditionEntries, resultActions, phaseIndices, questIds),
+		phaseAnchor,
+		sourcePhaseAnchor: phaseAnchor,
 		directlyRelevant: directRelevance,
 		conditionQuestReferences,
 		resultQuestReferences,
@@ -3258,6 +3631,18 @@ function parseConditions(frontmatter: Record<string, FrontmatterValue>, questIds
 		}
 
 		const prefix = rawFunction && rawFunction !== 'Function' ? `${rawFunction} - ` : '';
+		const numericCondition = parseNumericVariableCondition(rawVariable);
+		if (numericCondition) {
+			conditions.push({
+				kind: 'variable',
+				displayText: `${prefix}${rawVariable}`,
+				questId: `${rawFunction?.trim() || 'Function'}:${numericCondition.id}`,
+				operator: numericCondition.operator,
+				value: numericCondition.value,
+			});
+			continue;
+		}
+
 		conditions.push({
 			kind: 'other',
 			displayText: `${prefix}${rawVariable}`,
@@ -4048,6 +4433,7 @@ function addEdge(
 	fromSide: 'left' | 'right' | 'top' | 'bottom',
 	toNode: string,
 	toSide: 'left' | 'right' | 'top' | 'bottom',
+	label?: string,
 ): void {
 	const edgeId = createEdgeId(seed);
 	if (context.edgeIds.has(edgeId) || fromNode === toNode) {
@@ -4060,6 +4446,7 @@ function addEdge(
 		fromSide,
 		toNode,
 		toSide,
+		...(label ? { label } : {}),
 	});
 	context.edgeIds.add(edgeId);
 }

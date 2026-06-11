@@ -8,6 +8,9 @@ Index: 0
 Quest Name: true
 Finished: false
 Restart: false
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-Root of the Problem
+
+Root of the Problem ^obsidian-esp-canvas-ec8f4b43f1

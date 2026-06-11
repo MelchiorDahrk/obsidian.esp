@@ -21,9 +21,6 @@ Function0: Global
 Variable0: ABtv_GalosAnchored = 10
 Function1: Function
 Variable1: Choice = 1
-canvas:
-  - "[[The Final Door.canvas]]"
 ---
 
-
-You know what I have to use, Milyn. ^obsidian-esp-canvas-32911f21ff
+You know what I have to use, Milyn.

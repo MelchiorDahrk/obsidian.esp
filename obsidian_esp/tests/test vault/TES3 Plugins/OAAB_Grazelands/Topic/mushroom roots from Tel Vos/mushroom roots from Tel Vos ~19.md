@@ -23,6 +23,9 @@ Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem = 100
 Function1: Global
 Variable1: ABtv_DreynosSkooma = 1
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-The [[kwama]] poison worked! It took some time, but I applied more every day and then all of a sudden they withered up and I was able to pull them out and repair my house. Thank you for your help. Here, take this [[Dwemer goblet]] I dug up. Safe travels, %PCName.
+
+The [[kwama]] poison worked! It took some time, but I applied more every day and then all of a sudden they withered up and I was able to pull them out and repair my house. Thank you for your help. Here, take this [[Dwemer goblet]] I dug up. Safe travels, %PCName. ^obsidian-esp-canvas-9e772e1dd9

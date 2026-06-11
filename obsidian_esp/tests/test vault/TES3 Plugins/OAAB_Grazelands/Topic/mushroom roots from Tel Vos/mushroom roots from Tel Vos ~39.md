@@ -26,6 +26,9 @@ Function4: Not Class
 Variable4: Guard = 1
 Function5: Global
 Variable5: Random100 <= 25
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-I'll take these [[roots]] over Ashlander raiders any day.
+
+I'll take these [[roots]] over Ashlander raiders any day. ^obsidian-esp-canvas-515dba5787

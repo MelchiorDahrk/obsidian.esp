@@ -8,6 +8,9 @@ Index: 20
 Quest Name: false
 Finished: true
 Restart: false
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-I spoke to Surin Zabbi in [[Vos]] about the [[mushroom [[roots]] from Tel Vos]]. He suggested that I speak with his wife, Ibanu Zabbi, in [[Sinarralit Egg Mine]]. Apparently they rarely see [[roots]] there. Maybe she'll have an idea about how to deal with them.
+
+I spoke to Surin Zabbi in [[Vos]] about the [[mushroom [[roots]] from Tel Vos]]. He suggested that I speak with his wife, Ibanu Zabbi, in [[Sinarralit Egg Mine]]. Apparently they rarely see [[roots]] there. Maybe she'll have an idea about how to deal with them. ^obsidian-esp-canvas-478fa6ad56

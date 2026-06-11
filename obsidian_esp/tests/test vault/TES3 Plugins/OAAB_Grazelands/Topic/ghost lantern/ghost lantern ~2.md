@@ -14,6 +14,9 @@ Rank:
 Cell:
 PC Faction:
 PC Rank:
+canvas:
+  - "[[The Eerie Lantern.canvas]]"
 ---
 
-We see the [[ancestors]] carrying them across the grazelands on rare occasions. I do not know if it is a [[sacred]] or cursed thing that you acquired one. You should speak to a wise woman.
+
+We see the [[ancestors]] carrying them across the grazelands on rare occasions. I do not know if it is a [[sacred]] or cursed thing that you acquired one. You should speak to a wise woman. ^obsidian-esp-canvas-1d284761a4

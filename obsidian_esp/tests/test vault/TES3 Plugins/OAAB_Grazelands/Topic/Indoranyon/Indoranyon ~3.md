@@ -19,9 +19,6 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosIndoranyon = 10
 Function1: Function
 Variable1: Choice = 2
-canvas:
-  - "[[The Final Door.canvas]]"
 ---
 
-
-When I appeared inside the ruins, I was surrounded by blue candles. The same candles surrounded the door I left through. ^obsidian-esp-canvas-b648e48091
+When I appeared inside the ruins, I was surrounded by blue candles. The same candles surrounded the door I left through.

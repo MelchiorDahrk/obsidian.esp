@@ -8,9 +8,6 @@ Index: 20
 Quest Name: false
 Finished: false
 Restart: false
-canvas:
-  - "[[The Final Door.canvas]]"
 ---
 
-
-I asked the ashlander scout, Hairan Mannanalit, about [[Indoranyon]] like Galos Mathendis asked. I should tell him what she told me. ^obsidian-esp-canvas-c1f2a0bbb5
+I asked the ashlander scout, Hairan Mannanalit, about [[Indoranyon]] like Galos Mathendis asked. I should tell him what she told me.

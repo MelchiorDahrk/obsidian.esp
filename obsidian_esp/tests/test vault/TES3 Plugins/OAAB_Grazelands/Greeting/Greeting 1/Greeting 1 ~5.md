@@ -21,9 +21,6 @@ Function0: Global
 Variable0: ABtv_GalosAnchored = 10
 Function1: Function
 Variable1: Choice = 2
-canvas:
-  - "[[The Final Door.canvas]]"
 ---
 
-
-I have taken precautions, and I will take more. Even if I fail, I will survive. I must know the answer and pass through the door. ^obsidian-esp-canvas-bd09f51ee2
+I have taken precautions, and I will take more. Even if I fail, I will survive. I must know the answer and pass through the door.

@@ -8,6 +8,9 @@ Index: 0
 Quest Name: true
 Finished: false
 Restart: false
+canvas:
+  - "[[The Eerie Lantern.canvas]]"
 ---
 
-The Eerie Lantern
+
+The Eerie Lantern ^obsidian-esp-canvas-0de1db4b0d

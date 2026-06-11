@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem = 90
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-It will take some time for the [[kwama]] poison to [[work]] on the [[roots]]. Come back in a few days.
+
+It will take some time for the [[kwama]] poison to [[work]] on the [[roots]]. Come back in a few days. ^obsidian-esp-canvas-ccc08bf42c

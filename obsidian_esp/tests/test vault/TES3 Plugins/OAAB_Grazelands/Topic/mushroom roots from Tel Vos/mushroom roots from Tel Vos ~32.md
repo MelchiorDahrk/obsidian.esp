@@ -20,6 +20,9 @@ Function1: Item
 Variable1: AB_IngCrea_KwamaPoison < 3
 Function2: Global
 Variable2: ABtv_DreynosSkooma = 1
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-Don't come back until you have the [[kwama]] poison!
+
+Don't come back until you have the [[kwama]] poison! ^obsidian-esp-canvas-8447bdf0ba

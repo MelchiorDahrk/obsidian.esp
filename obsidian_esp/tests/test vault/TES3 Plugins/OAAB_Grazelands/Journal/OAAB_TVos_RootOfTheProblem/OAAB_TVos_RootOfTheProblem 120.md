@@ -8,6 +8,9 @@ Index: 120
 Quest Name: false
 Finished: true
 Restart: false
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-The [[kwama]] poison worked to wither and repel the Telvanni [[roots]] which broke into Dreynos Elvul's house in [[Vos]]. He thanked me and gave me a [[Dwemer artifact]] as a [[reward]].
+
+The [[kwama]] poison worked to wither and repel the Telvanni [[roots]] which broke into Dreynos Elvul's house in [[Vos]]. He thanked me and gave me a [[Dwemer artifact]] as a [[reward]]. ^obsidian-esp-canvas-75fa67d422

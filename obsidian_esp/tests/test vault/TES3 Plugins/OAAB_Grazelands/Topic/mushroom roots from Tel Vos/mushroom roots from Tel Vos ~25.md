@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem = 30
 Function1: Function
 Variable1: Choice = 7
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-Please hurry! I'm not sure when the [[roots]] will sprout more tendrils.
+
+Please hurry! I'm not sure when the [[roots]] will sprout more tendrils. ^obsidian-esp-canvas-eb7d500038

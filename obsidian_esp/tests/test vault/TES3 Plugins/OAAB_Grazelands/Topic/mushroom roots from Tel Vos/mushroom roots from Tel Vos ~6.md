@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem >= 10
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-Intriguing aren't they? The magic used to grow them isn't really my area of expertise, but it makes one wonder what else could grow to enormous sizes with a little magical encouragement...
+
+Intriguing aren't they? The magic used to grow them isn't really my area of expertise, but it makes one wonder what else could grow to enormous sizes with a little magical encouragement... ^obsidian-esp-canvas-92ee1cc13c

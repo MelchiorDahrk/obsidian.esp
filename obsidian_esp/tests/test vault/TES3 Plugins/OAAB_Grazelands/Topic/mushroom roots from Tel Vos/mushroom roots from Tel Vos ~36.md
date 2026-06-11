@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem = 0
 Function1: Function
 Variable1: Choice = 3
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-It is, but I was getting around to asking for your help. I don't have much, but I could offer you a [[Dwemer artifact]] I dug up in the fields last season.
+
+It is, but I was getting around to asking for your help. I don't have much, but I could offer you a [[Dwemer artifact]] I dug up in the fields last season. ^obsidian-esp-canvas-5df969e4d9

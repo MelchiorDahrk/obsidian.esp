@@ -19,9 +19,6 @@ Function0: Global
 Variable0: ABtv_ConservatoryWater = 0
 Function1: Journal
 Variable1: OAAB_TVos_ConservatoryWater = 0
-canvas:
-  - "[[Conserving Water.canvas]]"
 ---
 
-
-The water in my conservatory stopped flowing recently. My retainers can't determine where the fault lies and the fools who installed the machinery never put in a valve. ^obsidian-esp-canvas-8a6dd300d2
+The water in my conservatory stopped flowing recently. My retainers can't determine where the fault lies and the fools who installed the machinery never put in a valve.

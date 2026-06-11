@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_RootOfTheProblem = 120
+canvas:
+  - "[[Root of the Problem.canvas]]"
 ---
 
-Thanks again for your help. I'll tell everyone in town about what you did. Now we have a solution for our root problem!
+
+Thanks again for your help. I'll tell everyone in town about what you did. Now we have a solution for our root problem! ^obsidian-esp-canvas-8e793c6020
