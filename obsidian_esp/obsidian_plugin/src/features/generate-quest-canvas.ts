@@ -1886,6 +1886,14 @@ function connectAdjacentJournalPhaseTerminalTransitions(
 	phaseIndices: number[],
 	questIds: string[],
 ): void {
+	const recordByEntryNodeId = new Map<string, DialogueRecord>();
+	for (const record of records) {
+		const entryNodeId = context.recordEntryNodeIds.get(record.id);
+		if (entryNodeId) {
+			recordByEntryNodeId.set(entryNodeId, record);
+		}
+	}
+
 	const orderedPhases = uniqueNumbers(phaseIndices.filter((phaseValue) => phaseValue > 0));
 	for (let index = 1; index < orderedPhases.length; index += 1) {
 		const sourcePhase = orderedPhases[index - 1];
@@ -1917,8 +1925,16 @@ function connectAdjacentJournalPhaseTerminalTransitions(
 				}
 
 				const targetNodeId = context.recordEntryNodeIds.get(targetRecord.id);
-				const entryNodeId = targetNodeId ? rootEntryNodeForExistingBranch(context, targetNodeId) : undefined;
-				const entryPhaseValue = entryNodeId ? phaseNodeIdValue(context, entryNodeId) : null;
+				const entryNodeId: string | undefined = targetNodeId
+					? rootEntryNodeForExistingBranch(
+						context,
+						targetNodeId,
+						recordByEntryNodeId,
+						targetPhase,
+						questIds,
+					)
+					: undefined;
+				const entryPhaseValue: number | null = entryNodeId ? phaseNodeIdValue(context, entryNodeId) : null;
 				if (
 					!entryNodeId
 					|| (entryPhaseValue !== null && entryPhaseValue !== targetPhase)
@@ -1949,7 +1965,13 @@ function phaseNodeIdValue(context: CanvasLayoutContext, nodeId: string): number 
 	return null;
 }
 
-function rootEntryNodeForExistingBranch(context: CanvasLayoutContext, targetNodeId: string): string {
+function rootEntryNodeForExistingBranch(
+	context: CanvasLayoutContext,
+	targetNodeId: string,
+	recordByEntryNodeId: Map<string, DialogueRecord>,
+	targetPhase: number,
+	questIds: string[],
+): string {
 	const incomingByNode = new Map<string, CanvasEdge[]>();
 	for (const edge of context.edges) {
 		if (edge.fromSide === 'bottom' && edge.toSide === 'top') {
@@ -1982,7 +2004,18 @@ function rootEntryNodeForExistingBranch(context: CanvasLayoutContext, targetNode
 		return targetNodeId;
 	}
 
-	return roots.sort((left, right) => compareCanvasNodePosition(context, left, right))[0] ?? targetNodeId;
+	const validAncestors = [...ancestors].filter((nodeId) => {
+		const record = recordByEntryNodeId.get(nodeId);
+		return record !== undefined && recordCanRunAtPhase(record, targetPhase, questIds);
+	});
+	const validAncestorSet = new Set(validAncestors);
+	const validRootAncestors = validAncestors.filter((nodeId) =>
+		(incomingByNode.get(nodeId) ?? []).every((edge) => !validAncestorSet.has(edge.fromNode)),
+	);
+
+	return (validRootAncestors.length > 0 ? validRootAncestors : validAncestors)
+		.sort((left, right) => compareCanvasNodePosition(context, left, right))[0]
+		?? targetNodeId;
 }
 
 function compareCanvasNodePosition(context: CanvasLayoutContext, leftNodeId: string, rightNodeId: string): number {
