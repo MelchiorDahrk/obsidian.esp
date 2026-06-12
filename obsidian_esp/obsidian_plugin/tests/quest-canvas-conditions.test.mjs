@@ -7,6 +7,7 @@ import { dirname, resolve } from 'node:path';
 const here = dirname(fileURLToPath(import.meta.url));
 const jiti = createJiti(import.meta.url);
 const {
+	numericConditionRangesAreCompatible,
 	speakerConditionValuesAreCompatible,
 } = jiti(resolve(here, '../src/features/quest-canvas-conditions.ts'));
 
@@ -19,4 +20,31 @@ test('speaker condition matching treats disposition as a minimum requirement', (
 test('speaker condition matching keeps non-disposition filters exact', () => {
 	assert.equal(speakerConditionValuesAreCompatible('ID', 'ABtv_TelMoraTrader', 'abtv_telmoratrader'), true);
 	assert.equal(speakerConditionValuesAreCompatible('Journal', '50', '0'), false);
+});
+
+test('numeric condition matching rejects incompatible exact journal stages', () => {
+	assert.equal(
+		numericConditionRangesAreCompatible(
+			{ operator: '=', value: 101 },
+			{ operator: '=', value: 102 },
+		),
+		false,
+	);
+});
+
+test('numeric condition matching allows overlapping journal ranges', () => {
+	assert.equal(
+		numericConditionRangesAreCompatible(
+			{ operator: '>=', value: 100 },
+			{ operator: '=', value: 102 },
+		),
+		true,
+	);
+	assert.equal(
+		numericConditionRangesAreCompatible(
+			{ operator: '<', value: 102 },
+			{ operator: '=', value: 102 },
+		),
+		false,
+	);
 });

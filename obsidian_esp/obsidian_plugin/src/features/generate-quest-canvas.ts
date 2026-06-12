@@ -3,7 +3,10 @@ import { PathManager } from './path-manager';
 import { selectVaultFolder } from '../ui/folder-suggest-modal';
 import { ProgressBar } from '../ui/progress-bar';
 import { splitFrontmatter } from '../utils/obsidian-utils';
-import { speakerConditionValuesAreCompatible } from './quest-canvas-conditions';
+import {
+	numericConditionRangesAreCompatible,
+	speakerConditionValuesAreCompatible,
+} from './quest-canvas-conditions';
 
 const DIALOGUE_TYPES = ['Greeting', 'Topic', 'Persuasion', 'Voice'] as const;
 const CANVAS_BODY_BLOCK_TYPES = new Set(['Journal', 'Greeting', 'Topic']);
@@ -2142,6 +2145,10 @@ function conditionsCanFollowJournalPhase(
 		return false;
 	}
 
+	if (!journalConditionsAreCompatible(sourceRecord.conditions, candidate.conditions)) {
+		return false;
+	}
+
 	for (const condition of candidate.conditions) {
 		if (
 			condition.kind === 'journal'
@@ -2582,105 +2589,8 @@ function isStructuredNumericCondition(condition: Condition, kinds: Array<Conditi
 		&& condition.operator !== undefined;
 }
 
-interface NumericConditionRange {
-	min: number;
-	minInclusive: boolean;
-	max: number;
-	maxInclusive: boolean;
-	excludedValues: number[];
-}
-
 function numericConditionRangesOverlap(left: Condition, right: Condition): boolean {
-	const leftRange = numericConditionRange(left);
-	const rightRange = numericConditionRange(right);
-	const min = Math.max(leftRange.min, rightRange.min);
-	const max = Math.min(leftRange.max, rightRange.max);
-	const minInclusive = numericRangeUsesInclusiveMin(leftRange, min)
-		&& numericRangeUsesInclusiveMin(rightRange, min);
-	const maxInclusive = numericRangeUsesInclusiveMax(leftRange, max)
-		&& numericRangeUsesInclusiveMax(rightRange, max);
-
-	if (min > max) {
-		return false;
-	}
-	if (min === max) {
-		if (!minInclusive || !maxInclusive) {
-			return false;
-		}
-		return !leftRange.excludedValues.includes(min) && !rightRange.excludedValues.includes(min);
-	}
-
-	return true;
-}
-
-function numericConditionRange(condition: Condition): NumericConditionRange {
-	const value = condition.value ?? 0;
-	switch (condition.operator) {
-		case '<=':
-			return {
-				min: Number.NEGATIVE_INFINITY,
-				minInclusive: false,
-				max: value,
-				maxInclusive: true,
-				excludedValues: [],
-			};
-		case '>=':
-			return {
-				min: value,
-				minInclusive: true,
-				max: Number.POSITIVE_INFINITY,
-				maxInclusive: false,
-				excludedValues: [],
-			};
-		case '<':
-			return {
-				min: Number.NEGATIVE_INFINITY,
-				minInclusive: false,
-				max: value,
-				maxInclusive: false,
-				excludedValues: [],
-			};
-		case '>':
-			return {
-				min: value,
-				minInclusive: false,
-				max: Number.POSITIVE_INFINITY,
-				maxInclusive: false,
-				excludedValues: [],
-			};
-		case '!=':
-			return {
-				min: Number.NEGATIVE_INFINITY,
-				minInclusive: false,
-				max: Number.POSITIVE_INFINITY,
-				maxInclusive: false,
-				excludedValues: [value],
-			};
-		case '==':
-		case '=':
-		default:
-			return {
-				min: value,
-				minInclusive: true,
-				max: value,
-				maxInclusive: true,
-				excludedValues: [],
-			};
-	}
-}
-
-function numericRangeUsesInclusiveMin(range: NumericConditionRange, min: number): boolean {
-	if (range.min === Number.NEGATIVE_INFINITY || range.min < min) {
-		return true;
-	}
-	return range.minInclusive;
-}
-
-function numericRangeUsesInclusiveMax(range: NumericConditionRange, max: number): boolean {
-	if (range.max === Number.POSITIVE_INFINITY || range.max > max) {
-		return true;
-	}
-	return range.maxInclusive;
+	return numericConditionRangesAreCompatible(left, right);
 }
 
 function collectKnownJournalValuesAfterResult(record: DialogueRecord): Map<string, number> {

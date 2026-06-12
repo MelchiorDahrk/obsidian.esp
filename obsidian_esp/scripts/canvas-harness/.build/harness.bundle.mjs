@@ -108,6 +108,113 @@ function splitFrontmatter(content) {
   return { frontmatter: "", body: content };
 }
 
+// obsidian_plugin/src/features/quest-canvas-conditions.ts
+function speakerConditionValuesAreCompatible(label, sourceValue, candidateValue) {
+  if (label === "Disposition") {
+    const sourceDisposition = parseIntegerValue(sourceValue);
+    const candidateDisposition = parseIntegerValue(candidateValue);
+    if (sourceDisposition !== null && candidateDisposition !== null) {
+      return sourceDisposition >= candidateDisposition;
+    }
+  }
+  return sourceValue.toLowerCase() === candidateValue.toLowerCase();
+}
+function numericConditionRangesAreCompatible(left, right) {
+  if (left.value === void 0 || right.value === void 0) {
+    return true;
+  }
+  const leftRange = numericConditionRange(left);
+  const rightRange = numericConditionRange(right);
+  const min = Math.max(leftRange.min, rightRange.min);
+  const max = Math.min(leftRange.max, rightRange.max);
+  const minInclusive = numericRangeUsesInclusiveMin(leftRange, min) && numericRangeUsesInclusiveMin(rightRange, min);
+  const maxInclusive = numericRangeUsesInclusiveMax(leftRange, max) && numericRangeUsesInclusiveMax(rightRange, max);
+  if (min > max) {
+    return false;
+  }
+  if (min === max) {
+    if (!minInclusive || !maxInclusive) {
+      return false;
+    }
+    return !leftRange.excludedValues.includes(min) && !rightRange.excludedValues.includes(min);
+  }
+  return true;
+}
+function numericConditionRange(condition) {
+  const value = condition.value ?? 0;
+  switch (condition.operator) {
+    case "<=":
+      return {
+        min: Number.NEGATIVE_INFINITY,
+        minInclusive: false,
+        max: value,
+        maxInclusive: true,
+        excludedValues: []
+      };
+    case ">=":
+      return {
+        min: value,
+        minInclusive: true,
+        max: Number.POSITIVE_INFINITY,
+        maxInclusive: false,
+        excludedValues: []
+      };
+    case "<":
+      return {
+        min: Number.NEGATIVE_INFINITY,
+        minInclusive: false,
+        max: value,
+        maxInclusive: false,
+        excludedValues: []
+      };
+    case ">":
+      return {
+        min: value,
+        minInclusive: false,
+        max: Number.POSITIVE_INFINITY,
+        maxInclusive: false,
+        excludedValues: []
+      };
+    case "!=":
+      return {
+        min: Number.NEGATIVE_INFINITY,
+        minInclusive: false,
+        max: Number.POSITIVE_INFINITY,
+        maxInclusive: false,
+        excludedValues: [value]
+      };
+    case "==":
+    case "=":
+    default:
+      return {
+        min: value,
+        minInclusive: true,
+        max: value,
+        maxInclusive: true,
+        excludedValues: []
+      };
+  }
+}
+function numericRangeUsesInclusiveMin(range, min) {
+  if (range.min === Number.NEGATIVE_INFINITY || range.min < min) {
+    return true;
+  }
+  return range.minInclusive;
+}
+function numericRangeUsesInclusiveMax(range, max) {
+  if (range.max === Number.POSITIVE_INFINITY || range.max > max) {
+    return true;
+  }
+  return range.maxInclusive;
+}
+function parseIntegerValue(value) {
+  const trimmedValue = value.trim();
+  if (!/^-?\d+$/.test(trimmedValue)) {
+    return null;
+  }
+  return Number.parseInt(trimmedValue, 10);
+}
+
 // obsidian_plugin/src/features/generate-quest-canvas.ts
 var DIALOGUE_TYPES = ["Greeting", "Topic", "Persuasion", "Voice"];
 var CANVAS_BODY_BLOCK_TYPES = /* @__PURE__ */ new Set(["Journal", "Greeting", "Topic"]);
@@ -1363,6 +1470,13 @@ function recordCanIntroduceBodyTopic(record) {
   return !record.conditions.some((condition) => condition.kind === "choice") && record.conditions.some((condition) => condition.kind === "journal" && condition.value === 0 && (condition.operator === "=" || condition.operator === "=="));
 }
 function connectAdjacentJournalPhaseTerminalTransitions(context, records, phaseIndices, questIds) {
+  const recordByEntryNodeId = /* @__PURE__ */ new Map();
+  for (const record of records) {
+    const entryNodeId = context.recordEntryNodeIds.get(record.id);
+    if (entryNodeId) {
+      recordByEntryNodeId.set(entryNodeId, record);
+    }
+  }
   const orderedPhases = uniqueNumbers(phaseIndices.filter((phaseValue) => phaseValue > 0));
   for (let index = 1; index < orderedPhases.length; index += 1) {
     const sourcePhase = orderedPhases[index - 1];
@@ -1389,7 +1503,13 @@ function connectAdjacentJournalPhaseTerminalTransitions(context, records, phaseI
           continue;
         }
         const targetNodeId = context.recordEntryNodeIds.get(targetRecord.id);
-        const entryNodeId = targetNodeId ? rootEntryNodeForExistingBranch(context, targetNodeId) : void 0;
+        const entryNodeId = targetNodeId ? rootEntryNodeForExistingBranch(
+          context,
+          targetNodeId,
+          recordByEntryNodeId,
+          targetPhase,
+          questIds
+        ) : void 0;
         const entryPhaseValue = entryNodeId ? phaseNodeIdValue(context, entryNodeId) : null;
         if (!entryNodeId || entryPhaseValue !== null && entryPhaseValue !== targetPhase || nodeCanReach(context, sourceNodeId, entryNodeId)) {
           continue;
@@ -1414,7 +1534,7 @@ function phaseNodeIdValue(context, nodeId) {
   }
   return null;
 }
-function rootEntryNodeForExistingBranch(context, targetNodeId) {
+function rootEntryNodeForExistingBranch(context, targetNodeId, recordByEntryNodeId, targetPhase, questIds) {
   const incomingByNode = /* @__PURE__ */ new Map();
   for (const edge of context.edges) {
     if (edge.fromSide === "bottom" && edge.toSide === "top") {
@@ -1442,7 +1562,15 @@ function rootEntryNodeForExistingBranch(context, targetNodeId) {
   if (roots.length === 0) {
     return targetNodeId;
   }
-  return roots.sort((left, right) => compareCanvasNodePosition(context, left, right))[0] ?? targetNodeId;
+  const validAncestors = [...ancestors].filter((nodeId) => {
+    const record = recordByEntryNodeId.get(nodeId);
+    return record !== void 0 && recordCanRunAtPhase(record, targetPhase, questIds);
+  });
+  const validAncestorSet = new Set(validAncestors);
+  const validRootAncestors = validAncestors.filter(
+    (nodeId) => (incomingByNode.get(nodeId) ?? []).every((edge) => !validAncestorSet.has(edge.fromNode))
+  );
+  return (validRootAncestors.length > 0 ? validRootAncestors : validAncestors).sort((left, right) => compareCanvasNodePosition(context, left, right))[0] ?? targetNodeId;
 }
 function compareCanvasNodePosition(context, leftNodeId, rightNodeId) {
   const leftNode = findCanvasNode(context, leftNodeId);
@@ -1515,6 +1643,9 @@ function conditionsCanFollowJournalPhase(sourceRecord, candidate, targetPhase) {
     return false;
   }
   if (!numericConditionsAreCompatible(sourceRecord.conditions, candidate.conditions, ["item", "variable"])) {
+    return false;
+  }
+  if (!journalConditionsAreCompatible(sourceRecord.conditions, candidate.conditions)) {
     return false;
   }
   for (const condition of candidate.conditions) {
@@ -1767,7 +1898,7 @@ function speakerConditionsAreCompatible(sourceConditions, candidateConditions) {
       continue;
     }
     const sourceValue = sourceValuesByLabel.get(parsed.label);
-    if (sourceValue !== void 0 && sourceValue !== parsed.value.toLowerCase()) {
+    if (sourceValue !== void 0 && !speakerConditionValuesAreCompatible(parsed.label, sourceValue, parsed.value)) {
       return false;
     }
   }
@@ -1789,7 +1920,7 @@ function countMatchingSpeakerConditions(sourceConditions, candidateConditions) {
       continue;
     }
     const sourceValue = sourceValuesByLabel.get(parsed.label);
-    if (sourceValue !== void 0 && sourceValue === parsed.value.toLowerCase()) {
+    if (sourceValue !== void 0 && speakerConditionValuesAreCompatible(parsed.label, sourceValue, parsed.value)) {
       count += 1;
     }
   }
@@ -1828,89 +1959,7 @@ function isStructuredNumericCondition(condition, kinds) {
   return kinds.includes(condition.kind) && condition.questId !== void 0 && condition.value !== void 0 && condition.operator !== void 0;
 }
 function numericConditionRangesOverlap(left, right) {
-  const leftRange = numericConditionRange(left);
-  const rightRange = numericConditionRange(right);
-  const min = Math.max(leftRange.min, rightRange.min);
-  const max = Math.min(leftRange.max, rightRange.max);
-  const minInclusive = numericRangeUsesInclusiveMin(leftRange, min) && numericRangeUsesInclusiveMin(rightRange, min);
-  const maxInclusive = numericRangeUsesInclusiveMax(leftRange, max) && numericRangeUsesInclusiveMax(rightRange, max);
-  if (min > max) {
-    return false;
-  }
-  if (min === max) {
-    if (!minInclusive || !maxInclusive) {
-      return false;
-    }
-    return !leftRange.excludedValues.includes(min) && !rightRange.excludedValues.includes(min);
-  }
-  return true;
-}
-function numericConditionRange(condition) {
-  const value = condition.value ?? 0;
-  switch (condition.operator) {
-    case "<=":
-      return {
-        min: Number.NEGATIVE_INFINITY,
-        minInclusive: false,
-        max: value,
-        maxInclusive: true,
-        excludedValues: []
-      };
-    case ">=":
-      return {
-        min: value,
-        minInclusive: true,
-        max: Number.POSITIVE_INFINITY,
-        maxInclusive: false,
-        excludedValues: []
-      };
-    case "<":
-      return {
-        min: Number.NEGATIVE_INFINITY,
-        minInclusive: false,
-        max: value,
-        maxInclusive: false,
-        excludedValues: []
-      };
-    case ">":
-      return {
-        min: value,
-        minInclusive: false,
-        max: Number.POSITIVE_INFINITY,
-        maxInclusive: false,
-        excludedValues: []
-      };
-    case "!=":
-      return {
-        min: Number.NEGATIVE_INFINITY,
-        minInclusive: false,
-        max: Number.POSITIVE_INFINITY,
-        maxInclusive: false,
-        excludedValues: [value]
-      };
-    case "==":
-    case "=":
-    default:
-      return {
-        min: value,
-        minInclusive: true,
-        max: value,
-        maxInclusive: true,
-        excludedValues: []
-      };
-  }
-}
-function numericRangeUsesInclusiveMin(range, min) {
-  if (range.min === Number.NEGATIVE_INFINITY || range.min < min) {
-    return true;
-  }
-  return range.minInclusive;
-}
-function numericRangeUsesInclusiveMax(range, max) {
-  if (range.max === Number.POSITIVE_INFINITY || range.max > max) {
-    return true;
-  }
-  return range.maxInclusive;
+  return numericConditionRangesAreCompatible(left, right);
 }
 function collectKnownJournalValuesAfterResult(record) {
   const knownValues = /* @__PURE__ */ new Map();
