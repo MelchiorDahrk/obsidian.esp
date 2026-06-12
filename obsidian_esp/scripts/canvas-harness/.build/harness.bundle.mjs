@@ -301,8 +301,10 @@ async function buildQuestCanvas(app2, scope2) {
   connectChoiceTransitions(canvasContext, canvasRecords);
   routeJournalRangeChoiceTransitions(canvasContext, canvasRecords);
   connectAddTopicTransitions(canvasContext, canvasRecords);
+  connectBodyTopicLinkTransitions(canvasContext, canvasRecords);
   connectPendingPhaseEntryEdges(canvasContext, pendingPhaseEntryEdges);
   connectJournalConditionMilestones(canvasContext, canvasRecords, scope2.journalMilestones, scope2.questIds);
+  connectAdjacentJournalPhaseTerminalTransitions(canvasContext, canvasRecords, phaseIndices, scope2.questIds);
   connectScriptedMilestones(canvasContext, phaseGraph.orderedPhases);
   applyLayeredCanvasLayout(canvasContext);
   normalizeCanvasOrigin(canvasContext);
@@ -1262,6 +1264,128 @@ function connectAddTopicTransitions(context, records) {
     );
   }
 }
+function connectBodyTopicLinkTransitions(context, records) {
+  const orderedRecordsByTopic = groupRecordsByNormalizedTopic(records);
+  for (const sourceRecord of records) {
+    if (!recordCanIntroduceBodyTopic(sourceRecord)) {
+      continue;
+    }
+    const linkedTopics = extractBodyTopicLinks(sourceRecord.bodyText).filter(
+      (topic) => normalizeTopicKey(topic) !== normalizeTopicKey(sourceRecord.topic)
+    );
+    if (linkedTopics.length === 0) {
+      continue;
+    }
+    const sourceNodeId = createNodeId(`dialogue:${sourceRecord.file.path}`);
+    for (const targetTopic of linkedTopics) {
+      const targetRecords = resolveAddTopicTransitionTargets(sourceRecord, targetTopic, orderedRecordsByTopic);
+      for (const targetRecord of targetRecords) {
+        if (targetRecord.id === sourceRecord.id) {
+          continue;
+        }
+        const targetNodeId = context.recordEntryNodeIds.get(targetRecord.id);
+        if (!targetNodeId || nodeCanReach(context, sourceNodeId, targetNodeId)) {
+          continue;
+        }
+        addEdge(
+          context,
+          `${sourceNodeId}:${targetNodeId}:body-topic:${normalizeTopicKey(targetTopic)}`,
+          sourceNodeId,
+          "right",
+          targetNodeId,
+          "left"
+        );
+      }
+    }
+  }
+}
+function recordCanIntroduceBodyTopic(record) {
+  return !record.conditions.some((condition) => condition.kind === "choice") && record.conditions.some((condition) => condition.kind === "journal" && condition.value === 0 && (condition.operator === "=" || condition.operator === "=="));
+}
+function connectAdjacentJournalPhaseTerminalTransitions(context, records, phaseIndices, questIds) {
+  const orderedPhases = uniqueNumbers(phaseIndices.filter((phaseValue) => phaseValue > 0));
+  for (let index = 1; index < orderedPhases.length; index += 1) {
+    const sourcePhase = orderedPhases[index - 1];
+    const targetPhase = orderedPhases[index];
+    if (sourcePhase === void 0 || targetPhase === void 0) {
+      continue;
+    }
+    if (phaseHasExplicitJournalProgression(records, sourcePhase, targetPhase, questIds)) {
+      continue;
+    }
+    const sourceRecords = records.filter(
+      (record) => recordHasExactJournalCondition(record, sourcePhase, questIds) && isTerminalCanvasRecord(context, record)
+    );
+    const targetRecords = records.filter(
+      (record) => recordHasExactJournalCondition(record, targetPhase, questIds) && !record.conditions.some((condition) => condition.kind === "choice")
+    );
+    for (const sourceRecord of sourceRecords) {
+      const sourceNodeId = createNodeId(`dialogue:${sourceRecord.file.path}`);
+      for (const targetRecord of targetRecords) {
+        if (!recordsShareExactJournalQuest(sourceRecord, sourcePhase, targetRecord, targetPhase, questIds)) {
+          continue;
+        }
+        if (!conditionsCanFollowJournalPhase(sourceRecord, targetRecord, targetPhase)) {
+          continue;
+        }
+        const targetNodeId = context.recordEntryNodeIds.get(targetRecord.id);
+        const entryNodeId = targetNodeId ? rootEntryNodeForExistingBranch(context, targetNodeId) : void 0;
+        if (!entryNodeId || nodeCanReach(context, sourceNodeId, entryNodeId)) {
+          continue;
+        }
+        addEdge(
+          context,
+          `${sourceNodeId}:${entryNodeId}:journal-phase:${sourcePhase}:${targetPhase}`,
+          sourceNodeId,
+          "right",
+          entryNodeId,
+          "left"
+        );
+      }
+    }
+  }
+}
+function rootEntryNodeForExistingBranch(context, targetNodeId) {
+  const incomingByNode = /* @__PURE__ */ new Map();
+  for (const edge of context.edges) {
+    if (edge.fromSide === "bottom" && edge.toSide === "top") {
+      continue;
+    }
+    const incomingEdges = incomingByNode.get(edge.toNode) ?? [];
+    incomingEdges.push(edge);
+    incomingByNode.set(edge.toNode, incomingEdges);
+  }
+  const ancestors = /* @__PURE__ */ new Set();
+  const queue = [targetNodeId];
+  while (queue.length > 0) {
+    const nodeId = queue.shift();
+    if (!nodeId || ancestors.has(nodeId)) {
+      continue;
+    }
+    ancestors.add(nodeId);
+    for (const edge of incomingByNode.get(nodeId) ?? []) {
+      if (!ancestors.has(edge.fromNode)) {
+        queue.push(edge.fromNode);
+      }
+    }
+  }
+  const roots = [...ancestors].filter((nodeId) => (incomingByNode.get(nodeId) ?? []).length === 0);
+  if (roots.length === 0) {
+    return targetNodeId;
+  }
+  return roots.sort((left, right) => compareCanvasNodePosition(context, left, right))[0] ?? targetNodeId;
+}
+function compareCanvasNodePosition(context, leftNodeId, rightNodeId) {
+  const leftNode = findCanvasNode(context, leftNodeId);
+  const rightNode = findCanvasNode(context, rightNodeId);
+  if (!leftNode || !rightNode) {
+    return leftNodeId.localeCompare(rightNodeId);
+  }
+  return leftNode.x - rightNode.x || leftNode.y - rightNode.y || leftNodeId.localeCompare(rightNodeId);
+}
+function phaseHasExplicitJournalProgression(records, sourcePhase, targetPhase, questIds) {
+  return records.some((record) => recordHasExactJournalCondition(record, sourcePhase, questIds) && record.resultActions.some((action) => action.kind === "journal-set" && action.targetQuestId !== void 0 && questIds.includes(action.targetQuestId) && action.targetJournalIndex === targetPhase));
+}
 function resolveAddTopicTransitionTargets(sourceRecord, targetTopic, orderedRecordsByTopic) {
   const targetRecords = orderedRecordsByTopic.get(normalizeTopicKey(targetTopic)) ?? [];
   const candidates = targetRecords.filter((candidate) => conditionsCanFollowAddTopic(sourceRecord, candidate));
@@ -1275,6 +1399,64 @@ function resolveAddTopicTransitionTargets(sourceRecord, targetTopic, orderedReco
   const bestScore = Math.max(...scoredCandidates.map((item) => item.score));
   const bestCandidates = scoredCandidates.filter((item) => item.score === bestScore).map((item) => item.candidate);
   return bestScore > 0 ? bestCandidates : [candidates[0]];
+}
+function extractBodyTopicLinks(bodyText) {
+  const topics = [];
+  const seen = /* @__PURE__ */ new Set();
+  const linkPattern = /\[\[([^\]]+)\]\]/g;
+  let match = linkPattern.exec(bodyText);
+  while (match) {
+    const topic = normalizeWikilinkTopic(match[1] ?? "");
+    const topicKey = normalizeTopicKey(topic);
+    if (topic.length > 0 && !seen.has(topicKey)) {
+      topics.push(topic);
+      seen.add(topicKey);
+    }
+    match = linkPattern.exec(bodyText);
+  }
+  return topics;
+}
+function normalizeWikilinkTopic(rawLink) {
+  const linkTarget = (rawLink.split("|")[0] ?? rawLink).split("#")[0]?.trim() ?? "";
+  const pathParts = linkTarget.split("/");
+  const fileName = pathParts[pathParts.length - 1] ?? linkTarget;
+  return fileName.replace(/\.md$/i, "").trim();
+}
+function isTerminalCanvasRecord(context, record) {
+  if (record.resultActions.some((action) => action.kind === "journal-set" || action.kind === "choice-set" || action.kind === "add-topic")) {
+    return false;
+  }
+  const sourceNodeId = createNodeId(`dialogue:${record.file.path}`);
+  return !context.edges.some(
+    (edge) => edge.fromNode === sourceNodeId && !(edge.fromSide === "bottom" && edge.toSide === "top")
+  );
+}
+function recordHasExactJournalCondition(record, phaseValue, questIds) {
+  return exactJournalConditionQuestIds(record, phaseValue, questIds).length > 0;
+}
+function recordsShareExactJournalQuest(sourceRecord, sourcePhase, targetRecord, targetPhase, questIds) {
+  const sourceQuestIds = new Set(exactJournalConditionQuestIds(sourceRecord, sourcePhase, questIds));
+  return exactJournalConditionQuestIds(targetRecord, targetPhase, questIds).some((questId) => sourceQuestIds.has(questId));
+}
+function exactJournalConditionQuestIds(record, phaseValue, questIds) {
+  return record.conditions.filter((condition) => condition.kind === "journal" && condition.questId !== void 0 && questIds.includes(condition.questId) && condition.value === phaseValue && (condition.operator === "=" || condition.operator === "==")).map((condition) => condition.questId);
+}
+function conditionsCanFollowJournalPhase(sourceRecord, candidate, targetPhase) {
+  if (!speakerConditionsAreCompatible(sourceRecord.speakerConditions, candidate.speakerConditions)) {
+    return false;
+  }
+  if (!numericConditionsAreCompatible(sourceRecord.conditions, candidate.conditions, ["item", "variable"])) {
+    return false;
+  }
+  for (const condition of candidate.conditions) {
+    if (condition.kind === "journal" && condition.questId !== void 0 && condition.value !== void 0 && !journalConditionMatches(targetPhase, condition)) {
+      return false;
+    }
+  }
+  return true;
+}
+function journalConditionsAreCompatible(sourceConditions, candidateConditions) {
+  return numericConditionsAreCompatible(sourceConditions, candidateConditions, ["journal"]);
 }
 function findCanvasNode(context, nodeId) {
   return context.nodes.find((node) => node.id === nodeId);
@@ -1434,6 +1616,9 @@ function conditionsCanFollowAddTopic(sourceRecord, candidate) {
     return false;
   }
   if (!numericConditionsAreCompatible(sourceRecord.conditions, candidate.conditions, ["item", "variable"])) {
+    return false;
+  }
+  if (!journalConditionsAreCompatible(sourceRecord.conditions, candidate.conditions)) {
     return false;
   }
   const knownJournalValues = collectKnownJournalValuesAfterResult(sourceRecord);

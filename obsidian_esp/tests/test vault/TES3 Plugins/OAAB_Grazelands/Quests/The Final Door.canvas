@@ -1,0 +1,978 @@
+{
+	"nodes": [
+		{
+			"id": "824fcb216affefc5",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosIndoranyon/OAAB_TVos_GalosIndoranyon 10.md",
+			"subpath": "#^obsidian-esp-canvas-4b6347aee6",
+			"x": 1745,
+			"y": 161,
+			"width": 440,
+			"height": 162,
+			"color": "6"
+		},
+		{
+			"id": "8cf7b5c86b7b84a2",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosIndoranyon/OAAB_TVos_GalosIndoranyon 20.md",
+			"subpath": "#^obsidian-esp-canvas-c1f2a0bbb5",
+			"x": 8915,
+			"y": 580,
+			"width": 440,
+			"height": 138,
+			"color": "6"
+		},
+		{
+			"id": "48152a77d1f0dc4f",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosIndoranyon/OAAB_TVos_GalosIndoranyon 30.md",
+			"subpath": "#^obsidian-esp-canvas-96e946fc87",
+			"x": 10615,
+			"y": 543,
+			"width": 440,
+			"height": 210,
+			"color": "6"
+		},
+		{
+			"id": "7b0a6326e587a9d4",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosIndoranyon/OAAB_TVos_GalosIndoranyon 40.md",
+			"subpath": "#^obsidian-esp-canvas-f505036958",
+			"x": 5975,
+			"y": 987,
+			"width": 440,
+			"height": 234,
+			"color": "6"
+		},
+		{
+			"id": "9c84086d58cec6e1",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosIndoranyon/OAAB_TVos_GalosIndoranyon 50.md",
+			"subpath": "#^obsidian-esp-canvas-81a0437211",
+			"x": 6595,
+			"y": 896,
+			"width": 440,
+			"height": 138,
+			"color": "6"
+		},
+		{
+			"id": "0cafc16d1c35daad",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_GalosIndoranyon/OAAB_TVos_GalosIndoranyon 100.md",
+			"subpath": "#^obsidian-esp-canvas-a2cab9c4c3",
+			"x": 7215,
+			"y": 840,
+			"width": 440,
+			"height": 210,
+			"color": "6"
+		},
+		{
+			"id": "0071bb14d05ee5ae",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Indoranyon/Indoranyon ~9.md",
+			"subpath": "#^obsidian-esp-canvas-856cf4c2cc",
+			"x": 1125,
+			"y": 137,
+			"width": 440,
+			"height": 210,
+			"color": "3"
+		},
+		{
+			"id": "725bf0c736f08fe9",
+			"type": "text",
+			"text": "Disposition = 0\nID = galos mathendis\nJournal - OAAB_TVos_GalosIndoranyon = 0\nJournal - OAAB_TVos_GalosLetter >= 100",
+			"x": 560,
+			"y": 181,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "0f4113d50b34b8df",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_GalosIndoranyon 10#^obsidian-esp-canvas-4b6347aee6|OAAB_TVos_GalosIndoranyon 10]]\nPlayer->AddItem \"ABtv_note_GalosQuestions\" 1",
+			"x": 1125,
+			"y": 377,
+			"width": 440,
+			"height": 122,
+			"color": "6"
+		},
+		{
+			"id": "38dffb61f2b36eff",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Indoranyon/Indoranyon ~8.md",
+			"subpath": "#^obsidian-esp-canvas-52800927b2",
+			"x": 2930,
+			"y": 44,
+			"width": 440,
+			"height": 138,
+			"color": "3"
+		},
+		{
+			"id": "31eda3e2e36877e8",
+			"type": "text",
+			"text": "Disposition = 0\nID = galos mathendis\nJournal - OAAB_TVos_GalosIndoranyon = 10",
+			"x": 2365,
+			"y": 64,
+			"width": 385,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "8ce86d28f6d1b032",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Indoranyon/Indoranyon ~5.md",
+			"subpath": "#^obsidian-esp-canvas-e719913e6d",
+			"x": 2930,
+			"y": 361,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "d682f6432ae957a5",
+			"type": "text",
+			"text": "Disposition = 0\nID = hairan mannanalit\nJournal - OAAB_TVos_GalosIndoranyon = 10",
+			"x": 2365,
+			"y": 322,
+			"width": 385,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "c96b15e702116d85",
+			"type": "text",
+			"text": "\"Where is Telvon?\" - Choice 30",
+			"x": 3550,
+			"y": 292,
+			"width": 320,
+			"height": 50,
+			"color": "4"
+		},
+		{
+			"id": "c6be330ac3d533ec",
+			"type": "text",
+			"text": "\"What color was the candle wax?\" - Choice 20",
+			"x": 3550,
+			"y": 373,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "0f101f40c3d2befc",
+			"type": "text",
+			"text": "\"Was the door locked?\" - Choice 1",
+			"x": 3550,
+			"y": 526,
+			"width": 320,
+			"height": 50,
+			"color": "4"
+		},
+		{
+			"id": "f2f02d4940e51827",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Indoranyon/Indoranyon ~0.md",
+			"subpath": "#^obsidian-esp-canvas-bb4b4eff3d",
+			"x": 6595,
+			"y": 342,
+			"width": 440,
+			"height": 96,
+			"color": "3"
+		},
+		{
+			"id": "dab7bb7a44cd29b0",
+			"type": "text",
+			"text": "Disposition = 0\nID = hairan mannanalit\nChoice = 30\nJournal - OAAB_TVos_GalosIndoranyon = 10",
+			"x": 5975,
+			"y": 337,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "c92643bc6aabb2f6",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Indoranyon/Indoranyon ~1.md",
+			"subpath": "#^obsidian-esp-canvas-badd66da1f",
+			"x": 4735,
+			"y": 391,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "6a46671fd13d5d31",
+			"type": "text",
+			"text": "Disposition = 0\nID = hairan mannanalit\nChoice = 20\nJournal - OAAB_TVos_GalosIndoranyon = 10",
+			"x": 4170,
+			"y": 367,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "21fcbc65dc73e8f3",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Indoranyon/Indoranyon ~4.md",
+			"subpath": "#^obsidian-esp-canvas-2a02472351",
+			"x": 4735,
+			"y": 665,
+			"width": 440,
+			"height": 96,
+			"color": "3"
+		},
+		{
+			"id": "096fe1de6e0e53d4",
+			"type": "text",
+			"text": "Disposition = 0\nID = hairan mannanalit\nChoice = 1\nJournal - OAAB_TVos_GalosIndoranyon = 10",
+			"x": 4170,
+			"y": 649,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "74b57526cb7a3aec",
+			"type": "text",
+			"text": "\"Where is Telvon?\" - Choice 30",
+			"x": 5355,
+			"y": 502,
+			"width": 320,
+			"height": 50,
+			"color": "4"
+		},
+		{
+			"id": "9f825e89d566cb31",
+			"type": "text",
+			"text": "\"What color was the candle wax?\" - Choice 2",
+			"x": 5355,
+			"y": 631,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "b8042226578e6574",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Indoranyon/Indoranyon ~3.md",
+			"subpath": "#^obsidian-esp-canvas-b648e48091",
+			"x": 6595,
+			"y": 598,
+			"width": 440,
+			"height": 138,
+			"color": "3"
+		},
+		{
+			"id": "72c9185d62657ed3",
+			"type": "text",
+			"text": "Disposition = 0\nID = hairan mannanalit\nChoice = 2\nJournal - OAAB_TVos_GalosIndoranyon = 10",
+			"x": 5975,
+			"y": 619,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "d7ea1527ac26c197",
+			"type": "text",
+			"text": "\"Where is Telvon?\" - Choice 3",
+			"x": 7215,
+			"y": 630,
+			"width": 320,
+			"height": 50,
+			"color": "4"
+		},
+		{
+			"id": "c051b92b79e2eec5",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Indoranyon/Indoranyon ~2.md",
+			"subpath": "#^obsidian-esp-canvas-c648693d75",
+			"x": 8295,
+			"y": 569,
+			"width": 440,
+			"height": 162,
+			"color": "3"
+		},
+		{
+			"id": "65458fa0a7d81912",
+			"type": "text",
+			"text": "Disposition = 0\nID = hairan mannanalit\nChoice = 3\nJournal - OAAB_TVos_GalosIndoranyon = 10",
+			"x": 7835,
+			"y": 591,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "0bf031ead58934d4",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_GalosIndoranyon 20#^obsidian-esp-canvas-c1f2a0bbb5|OAAB_TVos_GalosIndoranyon 20]]",
+			"x": 8295,
+			"y": 761,
+			"width": 440,
+			"height": 98,
+			"color": "6"
+		},
+		{
+			"id": "8f46ae1eca323988",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 1/Greeting 1 ~7.md",
+			"subpath": "#^obsidian-esp-canvas-fa22ded4ad",
+			"x": -60,
+			"y": 1035,
+			"width": 440,
+			"height": 138,
+			"color": "3"
+		},
+		{
+			"id": "b6c61e0be7c1e98b",
+			"type": "text",
+			"text": "Disposition = 0\nID = galos mathendis\nGlobal - ABtv_GalosAnchored = 10",
+			"x": -520,
+			"y": 1055,
+			"width": 385,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "2fa63d715a88eb1d",
+			"type": "text",
+			"text": "MessageBox \"Milyn Faram: But what will you use as a key, Galos? I can still sense the destruction which was wrought below our feet here.\"",
+			"x": -60,
+			"y": 1203,
+			"width": 440,
+			"height": 98,
+			"color": "5"
+		},
+		{
+			"id": "14239cd5063c3c29",
+			"type": "text",
+			"text": "\"[Continue listening.]\" - Choice 1",
+			"x": 560,
+			"y": 1079,
+			"width": 320,
+			"height": 50,
+			"color": "4"
+		},
+		{
+			"id": "5c5b55838333d709",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 1/Greeting 1 ~6.md",
+			"subpath": "#^obsidian-esp-canvas-32911f21ff",
+			"x": 1745,
+			"y": 1056,
+			"width": 440,
+			"height": 96,
+			"color": "3"
+		},
+		{
+			"id": "b0f2f0065b51b60a",
+			"type": "text",
+			"text": "Disposition = 0\nID = galos mathendis\nChoice = 1\nGlobal - ABtv_GalosAnchored = 10",
+			"x": 1125,
+			"y": 1043,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "32213ae4f235652c",
+			"type": "text",
+			"text": "MessageBox \"Milyn Faram: My friend, without a pact to protect yourself, how can you be sure the spell will succeed?\"",
+			"x": 1745,
+			"y": 1182,
+			"width": 440,
+			"height": 98,
+			"color": "5"
+		},
+		{
+			"id": "19709e4877089f10",
+			"type": "text",
+			"text": "\"[Continue listening.]\" - Choice 2",
+			"x": 2365,
+			"y": 1079,
+			"width": 320,
+			"height": 50,
+			"color": "4"
+		},
+		{
+			"id": "cc5f97d410c1828a",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 1/Greeting 1 ~5.md",
+			"subpath": "#^obsidian-esp-canvas-bd09f51ee2",
+			"x": 3550,
+			"y": 1035,
+			"width": 440,
+			"height": 138,
+			"color": "3"
+		},
+		{
+			"id": "5f38a0a9cdc40a89",
+			"type": "text",
+			"text": "Disposition = 0\nID = galos mathendis\nChoice = 2\nGlobal - ABtv_GalosAnchored = 10",
+			"x": 2930,
+			"y": 1043,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "890ec013db8c17df",
+			"type": "text",
+			"text": "MessageBox \"Milyn Faram: *Sigh* Very well. Take care, Galos.\"",
+			"x": 3550,
+			"y": 1203,
+			"width": 440,
+			"height": 74,
+			"color": "5"
+		},
+		{
+			"id": "e7546f4dcfffeaeb",
+			"type": "text",
+			"text": "\"Excuse me, but what are you both talking about?\" - Choice 3",
+			"x": 4170,
+			"y": 1067,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "97bb8df1b45ebd1f",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/enchanting research/enchanting research ~0.md",
+			"subpath": "#^obsidian-esp-canvas-5c862c3fa4",
+			"x": -60,
+			"y": 161,
+			"width": 440,
+			"height": 162,
+			"color": "3"
+		},
+		{
+			"id": "de63334eabdb17f8",
+			"type": "text",
+			"text": "Disposition = 0\nPC Faction = Telvanni\nID = galos mathendis\nDead - hairan mannanalit = 0\nJournal - OAAB_TVos_GalosIndoranyon = 0\nJournal - OAAB_TVos_GalosLetter >= 100",
+			"x": -520,
+			"y": 157,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "07dc55fc24921ede",
+			"type": "text",
+			"text": "AddTopic \"[[Indoranyon]]\"",
+			"x": -60,
+			"y": 353,
+			"width": 440,
+			"height": 50,
+			"color": "5"
+		},
+		{
+			"id": "ee528f6259620e50",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Indoranyon/Indoranyon ~7.md",
+			"subpath": "#^obsidian-esp-canvas-978c20748f",
+			"x": 9995,
+			"y": 532,
+			"width": 440,
+			"height": 234,
+			"color": "3"
+		},
+		{
+			"id": "7c7b0fe157650687",
+			"type": "text",
+			"text": "Disposition = 0\nID = galos mathendis\nJournal - OAAB_TVos_GalosIndoranyon = 20",
+			"x": 9535,
+			"y": 600,
+			"width": 385,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "402bd47338b83e31",
+			"type": "text",
+			"text": "Player->AddItem \"ABtv_ScEn_GalosMark\" 1\nJournal [[OAAB_TVos_GalosIndoranyon 30#^obsidian-esp-canvas-96e946fc87|OAAB_TVos_GalosIndoranyon 30]]\nPlayer->StartScript ABtv_GalosIndoranyonTrip_s",
+			"x": 9995,
+			"y": 796,
+			"width": 440,
+			"height": 146,
+			"color": "6"
+		},
+		{
+			"id": "04cdd8219d31b60b",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 1/Greeting 1 ~4.md",
+			"subpath": "#^obsidian-esp-canvas-8a1e9c8343",
+			"x": 5355,
+			"y": 963,
+			"width": 440,
+			"height": 282,
+			"color": "3"
+		},
+		{
+			"id": "c215119c14c26d08",
+			"type": "text",
+			"text": "Disposition = 0\nID = galos mathendis\nChoice = 3\nGlobal - ABtv_GalosAnchored = 10",
+			"x": 4735,
+			"y": 1043,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "c1113fae1eb1140e",
+			"type": "text",
+			"text": "set ABtv_GalosAnchored to 100\nPlayer->StartScript ABtv_GalosWait_s\nJournal [[OAAB_TVos_GalosIndoranyon 40#^obsidian-esp-canvas-f505036958|OAAB_TVos_GalosIndoranyon 40]]\nGoodbye",
+			"x": 5355,
+			"y": 1275,
+			"width": 440,
+			"height": 170,
+			"color": "6"
+		},
+		{
+			"id": "2ec0dc47babd6ed1",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Indoranyon/Indoranyon ~6.md",
+			"subpath": "#^obsidian-esp-canvas-5ca0bb411d",
+			"x": 11695,
+			"y": 579,
+			"width": 440,
+			"height": 138,
+			"color": "3"
+		},
+		{
+			"id": "440ccf94f09d48d6",
+			"type": "text",
+			"text": "Disposition = 0\nID = galos mathendis\nJournal - OAAB_TVos_GalosIndoranyon = 30",
+			"x": 11235,
+			"y": 599,
+			"width": 385,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "eb1c5be03a02acae",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 1/Greeting 1 ~1.md",
+			"subpath": "#^obsidian-esp-canvas-90cc37bae0",
+			"x": 7215,
+			"y": 1210,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "8e452fc525e43cbd",
+			"type": "text",
+			"text": "Disposition = 0\nID = galos mathendis\nJournal - OAAB_TVos_GalosIndoranyon = 40",
+			"x": 6595,
+			"y": 1194,
+			"width": 385,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "5cd295af56cb4a6b",
+			"type": "text",
+			"text": "Goodbye",
+			"x": 7215,
+			"y": 1354,
+			"width": 440,
+			"height": 50,
+			"color": "5"
+		}
+	],
+	"edges": [
+		{
+			"id": "f719e8b8cdc1a25a",
+			"fromNode": "725bf0c736f08fe9",
+			"fromSide": "right",
+			"toNode": "0071bb14d05ee5ae",
+			"toSide": "left"
+		},
+		{
+			"id": "7da049aa8674766a",
+			"fromNode": "0071bb14d05ee5ae",
+			"fromSide": "bottom",
+			"toNode": "0f4113d50b34b8df",
+			"toSide": "top"
+		},
+		{
+			"id": "4da516c62f4f8b50",
+			"fromNode": "0071bb14d05ee5ae",
+			"fromSide": "right",
+			"toNode": "824fcb216affefc5",
+			"toSide": "left"
+		},
+		{
+			"id": "e093bddb62008623",
+			"fromNode": "31eda3e2e36877e8",
+			"fromSide": "right",
+			"toNode": "38dffb61f2b36eff",
+			"toSide": "left"
+		},
+		{
+			"id": "ab95048c5c57a5d6",
+			"fromNode": "d682f6432ae957a5",
+			"fromSide": "right",
+			"toNode": "8ce86d28f6d1b032",
+			"toSide": "left"
+		},
+		{
+			"id": "87203b63f6b53b2d",
+			"fromNode": "8ce86d28f6d1b032",
+			"fromSide": "right",
+			"toNode": "c96b15e702116d85",
+			"toSide": "left"
+		},
+		{
+			"id": "b7be2b9a0044e534",
+			"fromNode": "8ce86d28f6d1b032",
+			"fromSide": "right",
+			"toNode": "c6be330ac3d533ec",
+			"toSide": "left"
+		},
+		{
+			"id": "8b4d7fea7b06f600",
+			"fromNode": "8ce86d28f6d1b032",
+			"fromSide": "right",
+			"toNode": "0f101f40c3d2befc",
+			"toSide": "left"
+		},
+		{
+			"id": "c616aac7eea7b9a1",
+			"fromNode": "dab7bb7a44cd29b0",
+			"fromSide": "right",
+			"toNode": "f2f02d4940e51827",
+			"toSide": "left"
+		},
+		{
+			"id": "ddae719ef077287a",
+			"fromNode": "6a46671fd13d5d31",
+			"fromSide": "right",
+			"toNode": "c92643bc6aabb2f6",
+			"toSide": "left"
+		},
+		{
+			"id": "816e2a25f1ea253b",
+			"fromNode": "096fe1de6e0e53d4",
+			"fromSide": "right",
+			"toNode": "21fcbc65dc73e8f3",
+			"toSide": "left"
+		},
+		{
+			"id": "39dae2302aee676e",
+			"fromNode": "21fcbc65dc73e8f3",
+			"fromSide": "right",
+			"toNode": "74b57526cb7a3aec",
+			"toSide": "left"
+		},
+		{
+			"id": "58394ab91e871845",
+			"fromNode": "21fcbc65dc73e8f3",
+			"fromSide": "right",
+			"toNode": "9f825e89d566cb31",
+			"toSide": "left"
+		},
+		{
+			"id": "7aed065087dd7894",
+			"fromNode": "72c9185d62657ed3",
+			"fromSide": "right",
+			"toNode": "b8042226578e6574",
+			"toSide": "left"
+		},
+		{
+			"id": "8e53c5cf402e21c9",
+			"fromNode": "b8042226578e6574",
+			"fromSide": "right",
+			"toNode": "d7ea1527ac26c197",
+			"toSide": "left"
+		},
+		{
+			"id": "9ed5454547a6e6bf",
+			"fromNode": "65458fa0a7d81912",
+			"fromSide": "right",
+			"toNode": "c051b92b79e2eec5",
+			"toSide": "left"
+		},
+		{
+			"id": "c13602f6f83f203a",
+			"fromNode": "c051b92b79e2eec5",
+			"fromSide": "bottom",
+			"toNode": "0bf031ead58934d4",
+			"toSide": "top"
+		},
+		{
+			"id": "eb517a9f320925ef",
+			"fromNode": "c051b92b79e2eec5",
+			"fromSide": "right",
+			"toNode": "8cf7b5c86b7b84a2",
+			"toSide": "left"
+		},
+		{
+			"id": "4ec61bfa8c8915bc",
+			"fromNode": "b6c61e0be7c1e98b",
+			"fromSide": "right",
+			"toNode": "8f46ae1eca323988",
+			"toSide": "left"
+		},
+		{
+			"id": "f63a384736a919d1",
+			"fromNode": "8f46ae1eca323988",
+			"fromSide": "bottom",
+			"toNode": "2fa63d715a88eb1d",
+			"toSide": "top"
+		},
+		{
+			"id": "49394cb5eabc5c17",
+			"fromNode": "8f46ae1eca323988",
+			"fromSide": "right",
+			"toNode": "14239cd5063c3c29",
+			"toSide": "left"
+		},
+		{
+			"id": "c8016bd155290bab",
+			"fromNode": "b0f2f0065b51b60a",
+			"fromSide": "right",
+			"toNode": "5c5b55838333d709",
+			"toSide": "left"
+		},
+		{
+			"id": "ea5854a0a08eb3e2",
+			"fromNode": "5c5b55838333d709",
+			"fromSide": "bottom",
+			"toNode": "32213ae4f235652c",
+			"toSide": "top"
+		},
+		{
+			"id": "808fa01c8399ab9a",
+			"fromNode": "5c5b55838333d709",
+			"fromSide": "right",
+			"toNode": "19709e4877089f10",
+			"toSide": "left"
+		},
+		{
+			"id": "33a8b81422b10390",
+			"fromNode": "5f38a0a9cdc40a89",
+			"fromSide": "right",
+			"toNode": "cc5f97d410c1828a",
+			"toSide": "left"
+		},
+		{
+			"id": "2fdbdca932e7660d",
+			"fromNode": "cc5f97d410c1828a",
+			"fromSide": "bottom",
+			"toNode": "890ec013db8c17df",
+			"toSide": "top"
+		},
+		{
+			"id": "a7d2fcc601e74a80",
+			"fromNode": "cc5f97d410c1828a",
+			"fromSide": "right",
+			"toNode": "e7546f4dcfffeaeb",
+			"toSide": "left"
+		},
+		{
+			"id": "00b1f1feafb66216",
+			"fromNode": "de63334eabdb17f8",
+			"fromSide": "right",
+			"toNode": "97bb8df1b45ebd1f",
+			"toSide": "left"
+		},
+		{
+			"id": "26f2d1a15748780f",
+			"fromNode": "97bb8df1b45ebd1f",
+			"fromSide": "bottom",
+			"toNode": "07dc55fc24921ede",
+			"toSide": "top"
+		},
+		{
+			"id": "0da3c78cf1f94176",
+			"fromNode": "7c7b0fe157650687",
+			"fromSide": "right",
+			"toNode": "ee528f6259620e50",
+			"toSide": "left"
+		},
+		{
+			"id": "b54af476794384f8",
+			"fromNode": "ee528f6259620e50",
+			"fromSide": "bottom",
+			"toNode": "402bd47338b83e31",
+			"toSide": "top"
+		},
+		{
+			"id": "0f5c8f2b08a232f9",
+			"fromNode": "ee528f6259620e50",
+			"fromSide": "right",
+			"toNode": "48152a77d1f0dc4f",
+			"toSide": "left"
+		},
+		{
+			"id": "c19aebb0a1c28f70",
+			"fromNode": "c215119c14c26d08",
+			"fromSide": "right",
+			"toNode": "04cdd8219d31b60b",
+			"toSide": "left"
+		},
+		{
+			"id": "62af3d6763feef19",
+			"fromNode": "04cdd8219d31b60b",
+			"fromSide": "bottom",
+			"toNode": "c1113fae1eb1140e",
+			"toSide": "top"
+		},
+		{
+			"id": "8b65e80f695269c1",
+			"fromNode": "04cdd8219d31b60b",
+			"fromSide": "right",
+			"toNode": "7b0a6326e587a9d4",
+			"toSide": "left"
+		},
+		{
+			"id": "3df7204f13ffb345",
+			"fromNode": "440ccf94f09d48d6",
+			"fromSide": "right",
+			"toNode": "2ec0dc47babd6ed1",
+			"toSide": "left"
+		},
+		{
+			"id": "42f7c9d16f2693af",
+			"fromNode": "8e452fc525e43cbd",
+			"fromSide": "right",
+			"toNode": "eb1c5be03a02acae",
+			"toSide": "left"
+		},
+		{
+			"id": "0195899ded56bc15",
+			"fromNode": "eb1c5be03a02acae",
+			"fromSide": "bottom",
+			"toNode": "5cd295af56cb4a6b",
+			"toSide": "top"
+		},
+		{
+			"id": "2382bfee57f319cc",
+			"fromNode": "c96b15e702116d85",
+			"fromSide": "right",
+			"toNode": "dab7bb7a44cd29b0",
+			"toSide": "left"
+		},
+		{
+			"id": "2cbeca746030aa06",
+			"fromNode": "c6be330ac3d533ec",
+			"fromSide": "right",
+			"toNode": "6a46671fd13d5d31",
+			"toSide": "left"
+		},
+		{
+			"id": "924860b7be7b03ab",
+			"fromNode": "0f101f40c3d2befc",
+			"fromSide": "right",
+			"toNode": "096fe1de6e0e53d4",
+			"toSide": "left"
+		},
+		{
+			"id": "dd5bd2c68ec28c98",
+			"fromNode": "74b57526cb7a3aec",
+			"fromSide": "right",
+			"toNode": "dab7bb7a44cd29b0",
+			"toSide": "left"
+		},
+		{
+			"id": "18d1aacb1b4386ef",
+			"fromNode": "9f825e89d566cb31",
+			"fromSide": "right",
+			"toNode": "72c9185d62657ed3",
+			"toSide": "left"
+		},
+		{
+			"id": "c42149394513789d",
+			"fromNode": "d7ea1527ac26c197",
+			"fromSide": "right",
+			"toNode": "65458fa0a7d81912",
+			"toSide": "left"
+		},
+		{
+			"id": "e1bc0fbb96f8d3a9",
+			"fromNode": "14239cd5063c3c29",
+			"fromSide": "right",
+			"toNode": "b0f2f0065b51b60a",
+			"toSide": "left"
+		},
+		{
+			"id": "171ba7ba47a372f0",
+			"fromNode": "19709e4877089f10",
+			"fromSide": "right",
+			"toNode": "5f38a0a9cdc40a89",
+			"toSide": "left"
+		},
+		{
+			"id": "41267d47b1a2e8fd",
+			"fromNode": "e7546f4dcfffeaeb",
+			"fromSide": "right",
+			"toNode": "c215119c14c26d08",
+			"toSide": "left"
+		},
+		{
+			"id": "9bade8925540951c",
+			"fromNode": "97bb8df1b45ebd1f",
+			"fromSide": "right",
+			"toNode": "725bf0c736f08fe9",
+			"toSide": "left",
+			"label": "AddTopic"
+		},
+		{
+			"id": "46feec71e91d6ab3",
+			"fromNode": "824fcb216affefc5",
+			"fromSide": "right",
+			"toNode": "31eda3e2e36877e8",
+			"toSide": "left"
+		},
+		{
+			"id": "3f79e9fad8d73762",
+			"fromNode": "824fcb216affefc5",
+			"fromSide": "right",
+			"toNode": "d682f6432ae957a5",
+			"toSide": "left"
+		},
+		{
+			"id": "635cb02b1729d6f7",
+			"fromNode": "8cf7b5c86b7b84a2",
+			"fromSide": "right",
+			"toNode": "7c7b0fe157650687",
+			"toSide": "left"
+		},
+		{
+			"id": "442e1a855fae2be3",
+			"fromNode": "48152a77d1f0dc4f",
+			"fromSide": "right",
+			"toNode": "440ccf94f09d48d6",
+			"toSide": "left"
+		},
+		{
+			"id": "d7b7a25449796d78",
+			"fromNode": "7b0a6326e587a9d4",
+			"fromSide": "right",
+			"toNode": "8e452fc525e43cbd",
+			"toSide": "left"
+		},
+		{
+			"id": "81ae61f82a4c4294",
+			"fromNode": "7b0a6326e587a9d4",
+			"fromSide": "right",
+			"toNode": "9c84086d58cec6e1",
+			"toSide": "left"
+		},
+		{
+			"id": "1937bade0d625e1e",
+			"fromNode": "9c84086d58cec6e1",
+			"fromSide": "right",
+			"toNode": "0cafc16d1c35daad",
+			"toSide": "left"
+		}
+	],
+	"metadata": {
+		"version": "1.0-1.0",
+		"frontmatter": {}
+	}
+}
