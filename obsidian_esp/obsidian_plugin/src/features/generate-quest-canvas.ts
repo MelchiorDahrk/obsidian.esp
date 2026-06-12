@@ -3,6 +3,7 @@ import { PathManager } from './path-manager';
 import { selectVaultFolder } from '../ui/folder-suggest-modal';
 import { ProgressBar } from '../ui/progress-bar';
 import { splitFrontmatter } from '../utils/obsidian-utils';
+import { speakerConditionValuesAreCompatible } from './quest-canvas-conditions';
 
 const DIALOGUE_TYPES = ['Greeting', 'Topic', 'Persuasion', 'Voice'] as const;
 const CANVAS_BODY_BLOCK_TYPES = new Set(['Journal', 'Greeting', 'Topic']);
@@ -2463,7 +2464,10 @@ function speakerConditionsAreCompatible(sourceConditions: Condition[], candidate
 		}
 
 		const sourceValue = sourceValuesByLabel.get(parsed.label);
-		if (sourceValue !== undefined && sourceValue !== parsed.value.toLowerCase()) {
+		if (
+			sourceValue !== undefined
+			&& !speakerConditionValuesAreCompatible(parsed.label, sourceValue, parsed.value)
+		) {
 			return false;
 		}
 	}
@@ -2489,7 +2493,10 @@ function countMatchingSpeakerConditions(sourceConditions: Condition[], candidate
 		}
 
 		const sourceValue = sourceValuesByLabel.get(parsed.label);
-		if (sourceValue !== undefined && sourceValue === parsed.value.toLowerCase()) {
+		if (
+			sourceValue !== undefined
+			&& speakerConditionValuesAreCompatible(parsed.label, sourceValue, parsed.value)
+		) {
 			count += 1;
 		}
 	}
