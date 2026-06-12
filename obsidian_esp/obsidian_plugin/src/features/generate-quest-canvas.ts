@@ -1917,7 +1917,12 @@ function connectAdjacentJournalPhaseTerminalTransitions(
 
 				const targetNodeId = context.recordEntryNodeIds.get(targetRecord.id);
 				const entryNodeId = targetNodeId ? rootEntryNodeForExistingBranch(context, targetNodeId) : undefined;
-				if (!entryNodeId || nodeCanReach(context, sourceNodeId, entryNodeId)) {
+				const entryPhaseValue = entryNodeId ? phaseNodeIdValue(context, entryNodeId) : null;
+				if (
+					!entryNodeId
+					|| (entryPhaseValue !== null && entryPhaseValue !== targetPhase)
+					|| nodeCanReach(context, sourceNodeId, entryNodeId)
+				) {
 					continue;
 				}
 
@@ -1932,6 +1937,15 @@ function connectAdjacentJournalPhaseTerminalTransitions(
 			}
 		}
 	}
+}
+
+function phaseNodeIdValue(context: CanvasLayoutContext, nodeId: string): number | null {
+	for (const [phaseValue, phaseNodeId] of context.phaseNodeIds) {
+		if (phaseNodeId === nodeId) {
+			return phaseValue;
+		}
+	}
+	return null;
 }
 
 function rootEntryNodeForExistingBranch(context: CanvasLayoutContext, targetNodeId: string): string {

@@ -401,6 +401,8 @@ function pendingPhaseEntryHasChoiceCondition(pendingEdge, context) {
 }
 function connectJournalConditionMilestones(context, records, milestones, questIds) {
   const orderedRecords = [...records].sort((left, right) => Number(recordHasChoiceCondition(left)) - Number(recordHasChoiceCondition(right)) || left.sourcePhaseAnchor - right.sourcePhaseAnchor || left.infoOrder - right.infoOrder || left.file.path.localeCompare(right.file.path));
+  const candidateEdges = [];
+  const candidateEdgeKeys = /* @__PURE__ */ new Set();
   for (const record of orderedRecords) {
     const entryNodeId = context.recordEntryNodeIds.get(record.id);
     if (!entryNodeId) {
@@ -411,11 +413,69 @@ function connectJournalConditionMilestones(context, records, milestones, questId
       if (!phaseNodeId) {
         continue;
       }
-      if (nodeCanReach(context, phaseNodeId, entryNodeId)) {
+      const edgeKey = `${phaseNodeId}:${entryNodeId}`;
+      if (candidateEdgeKeys.has(edgeKey)) {
         continue;
       }
-      addEdge(context, `${phaseNodeId}:${entryNodeId}`, phaseNodeId, "right", entryNodeId, "left");
+      candidateEdges.push({ phaseValue, phaseNodeId, entryNodeId });
+      candidateEdgeKeys.add(edgeKey);
     }
+  }
+  for (const candidateEdge of candidateEdges) {
+    if (nodeCanReach(context, candidateEdge.phaseNodeId, candidateEdge.entryNodeId)) {
+      continue;
+    }
+    if (hasReachableMilestoneParent(context, candidateEdge, candidateEdges)) {
+      continue;
+    }
+    addEdge(
+      context,
+      `${candidateEdge.phaseNodeId}:${candidateEdge.entryNodeId}`,
+      candidateEdge.phaseNodeId,
+      "right",
+      candidateEdge.entryNodeId,
+      "left"
+    );
+  }
+  pruneRedundantJournalConditionMilestoneEdges(context, candidateEdges);
+}
+function hasReachableMilestoneParent(context, candidateEdge, candidateEdges) {
+  for (const otherEdge of candidateEdges) {
+    if (otherEdge.phaseValue !== candidateEdge.phaseValue || otherEdge.entryNodeId === candidateEdge.entryNodeId) {
+      continue;
+    }
+    if (nodeCanReach(context, otherEdge.entryNodeId, candidateEdge.entryNodeId) && !nodeCanReach(context, candidateEdge.entryNodeId, otherEdge.entryNodeId)) {
+      return true;
+    }
+  }
+  return false;
+}
+function pruneRedundantJournalConditionMilestoneEdges(context, candidateEdges) {
+  const redundantEdgeIds = /* @__PURE__ */ new Set();
+  const candidatesByPhaseNode = /* @__PURE__ */ new Map();
+  for (const candidateEdge of candidateEdges) {
+    const phaseCandidates = candidatesByPhaseNode.get(candidateEdge.phaseNodeId) ?? [];
+    phaseCandidates.push(candidateEdge);
+    candidatesByPhaseNode.set(candidateEdge.phaseNodeId, phaseCandidates);
+  }
+  for (const phaseCandidates of candidatesByPhaseNode.values()) {
+    for (const candidateEdge of phaseCandidates) {
+      const edge = context.edges.find((item) => item.fromNode === candidateEdge.phaseNodeId && item.fromSide === "right" && item.toNode === candidateEdge.entryNodeId && item.toSide === "left");
+      if (!edge) {
+        continue;
+      }
+      const hasIndirectParent = phaseCandidates.some((otherEdge) => otherEdge.phaseValue === candidateEdge.phaseValue && otherEdge.entryNodeId !== candidateEdge.entryNodeId && nodeCanReach(context, otherEdge.entryNodeId, candidateEdge.entryNodeId) && !nodeCanReach(context, candidateEdge.entryNodeId, otherEdge.entryNodeId));
+      if (hasIndirectParent) {
+        redundantEdgeIds.add(edge.id);
+      }
+    }
+  }
+  if (redundantEdgeIds.size === 0) {
+    return;
+  }
+  context.edges = context.edges.filter((edge) => !redundantEdgeIds.has(edge.id));
+  for (const edgeId of redundantEdgeIds) {
+    context.edgeIds.delete(edgeId);
   }
 }
 function recordHasChoiceCondition(record) {
@@ -1330,7 +1390,8 @@ function connectAdjacentJournalPhaseTerminalTransitions(context, records, phaseI
         }
         const targetNodeId = context.recordEntryNodeIds.get(targetRecord.id);
         const entryNodeId = targetNodeId ? rootEntryNodeForExistingBranch(context, targetNodeId) : void 0;
-        if (!entryNodeId || nodeCanReach(context, sourceNodeId, entryNodeId)) {
+        const entryPhaseValue = entryNodeId ? phaseNodeIdValue(context, entryNodeId) : null;
+        if (!entryNodeId || entryPhaseValue !== null && entryPhaseValue !== targetPhase || nodeCanReach(context, sourceNodeId, entryNodeId)) {
           continue;
         }
         addEdge(
@@ -1344,6 +1405,14 @@ function connectAdjacentJournalPhaseTerminalTransitions(context, records, phaseI
       }
     }
   }
+}
+function phaseNodeIdValue(context, nodeId) {
+  for (const [phaseValue, phaseNodeId] of context.phaseNodeIds) {
+    if (phaseNodeId === nodeId) {
+      return phaseValue;
+    }
+  }
+  return null;
 }
 function rootEntryNodeForExistingBranch(context, targetNodeId) {
   const incomingByNode = /* @__PURE__ */ new Map();
