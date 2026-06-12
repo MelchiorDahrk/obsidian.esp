@@ -34,12 +34,13 @@ const TOPIC_SEGMENT_GAP_X = 1920;
 const FOLLOWUP_GROUP_GAP_X = 500;
 const CLUSTER_GAP_Y = 140;
 const DENSE_VARIANT_GAP_Y = 64;
-const BRANCH_COLLISION_GAP_Y = 80;
-const FINAL_NODE_GAP_Y = 24;
 const INTRODUCER_ORIGIN_X = -GATE_GAP_X;
 const MIN_HORIZONTAL_EDGE_GAP_X = 75;
-const MAX_COMPACT_EDGE_GAP_X = 180;
-const ADD_TOPIC_GAP_X = 100;
+const LAYER_GAP_X = 180;
+const LAYER_UNIT_GAP_Y = 160;
+const CHOICE_STACK_GAP_Y = 24;
+const SPACER_UNIT_SIZE = 110;
+const SPACER_UNIT_GAP_Y = 70;
 const PRE_JOURNAL_PHASE = 0;
 const NUMERIC_OPERATOR_PATTERN = '(<=|>=|==|!=|=|<|>)';
 const KNOWN_FRONTMATTER_KEYS = new Set([
@@ -333,7 +334,7 @@ export async function generateQuestCanvasForFolder(
 	}
 }
 
-async function discoverQuestScope(app: App, folder: TFolder): Promise<QuestScope> {
+export async function discoverQuestScope(app: App, folder: TFolder): Promise<QuestScope> {
 	const projectRoot = PathManager.findPluginRoot(folder);
 	if (!projectRoot) {
 		throw new Error('Could not find a valid obsidian.esp project root (missing header.md).');
@@ -399,7 +400,7 @@ async function discoverQuestScope(app: App, folder: TFolder): Promise<QuestScope
 	};
 }
 
-async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuildResult> {
+export async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuildResult> {
 	const dialogueDocuments = await readDialogueDocuments(app, scope.projectRoot);
 	const allRecords = dialogueDocuments
 		.map((document) => toDialogueRecord(document, scope.questIds, scope.journalMilestones.map((milestone) => milestone.index)))
@@ -518,20 +519,12 @@ async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuil
 
 	connectChoiceTransitions(canvasContext, canvasRecords);
 	routeJournalRangeChoiceTransitions(canvasContext, canvasRecords);
+	connectAddTopicTransitions(canvasContext, canvasRecords);
 	connectPendingPhaseEntryEdges(canvasContext, pendingPhaseEntryEdges);
 	connectJournalConditionMilestones(canvasContext, canvasRecords, scope.journalMilestones, scope.questIds);
-	connectAddTopicTransitions(canvasContext, canvasRecords);
 	connectScriptedMilestones(canvasContext, phaseGraph.orderedPhases);
-	compactHorizontalConnectionLayout(canvasContext);
-	separateOverlappingBranchGroups(canvasContext);
-	resolveCanvasNodeOverlaps(canvasContext);
-	balanceChoiceTargetRecordClusters(canvasContext);
-	resolveCanvasNodeOverlaps(canvasContext);
-	compactHorizontalConnectionLayout(canvasContext);
-	resolveCanvasNodeOverlaps(canvasContext);
+	applyLayeredCanvasLayout(canvasContext);
 	normalizeCanvasOrigin(canvasContext);
-	enforceGateDialogueCenterAlignment(canvasContext);
-	resolveCanvasNodeOverlaps(canvasContext);
 
 	const relatedFiles = new Map<string, TFile>();
 	const fileNodeTargets = new Map<string, FileNodeTarget>();
@@ -1733,8 +1726,6 @@ function connectAddTopicTransitions(context: CanvasLayoutContext, records: Dialo
 			'AddTopic',
 		);
 	}
-
-	placeAddTopicSourcesBeforeTargets(context, transitions);
 }
 
 function resolveAddTopicTransitionTargets(
@@ -1760,535 +1751,8 @@ function resolveAddTopicTransitionTargets(
 	return bestScore > 0 ? bestCandidates : [candidates[0] as DialogueRecord];
 }
 
-function placeAddTopicSourcesBeforeTargets(context: CanvasLayoutContext, transitions: AddTopicTransition[]): void {
-	const lockedGroups = buildLockedVerticalGroups(context);
-	const groupByNodeId = buildLockedGroupByNodeId(lockedGroups);
-
-	for (const transition of transitions) {
-		const sourceGroup = groupByNodeId.get(transition.sourceNodeId);
-		const targetGroup = groupByNodeId.get(transition.targetNodeId);
-		if (!sourceGroup || !targetGroup || sourceGroup.id === targetGroup.id) {
-			continue;
-		}
-
-		const maximumSourceRightX = targetGroup.leftX - ADD_TOPIC_GAP_X;
-		if (sourceGroup.rightX <= maximumSourceRightX) {
-			continue;
-		}
-
-		shiftLockedGroup(sourceGroup, maximumSourceRightX - sourceGroup.rightX, 0);
-	}
-}
-
-interface BranchSeparationGroup {
-	id: string;
-	nodeIds: Set<string>;
-	rootIsJournalBranch: boolean;
-}
-
-interface BranchGroupBounds {
-	group: BranchSeparationGroup;
-	topY: number;
-	bottomY: number;
-	leftX: number;
-	rightX: number;
-	centerY: number;
-}
-
-function separateOverlappingBranchGroups(context: CanvasLayoutContext): void {
-	const groups = buildBranchSeparationGroups(context);
-	const maxPasses = Math.max(1, groups.length * groups.length);
-	for (let pass = 0; pass < maxPasses; pass += 1) {
-		const bounds = groups
-			.map((group) => measureBranchGroup(context, group))
-			.filter((item): item is BranchGroupBounds => item !== null)
-			.sort((left, right) => left.centerY - right.centerY || left.leftX - right.leftX || left.group.id.localeCompare(right.group.id));
-		let changed = false;
-
-		for (let upperIndex = 0; upperIndex < bounds.length; upperIndex += 1) {
-			const upper = bounds[upperIndex];
-			if (!upper) {
-				continue;
-			}
-
-			for (let lowerIndex = upperIndex + 1; lowerIndex < bounds.length; lowerIndex += 1) {
-				const lower = bounds[lowerIndex];
-				if (!lower) {
-					continue;
-				}
-				if (
-					upper.group.rootIsJournalBranch === lower.group.rootIsJournalBranch ||
-					branchGroupsShareNodes(upper.group, lower.group) ||
-					!branchGroupsOverlapHorizontally(upper, lower)
-				) {
-					continue;
-				}
-
-				const overlap = measureBranchGroupLockedOverlap(
-					context,
-					upper.group,
-					lower.group,
-					BRANCH_COLLISION_GAP_Y,
-				);
-				if (overlap <= 0) {
-					continue;
-				}
-
-				const upperShift = -Math.ceil(overlap / 2);
-				const lowerShift = Math.floor(overlap / 2);
-				shiftBranchGroup(context, upper.group, upperShift);
-				shiftBranchGroup(context, lower.group, lowerShift);
-				changed = true;
-			}
-		}
-
-		if (!changed) {
-			return;
-		}
-	}
-}
-
-function buildBranchSeparationGroups(context: CanvasLayoutContext): BranchSeparationGroup[] {
-	const outgoingNodes = new Map<string, string[]>();
-	for (const edge of context.edges) {
-		const outgoing = outgoingNodes.get(edge.fromNode) ?? [];
-		outgoing.push(edge.toNode);
-		outgoingNodes.set(edge.fromNode, outgoing);
-	}
-
-	const nodeById = new Map(context.nodes.map((node) => [node.id, node]));
-	const groups: BranchSeparationGroup[] = [];
-	for (const node of context.nodes) {
-		if (!isBranchSeparationParent(node)) {
-			continue;
-		}
-
-		const nodeIds = collectLocalBranchNodeIds(node.id, nodeById, outgoingNodes);
-		if (nodeIds.size < 8) {
-			continue;
-		}
-		const rootIsJournalBranch = isJournalFileNode(node);
-		if (rootIsJournalBranch && branchGroupContainsChoiceNode(nodeIds, nodeById)) {
-			continue;
-		}
-
-		groups.push({
-			id: node.id,
-			nodeIds,
-			rootIsJournalBranch,
-		});
-	}
-
-	return mergeSharedBranchGroups(groups);
-}
-
-function isBranchSeparationParent(node: CanvasNode): boolean {
-	return isJournalFileNode(node) || isChoiceNode(node);
-}
-
-function collectLocalBranchNodeIds(
-	startNodeId: string,
-	nodeById: Map<string, CanvasNode>,
-	outgoingNodes: Map<string, string[]>,
-): Set<string> {
-	const nodeIds = new Set<string>();
-	const queue = [startNodeId];
-
-	while (queue.length > 0) {
-		const nodeId = queue.shift();
-		if (!nodeId || nodeIds.has(nodeId)) {
-			continue;
-		}
-
-		const node = nodeById.get(nodeId);
-		if (!node) {
-			continue;
-		}
-		if (nodeId !== startNodeId && isJournalFileNode(node)) {
-			continue;
-		}
-
-		nodeIds.add(nodeId);
-		for (const nextNodeId of outgoingNodes.get(nodeId) ?? []) {
-			queue.push(nextNodeId);
-		}
-	}
-
-	return nodeIds;
-}
-
-function branchGroupContainsChoiceNode(nodeIds: Set<string>, nodeById: Map<string, CanvasNode>): boolean {
-	for (const nodeId of nodeIds) {
-		const node = nodeById.get(nodeId);
-		if (node && isChoiceNode(node)) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
-function mergeSharedBranchGroups(groups: BranchSeparationGroup[]): BranchSeparationGroup[] {
-	const mergedGroups: BranchSeparationGroup[] = [];
-	for (const group of groups) {
-		const existingGroup = mergedGroups.find((candidate) => branchGroupsShareNodes(candidate, group));
-		if (!existingGroup) {
-			mergedGroups.push({
-				id: group.id,
-				nodeIds: new Set(group.nodeIds),
-				rootIsJournalBranch: group.rootIsJournalBranch,
-			});
-			continue;
-		}
-
-		for (const nodeId of group.nodeIds) {
-			existingGroup.nodeIds.add(nodeId);
-		}
-		existingGroup.rootIsJournalBranch = existingGroup.rootIsJournalBranch && group.rootIsJournalBranch;
-	}
-
-	let changed = true;
-	while (changed) {
-		changed = false;
-		for (let index = 0; index < mergedGroups.length; index += 1) {
-			const leftGroup = mergedGroups[index];
-			if (!leftGroup) {
-				continue;
-			}
-
-			for (let nextIndex = index + 1; nextIndex < mergedGroups.length; nextIndex += 1) {
-				const rightGroup = mergedGroups[nextIndex];
-				if (!rightGroup || !branchGroupsShareNodes(leftGroup, rightGroup)) {
-					continue;
-				}
-
-				for (const nodeId of rightGroup.nodeIds) {
-					leftGroup.nodeIds.add(nodeId);
-				}
-				leftGroup.rootIsJournalBranch = leftGroup.rootIsJournalBranch && rightGroup.rootIsJournalBranch;
-				mergedGroups.splice(nextIndex, 1);
-				changed = true;
-				break;
-			}
-
-			if (changed) {
-				break;
-			}
-		}
-	}
-
-	return mergedGroups;
-}
-
-function measureBranchGroup(
-	context: CanvasLayoutContext,
-	group: BranchSeparationGroup,
-): BranchGroupBounds | null {
-	const nodes = context.nodes.filter((node) => group.nodeIds.has(node.id));
-	if (nodes.length === 0) {
-		return null;
-	}
-
-	const topY = Math.min(...nodes.map((node) => node.y));
-	const bottomY = Math.max(...nodes.map((node) => node.y + node.height));
-	const leftX = Math.min(...nodes.map((node) => node.x));
-	const rightX = Math.max(...nodes.map((node) => node.x + node.width));
-	return {
-		group,
-		topY,
-		bottomY,
-		leftX,
-		rightX,
-		centerY: Math.round((topY + bottomY) / 2),
-	};
-}
-
-function branchGroupsShareNodes(left: BranchSeparationGroup, right: BranchSeparationGroup): boolean {
-	for (const nodeId of left.nodeIds) {
-		if (right.nodeIds.has(nodeId)) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
-function branchGroupsOverlapHorizontally(left: BranchGroupBounds, right: BranchGroupBounds): boolean {
-	return left.leftX < right.rightX && right.leftX < left.rightX;
-}
-
-function measureBranchGroupLockedOverlap(
-	context: CanvasLayoutContext,
-	upperGroup: BranchSeparationGroup,
-	lowerGroup: BranchSeparationGroup,
-	gapY: number,
-): number {
-	const lockedGroups = [...buildLockedVerticalGroups(context).values()];
-	const upperLockedGroups = lockedGroups.filter((group) => lockedGroupTouchesBranchGroup(group, upperGroup));
-	const lowerLockedGroups = lockedGroups.filter((group) => lockedGroupTouchesBranchGroup(group, lowerGroup));
-	let overlap = 0;
-
-	for (const upperLockedGroup of upperLockedGroups) {
-		for (const lowerLockedGroup of lowerLockedGroups) {
-			if (
-				upperLockedGroup.id === lowerLockedGroup.id ||
-				!lockedGroupsOverlapHorizontally(upperLockedGroup, lowerLockedGroup) ||
-				upperLockedGroup.topY > lowerLockedGroup.topY
-			) {
-				continue;
-			}
-
-			overlap = Math.max(overlap, upperLockedGroup.bottomY + gapY - lowerLockedGroup.topY);
-		}
-	}
-
-	return overlap;
-}
-
-function lockedGroupTouchesBranchGroup(
-	lockedGroup: LockedVerticalGroup,
-	branchGroup: BranchSeparationGroup,
-): boolean {
-	return lockedGroup.nodes.some((node) => branchGroup.nodeIds.has(node.id));
-}
-
-interface RecordCluster {
-	entryId: string;
-	nodeIds: Set<string>;
-	topY: number;
-	bottomY: number;
-	leftX: number;
-	rightX: number;
-}
-
-interface ChoiceTargetCluster {
-	entryId: string;
-	cluster: RecordCluster;
-	category: 'choice' | 'journal';
-	choiceValue: number;
-	sourceCenterY: number;
-	anchors: Array<{ sourceNode: CanvasNode; targetNode: CanvasNode }>;
-}
-
-function balanceChoiceTargetRecordClusters(context: CanvasLayoutContext): void {
-	for (let pass = 0; pass < 3; pass += 1) {
-		const clustersByEntryId = buildRecordClustersByEntryId(context);
-		const clusterItemsByColumn = new Map<number, ChoiceTargetCluster[]>();
-
-		for (const edge of context.edges) {
-			if (edge.fromSide !== 'right' || edge.toSide !== 'left') {
-				continue;
-			}
-
-			const sourceNode = findCanvasNode(context, edge.fromNode);
-			const targetNode = findCanvasNode(context, edge.toNode);
-			if (!sourceNode || !targetNode || !isGateNode(targetNode)) {
-				continue;
-			}
-
-			const targetCluster = clustersByEntryId.get(targetNode.id);
-			if (!targetCluster) {
-				continue;
-			}
-
-			const choiceValue = parseChoiceNodeValue(sourceNode);
-			const category = isChoiceNode(sourceNode) ? 'choice' : isJournalFileNode(sourceNode) ? 'journal' : null;
-			if (category === null) {
-				continue;
-			}
-
-			const columnKey = recordClusterColumnKey(targetCluster);
-			const columnItems = clusterItemsByColumn.get(columnKey) ?? [];
-			let item = columnItems.find((candidate) => candidate.entryId === targetNode.id);
-			if (!item) {
-				item = {
-					entryId: targetNode.id,
-					cluster: targetCluster,
-					category,
-					choiceValue: choiceValue ?? Number.MAX_SAFE_INTEGER,
-					sourceCenterY: edgeEndpoint(sourceNode, 'right').y,
-					anchors: [],
-				};
-				columnItems.push(item);
-			}
-
-			if (item.category !== 'choice' && category === 'choice') {
-				item.category = 'choice';
-			}
-			item.choiceValue = Math.min(item.choiceValue, choiceValue ?? Number.MAX_SAFE_INTEGER);
-			item.anchors.push({ sourceNode, targetNode });
-			item.sourceCenterY = averageNumbers(item.anchors.map((anchor) => edgeEndpoint(anchor.sourceNode, 'right').y));
-			clusterItemsByColumn.set(columnKey, columnItems);
-		}
-
-		let changed = false;
-		const orderedColumns = [...clusterItemsByColumn.entries()].sort((left, right) => left[0] - right[0]);
-		for (const [, columnItems] of orderedColumns) {
-			if (columnItems.length === 0) {
-				continue;
-			}
-
-			const orderedItems = columnItems.sort(
-				(left, right) => left.sourceCenterY - right.sourceCenterY
-					|| compareRoutedClusterCategories(left.category, right.category)
-					|| left.choiceValue - right.choiceValue
-					|| left.cluster.topY - right.cluster.topY,
-			);
-			let nextTopY = Number.NEGATIVE_INFINITY;
-			for (const item of orderedItems) {
-				const targetNode = item.anchors[0]?.targetNode;
-				if (!targetNode) {
-					continue;
-				}
-
-				const desiredAnchorY = item.category === 'choice'
-					? averageNumbers(item.anchors.map((anchor) => edgeEndpoint(anchor.sourceNode, 'right').y))
-					: edgeEndpoint(targetNode, 'left').y;
-				const targetOffsetY = edgeEndpoint(targetNode, 'left').y - item.cluster.topY;
-				const desiredTopY = desiredAnchorY - targetOffsetY;
-				const shouldCompactToPrevious = item.category === 'journal' && Number.isFinite(nextTopY);
-				const nextTop = shouldCompactToPrevious ? nextTopY : Math.max(desiredTopY, nextTopY);
-				const deltaY = Math.round(nextTop - item.cluster.topY);
-				if (deltaY !== 0) {
-					shiftRecordCluster(context, item.cluster, deltaY);
-					changed = true;
-				}
-				nextTopY = item.cluster.bottomY + CLUSTER_GAP_Y;
-			}
-		}
-
-		if (!changed) {
-			return;
-		}
-	}
-}
-
-function recordClusterColumnKey(cluster: RecordCluster): number {
-	return Math.round(cluster.leftX / 240) * 240;
-}
-
-function compareRoutedClusterCategories(left: 'choice' | 'journal', right: 'choice' | 'journal'): number {
-	if (left === right) {
-		return 0;
-	}
-
-	return left === 'choice' ? -1 : 1;
-}
-
-function buildRecordClustersByEntryId(context: CanvasLayoutContext): Map<string, RecordCluster> {
-	const outgoingEdgesByNodeId = new Map<string, CanvasEdge[]>();
-	for (const edge of context.edges) {
-		const outgoingEdges = outgoingEdgesByNodeId.get(edge.fromNode) ?? [];
-		outgoingEdges.push(edge);
-		outgoingEdgesByNodeId.set(edge.fromNode, outgoingEdges);
-	}
-
-	const clustersByEntryId = new Map<string, RecordCluster>();
-	for (const node of context.nodes) {
-		if (!isGateNode(node)) {
-			continue;
-		}
-
-		const nodeIds = collectRecordClusterNodeIds(context, node.id, outgoingEdgesByNodeId);
-		clustersByEntryId.set(node.id, measureRecordCluster(context, node.id, nodeIds));
-	}
-
-	return clustersByEntryId;
-}
-
-function collectRecordClusterNodeIds(
-	context: CanvasLayoutContext,
-	entryId: string,
-	outgoingEdgesByNodeId: Map<string, CanvasEdge[]>,
-): Set<string> {
-	const nodeIds = new Set<string>();
-	const queue = [entryId];
-
-	while (queue.length > 0) {
-		const nodeId = queue.shift();
-		if (!nodeId || nodeIds.has(nodeId)) {
-			continue;
-		}
-
-		const node = findCanvasNode(context, nodeId);
-		if (!node) {
-			continue;
-		}
-
-		nodeIds.add(nodeId);
-		for (const edge of outgoingEdgesByNodeId.get(nodeId) ?? []) {
-			const targetNode = findCanvasNode(context, edge.toNode);
-			if (!targetNode) {
-				continue;
-			}
-
-			if (isGateNode(node) && isDialogueFileNode(targetNode) && edge.fromSide === 'right' && edge.toSide === 'left') {
-				queue.push(targetNode.id);
-			} else if (isDialogueFileNode(node) && edge.fromSide === 'bottom' && edge.toSide === 'top') {
-				queue.push(targetNode.id);
-			} else if (isDialogueFileNode(node) && isChoiceNode(targetNode) && edge.fromSide === 'right' && edge.toSide === 'left') {
-				queue.push(targetNode.id);
-			}
-		}
-	}
-
-	return nodeIds;
-}
-
-function measureRecordCluster(
-	context: CanvasLayoutContext,
-	entryId: string,
-	nodeIds: Set<string>,
-): RecordCluster {
-	const nodes = context.nodes.filter((node) => nodeIds.has(node.id));
-	return {
-		entryId,
-		nodeIds,
-		topY: Math.min(...nodes.map((node) => node.y)),
-		bottomY: Math.max(...nodes.map((node) => node.y + node.height)),
-		leftX: Math.min(...nodes.map((node) => node.x)),
-		rightX: Math.max(...nodes.map((node) => node.x + node.width)),
-	};
-}
-
-function shiftRecordCluster(context: CanvasLayoutContext, cluster: RecordCluster, deltaY: number): void {
-	for (const node of context.nodes) {
-		if (cluster.nodeIds.has(node.id)) {
-			node.y += deltaY;
-		}
-	}
-
-	cluster.topY += deltaY;
-	cluster.bottomY += deltaY;
-}
-
-function parseChoiceNodeValue(node: CanvasNode): number | null {
-	const match = (node.text ?? '').match(/\bChoice\s+(-?\d+)/);
-	return match?.[1] ? Number.parseInt(match[1], 10) : null;
-}
-
-function averageNumbers(values: number[]): number {
-	if (values.length === 0) {
-		return 0;
-	}
-
-	return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
-
 function findCanvasNode(context: CanvasLayoutContext, nodeId: string): CanvasNode | undefined {
 	return context.nodes.find((node) => node.id === nodeId);
-}
-
-function shiftBranchGroup(context: CanvasLayoutContext, group: BranchSeparationGroup, deltaY: number): void {
-	if (deltaY === 0) {
-		return;
-	}
-
-	for (const node of context.nodes) {
-		if (group.nodeIds.has(node.id)) {
-			node.y += deltaY;
-		}
-	}
 }
 
 function assignDialogueInfoOrder(records: DialogueRecord[]): DialogueRecord[] {
@@ -2900,109 +2364,6 @@ function connectScriptedMilestones(context: CanvasLayoutContext, phaseIndices: n
 	}
 }
 
-function compactHorizontalConnectionLayout(context: CanvasLayoutContext): void {
-	const lockedGroups = buildLockedVerticalGroups(context);
-	const nodeById = new Map(context.nodes.map((node) => [node.id, node]));
-	const groupByNodeId = buildLockedGroupByNodeId(lockedGroups);
-	const incomingEdgesByGroup = new Map<string, CanvasEdge[]>();
-
-	for (const edge of context.edges) {
-		if (edge.fromSide !== 'right' || edge.toSide !== 'left') {
-			continue;
-		}
-
-		const fromNode = nodeById.get(edge.fromNode);
-		const toNode = nodeById.get(edge.toNode);
-		if (!fromNode || !toNode || isJumpNode(fromNode)) {
-			continue;
-		}
-
-		const fromGroup = groupByNodeId.get(edge.fromNode);
-		const toGroup = groupByNodeId.get(edge.toNode);
-		if (!fromGroup || !toGroup || fromGroup.id === toGroup.id) {
-			continue;
-		}
-
-		const incomingEdges = incomingEdgesByGroup.get(toGroup.id) ?? [];
-		incomingEdges.push(edge);
-		incomingEdgesByGroup.set(toGroup.id, incomingEdges);
-	}
-
-	const orderedGroups = [...lockedGroups.values()].sort(
-		(left, right) => left.leftX - right.leftX || left.topY - right.topY || left.id.localeCompare(right.id),
-	);
-	const baseLeftX = Math.min(...orderedGroups.map((group) => group.leftX));
-	const compactLeftByGroupId = new Map<string, number>();
-
-	for (const group of orderedGroups) {
-		const incomingEdges = incomingEdgesByGroup.get(group.id) ?? [];
-		let compactLeftX = incomingEdges.length > 0 ? 0 : group.leftX - baseLeftX;
-
-		for (const edge of incomingEdges) {
-			const fromGroup = groupByNodeId.get(edge.fromNode);
-			const toGroup = groupByNodeId.get(edge.toNode);
-			const fromNode = nodeById.get(edge.fromNode);
-			const toNode = nodeById.get(edge.toNode);
-			if (!fromGroup || !toGroup || !fromNode || !toNode) {
-				continue;
-			}
-
-			const compactFromLeftX = compactLeftByGroupId.get(fromGroup.id) ?? fromGroup.leftX - baseLeftX;
-			const sourceRightOffset = fromNode.x + fromNode.width - fromGroup.leftX;
-			const targetLeftOffset = toNode.x - toGroup.leftX;
-			const sourceEndpointX = edgeEndpoint(fromNode, edge.fromSide).x;
-			const targetEndpointX = edgeEndpoint(toNode, edge.toSide).x;
-			const compactGapX = compactEdgeGapX(edge, fromNode, toNode, targetEndpointX - sourceEndpointX);
-			compactLeftX = Math.max(
-				compactLeftX,
-				compactFromLeftX + sourceRightOffset + compactGapX - targetLeftOffset,
-			);
-		}
-
-		compactLeftByGroupId.set(group.id, compactLeftX);
-	}
-
-	for (const group of orderedGroups) {
-		const compactLeftX = compactLeftByGroupId.get(group.id);
-		if (compactLeftX === undefined) {
-			continue;
-		}
-
-		shiftLockedGroup(group, Math.round(baseLeftX + compactLeftX - group.leftX), 0);
-	}
-}
-
-function buildLockedGroupByNodeId(lockedGroups: Map<string, LockedVerticalGroup>): Map<string, LockedVerticalGroup> {
-	const groupByNodeId = new Map<string, LockedVerticalGroup>();
-	for (const group of lockedGroups.values()) {
-		for (const node of group.nodes) {
-			groupByNodeId.set(node.id, group);
-		}
-	}
-	return groupByNodeId;
-}
-
-function compactEdgeGapX(
-	edge: CanvasEdge,
-	fromNode: CanvasNode,
-	toNode: CanvasNode,
-	currentGapX: number,
-): number {
-	if (edge.fromSide !== 'right' || edge.toSide !== 'left') {
-		return MIN_HORIZONTAL_EDGE_GAP_X;
-	}
-
-	if (isGateNode(fromNode) && isDialogueFileNode(toNode)) {
-		return Math.max(MIN_HORIZONTAL_EDGE_GAP_X, Math.min(currentGapX, MIN_HORIZONTAL_EDGE_GAP_X));
-	}
-
-	if (isDialogueFileNode(fromNode) && isChoiceNode(toNode)) {
-		return Math.max(MIN_HORIZONTAL_EDGE_GAP_X, Math.min(currentGapX, 160));
-	}
-
-	return Math.max(MIN_HORIZONTAL_EDGE_GAP_X, Math.min(currentGapX, MAX_COMPACT_EDGE_GAP_X));
-}
-
 function edgeEndpoint(
 	node: CanvasNode,
 	side: 'left' | 'right' | 'top' | 'bottom',
@@ -3023,10 +2384,6 @@ function isChoiceNode(node: CanvasNode): boolean {
 	return node.type === 'text' && /^".*"\s+-\s+Choice\s+-?\d+/.test(node.text ?? '');
 }
 
-function isJumpNode(node: CanvasNode): boolean {
-	return node.type === 'text' && /^Jump #\d+$/.test(node.text ?? '');
-}
-
 function isGateNode(node: CanvasNode): boolean {
 	return node.type === 'text' && !isChoiceNode(node);
 }
@@ -3035,155 +2392,665 @@ function isDialogueFileNode(node: CanvasNode): boolean {
 	return node.type === 'file' && !node.file?.includes(`/${JOURNAL_FOLDER_NAME}/`);
 }
 
-function isJournalFileNode(node: CanvasNode): boolean {
-	return node.type === 'file' && Boolean(node.file?.includes(`/${JOURNAL_FOLDER_NAME}/`));
-}
-
-function resolveCanvasNodeOverlaps(context: CanvasLayoutContext): void {
-	const lockedGroups = buildLockedVerticalGroups(context);
-	const maxPasses = Math.max(1, context.nodes.length * context.nodes.length);
-	for (let pass = 0; pass < maxPasses; pass += 1) {
-		let changed = false;
-		const orderedGroups = [...lockedGroups.values()].sort(compareLockedGroupsByPosition);
-
-		for (let upperIndex = 0; upperIndex < orderedGroups.length; upperIndex += 1) {
-			const upperGroup = orderedGroups[upperIndex];
-			if (!upperGroup) {
-				continue;
-			}
-
-			for (let lowerIndex = upperIndex + 1; lowerIndex < orderedGroups.length; lowerIndex += 1) {
-				const lowerGroup = orderedGroups[lowerIndex];
-				if (!lowerGroup) {
-					continue;
-				}
-
-				const minimumLowerY = upperGroup.bottomY + FINAL_NODE_GAP_Y;
-				if (lowerGroup.topY >= minimumLowerY) {
-					break;
-				}
-				if (!lockedGroupsOverlapHorizontally(upperGroup, lowerGroup)) {
-					continue;
-				}
-
-				shiftLockedGroup(lowerGroup, 0, minimumLowerY - lowerGroup.topY);
-				changed = true;
-			}
-		}
-
-		if (!changed) {
-			return;
-		}
-	}
-}
-
-interface LockedVerticalGroup {
+interface LayoutUnit {
 	id: string;
-	nodes: CanvasNode[];
-	topY: number;
-	bottomY: number;
-	leftX: number;
-	rightX: number;
+	root: CanvasNode;
+	attachments: CanvasNode[];
+	width: number;
+	height: number;
+	layer: number;
+	componentOrder: number;
+	creationIndex: number;
+	top: number;
+	predIds: Set<string>;
+	succIds: Set<string>;
+	virtual?: boolean;
+	chainSourceId?: string;
+	chainTargetId?: string;
+	chainT?: number;
 }
 
-function buildLockedVerticalGroups(context: CanvasLayoutContext): Map<string, LockedVerticalGroup> {
-	const parentByNodeId = new Map<string, string>();
-
-	const find = (nodeId: string): string => {
-		const parent = parentByNodeId.get(nodeId);
-		if (!parent || parent === nodeId) {
-			parentByNodeId.set(nodeId, nodeId);
-			return nodeId;
-		}
-
-		const root = find(parent);
-		parentByNodeId.set(nodeId, root);
-		return root;
-	};
-
-	const union = (leftId: string, rightId: string): void => {
-		const leftRoot = find(leftId);
-		const rightRoot = find(rightId);
-		if (leftRoot === rightRoot) {
-			return;
-		}
-
-		parentByNodeId.set(rightRoot, leftRoot);
-	};
-
-	for (const node of context.nodes) {
-		parentByNodeId.set(node.id, node.id);
-	}
-
-	const nodeById = new Map(context.nodes.map((node) => [node.id, node]));
-	for (const edge of context.edges) {
-		const fromNode = nodeById.get(edge.fromNode);
-		const toNode = nodeById.get(edge.toNode);
-		if (
-			edge.fromSide === 'bottom'
-			&& edge.toSide === 'top'
-		) {
-			union(edge.fromNode, edge.toNode);
-		} else if (
-			fromNode !== undefined
-			&& toNode !== undefined
-			&& isGateNode(fromNode)
-			&& isDialogueFileNode(toNode)
-			&& edge.fromSide === 'right'
-			&& edge.toSide === 'left'
-		) {
-			union(edge.fromNode, edge.toNode);
-		}
-	}
-
-	const groups = new Map<string, LockedVerticalGroup>();
-	for (const node of context.nodes) {
-		const rootId = find(node.id);
-		const existing = groups.get(rootId);
-		if (existing) {
-			existing.nodes.push(node);
-			existing.topY = Math.min(existing.topY, node.y);
-			existing.bottomY = Math.max(existing.bottomY, node.y + node.height);
-			existing.leftX = Math.min(existing.leftX, node.x);
-			existing.rightX = Math.max(existing.rightX, node.x + node.width);
-			continue;
-		}
-
-		groups.set(rootId, {
-			id: rootId,
-			nodes: [node],
-			topY: node.y,
-			bottomY: node.y + node.height,
-			leftX: node.x,
-			rightX: node.x + node.width,
-		});
-	}
-
-	return groups;
-}
-
-function compareLockedGroupsByPosition(left: LockedVerticalGroup, right: LockedVerticalGroup): number {
-	return left.topY - right.topY || left.leftX - right.leftX || left.id.localeCompare(right.id);
-}
-
-function lockedGroupsOverlapHorizontally(left: LockedVerticalGroup, right: LockedVerticalGroup): boolean {
-	return left.leftX < right.rightX && right.leftX < left.rightX;
-}
-
-function shiftLockedGroup(group: LockedVerticalGroup, deltaX: number, deltaY: number): void {
-	if (deltaX === 0 && deltaY === 0) {
+/**
+ * Re-derives every node position from the finished node/edge graph using a
+ * layered (Sugiyama-style) layout: nodes flow left to right by graph depth,
+ * result text hangs below its dialogue, and vertical placement follows the
+ * average position of connected neighbors so edges stay short and parallel.
+ */
+function applyLayeredCanvasLayout(context: CanvasLayoutContext): void {
+	const units = buildLayoutUnits(context);
+	if (units.length === 0) {
 		return;
 	}
 
-	for (const node of group.nodes) {
-		node.x += deltaX;
-		node.y += deltaY;
+	const unitById = new Map<string, LayoutUnit>();
+	const unitIdByNodeId = new Map<string, string>();
+	for (const unit of units) {
+		unitById.set(unit.id, unit);
+		unitIdByNodeId.set(unit.root.id, unit.id);
+		for (const attachment of unit.attachments) {
+			unitIdByNodeId.set(attachment.id, unit.id);
+		}
 	}
 
-	group.leftX += deltaX;
-	group.rightX += deltaX;
-	group.topY += deltaY;
-	group.bottomY += deltaY;
+	linkAcyclicUnitGraph(context, units, unitById, unitIdByNodeId);
+	assignUnitLayers(units, unitById);
+	assignUnitComponentOrder(units, unitById);
+	const layerXPositions = computeLayerXPositions(context, units, unitById, unitIdByNodeId);
+	insertSpacerUnits(units, unitById, layerXPositions);
+	assignUnitTops(units, unitById);
+	applyUnitPositions(units, layerXPositions);
+	nudgeUnitsOffEdges(context, units, unitIdByNodeId, layerXPositions);
+}
+
+function applyUnitPositions(units: LayoutUnit[], layerXPositions: Map<number, number>): void {
+	for (const unit of units) {
+		if (unit.virtual) {
+			continue;
+		}
+
+		const unitX = layerXPositions.get(unit.layer) ?? 0;
+		unit.root.x = unitX;
+		unit.root.y = Math.round(unit.top);
+		let cursorY = unit.root.y + unit.root.height;
+		for (const attachment of unit.attachments) {
+			attachment.x = unitX;
+			attachment.y = cursorY + RESULT_GAP_Y;
+			cursorY = attachment.y + attachment.height;
+		}
+	}
+}
+
+function buildLayoutUnits(context: CanvasLayoutContext): LayoutUnit[] {
+	const nodeById = new Map(context.nodes.map((node) => [node.id, node]));
+	const attachmentChildIds = new Map<string, string[]>();
+	const attachedIds = new Set<string>();
+	for (const edge of context.edges) {
+		if (edge.fromSide !== 'bottom' || edge.toSide !== 'top') {
+			continue;
+		}
+		if (!nodeById.has(edge.fromNode) || !nodeById.has(edge.toNode)) {
+			continue;
+		}
+		if (attachedIds.has(edge.toNode) || edge.fromNode === edge.toNode) {
+			continue;
+		}
+
+		const childIds = attachmentChildIds.get(edge.fromNode) ?? [];
+		childIds.push(edge.toNode);
+		attachmentChildIds.set(edge.fromNode, childIds);
+		attachedIds.add(edge.toNode);
+	}
+
+	const units: LayoutUnit[] = [];
+	for (let nodeIndex = 0; nodeIndex < context.nodes.length; nodeIndex += 1) {
+		const node = context.nodes[nodeIndex];
+		if (!node || attachedIds.has(node.id)) {
+			continue;
+		}
+
+		const attachments: CanvasNode[] = [];
+		const queue = [...(attachmentChildIds.get(node.id) ?? [])];
+		while (queue.length > 0) {
+			const attachmentId = queue.shift();
+			const attachment = attachmentId ? nodeById.get(attachmentId) : undefined;
+			if (!attachment) {
+				continue;
+			}
+
+			attachments.push(attachment);
+			queue.push(...(attachmentChildIds.get(attachment.id) ?? []));
+		}
+
+		let width = node.width;
+		let height = node.height;
+		for (const attachment of attachments) {
+			width = Math.max(width, attachment.width);
+			height += RESULT_GAP_Y + attachment.height;
+		}
+
+		units.push({
+			id: node.id,
+			root: node,
+			attachments,
+			width,
+			height,
+			layer: 0,
+			componentOrder: nodeIndex,
+			creationIndex: nodeIndex,
+			top: 0,
+			predIds: new Set<string>(),
+			succIds: new Set<string>(),
+		});
+	}
+
+	return units;
+}
+
+function linkAcyclicUnitGraph(
+	context: CanvasLayoutContext,
+	units: LayoutUnit[],
+	unitById: Map<string, LayoutUnit>,
+	unitIdByNodeId: Map<string, string>,
+): void {
+	const rawSuccIds = new Map<string, string[]>();
+	const seenUnitEdges = new Set<string>();
+	for (const edge of context.edges) {
+		if (edge.fromSide === 'bottom' && edge.toSide === 'top') {
+			continue;
+		}
+
+		const fromUnitId = unitIdByNodeId.get(edge.fromNode);
+		const toUnitId = unitIdByNodeId.get(edge.toNode);
+		if (!fromUnitId || !toUnitId || fromUnitId === toUnitId) {
+			continue;
+		}
+
+		const unitEdgeKey = `${fromUnitId}:${toUnitId}`;
+		if (seenUnitEdges.has(unitEdgeKey)) {
+			continue;
+		}
+		seenUnitEdges.add(unitEdgeKey);
+		const succIds = rawSuccIds.get(fromUnitId) ?? [];
+		succIds.push(toUnitId);
+		rawSuccIds.set(fromUnitId, succIds);
+	}
+
+	// Depth-first sweep that keeps forward and cross edges but drops edges
+	// closing a cycle, so layer assignment sees a DAG.
+	const visitState = new Map<string, 'visiting' | 'done'>();
+	const visit = (unitId: string): void => {
+		visitState.set(unitId, 'visiting');
+		for (const succId of rawSuccIds.get(unitId) ?? []) {
+			const state = visitState.get(succId);
+			if (state === 'visiting') {
+				continue;
+			}
+
+			const fromUnit = unitById.get(unitId);
+			const toUnit = unitById.get(succId);
+			if (fromUnit && toUnit) {
+				fromUnit.succIds.add(succId);
+				toUnit.predIds.add(unitId);
+			}
+			if (state === undefined) {
+				visit(succId);
+			}
+		}
+		visitState.set(unitId, 'done');
+	};
+	for (const unit of units) {
+		if (!visitState.has(unit.id)) {
+			visit(unit.id);
+		}
+	}
+}
+
+function assignUnitLayers(units: LayoutUnit[], unitById: Map<string, LayoutUnit>): void {
+	const remainingIncoming = new Map<string, number>();
+	const ready: LayoutUnit[] = [];
+	for (const unit of units) {
+		unit.layer = 0;
+		remainingIncoming.set(unit.id, unit.predIds.size);
+		if (unit.predIds.size === 0) {
+			ready.push(unit);
+		}
+	}
+
+	while (ready.length > 0) {
+		const unit = ready.shift();
+		if (!unit) {
+			break;
+		}
+
+		for (const succId of unit.succIds) {
+			const succ = unitById.get(succId);
+			if (!succ) {
+				continue;
+			}
+
+			succ.layer = Math.max(succ.layer, unit.layer + 1);
+			const remaining = (remainingIncoming.get(succId) ?? 0) - 1;
+			remainingIncoming.set(succId, remaining);
+			if (remaining === 0) {
+				ready.push(succ);
+			}
+		}
+	}
+
+	// Pull entry units (no predecessors) right, next to their earliest
+	// consumer, so side branches start beside the column they feed.
+	for (const unit of units) {
+		if (unit.predIds.size > 0 || unit.succIds.size === 0) {
+			continue;
+		}
+
+		let minSuccLayer = Number.POSITIVE_INFINITY;
+		for (const succId of unit.succIds) {
+			minSuccLayer = Math.min(minSuccLayer, unitById.get(succId)?.layer ?? Number.POSITIVE_INFINITY);
+		}
+		if (Number.isFinite(minSuccLayer)) {
+			unit.layer = Math.max(unit.layer, minSuccLayer - 1);
+		}
+	}
+}
+
+function assignUnitComponentOrder(units: LayoutUnit[], unitById: Map<string, LayoutUnit>): void {
+	const componentRoots = new Map<string, string>();
+	const findRoot = (unitId: string): string => {
+		const parent = componentRoots.get(unitId);
+		if (!parent || parent === unitId) {
+			componentRoots.set(unitId, unitId);
+			return unitId;
+		}
+
+		const root = findRoot(parent);
+		componentRoots.set(unitId, root);
+		return root;
+	};
+	const union = (leftId: string, rightId: string): void => {
+		const leftRoot = findRoot(leftId);
+		const rightRoot = findRoot(rightId);
+		if (leftRoot !== rightRoot) {
+			componentRoots.set(rightRoot, leftRoot);
+		}
+	};
+
+	for (const unit of units) {
+		findRoot(unit.id);
+	}
+	for (const unit of units) {
+		for (const succId of unit.succIds) {
+			union(unit.id, succId);
+		}
+	}
+
+	const componentOrderByRoot = new Map<string, number>();
+	for (const unit of units) {
+		const root = findRoot(unit.id);
+		const existing = componentOrderByRoot.get(root);
+		if (existing === undefined || unit.creationIndex < existing) {
+			componentOrderByRoot.set(root, unit.creationIndex);
+		}
+	}
+	for (const unit of units) {
+		unit.componentOrder = componentOrderByRoot.get(findRoot(unit.id)) ?? unit.creationIndex;
+	}
+
+	void unitById;
+}
+
+/**
+ * Iteratively shifts units vertically when a straight edge still passes over
+ * them after relaxation, then restacks each layer to keep minimum gaps.
+ */
+function nudgeUnitsOffEdges(
+	context: CanvasLayoutContext,
+	units: LayoutUnit[],
+	unitIdByNodeId: Map<string, string>,
+	layerXPositions: Map<number, number>,
+): void {
+	const nodeById = new Map(context.nodes.map((node) => [node.id, node]));
+	const realUnits = units.filter((unit) => !unit.virtual);
+	const unitsByLayer = new Map<number, LayoutUnit[]>();
+	for (const unit of realUnits) {
+		const layerUnits = unitsByLayer.get(unit.layer) ?? [];
+		layerUnits.push(unit);
+		unitsByLayer.set(unit.layer, layerUnits);
+	}
+
+	const margin = 24;
+	const maxPasses = 6;
+	for (let pass = 0; pass < maxPasses; pass += 1) {
+		const segments: Array<{
+			p1: { x: number; y: number };
+			p2: { x: number; y: number };
+			fromUnitId: string | undefined;
+			toUnitId: string | undefined;
+		}> = [];
+		for (const edge of context.edges) {
+			if (edge.fromSide === 'bottom' && edge.toSide === 'top') {
+				continue;
+			}
+
+			const fromNode = nodeById.get(edge.fromNode);
+			const toNode = nodeById.get(edge.toNode);
+			if (!fromNode || !toNode) {
+				continue;
+			}
+
+			segments.push({
+				p1: edgeEndpoint(fromNode, edge.fromSide),
+				p2: edgeEndpoint(toNode, edge.toSide),
+				fromUnitId: unitIdByNodeId.get(edge.fromNode),
+				toUnitId: unitIdByNodeId.get(edge.toNode),
+			});
+		}
+
+		let moved = false;
+		for (const layerUnits of unitsByLayer.values()) {
+			for (const unit of layerUnits) {
+				const left = unit.root.x;
+				const right = unit.root.x + unit.width;
+				const top = unit.top;
+				const bottom = unit.top + unit.height;
+				let delta = 0;
+				for (const segment of segments) {
+					if (segment.fromUnitId === unit.id || segment.toUnitId === unit.id) {
+						continue;
+					}
+
+					const clip = segmentYRangeOverSpan(segment.p1, segment.p2, left, right);
+					if (!clip || clip.maxY < top - margin / 2 || clip.minY > bottom + margin / 2) {
+						continue;
+					}
+
+					const moveDownBy = clip.maxY + margin - top;
+					const moveUpBy = bottom + margin - clip.minY;
+					const candidate = moveDownBy <= moveUpBy ? moveDownBy : -moveUpBy;
+					if (Math.abs(candidate) > Math.abs(delta)) {
+						delta = candidate;
+					}
+				}
+
+				if (delta !== 0) {
+					unit.top += delta;
+					moved = true;
+				}
+			}
+		}
+
+		if (!moved) {
+			return;
+		}
+
+		for (const layerUnits of unitsByLayer.values()) {
+			layerUnits.sort((leftUnit, rightUnit) => leftUnit.top - rightUnit.top);
+			let previous: LayoutUnit | null = null;
+			for (const unit of layerUnits) {
+				if (previous) {
+					const minimumTop = previous.top + previous.height + verticalUnitGap(previous, unit);
+					unit.top = Math.max(unit.top, minimumTop);
+				}
+				previous = unit;
+			}
+		}
+
+		applyUnitPositions(units, layerXPositions);
+	}
+}
+
+function segmentYRangeOverSpan(
+	p1: { x: number; y: number },
+	p2: { x: number; y: number },
+	left: number,
+	right: number,
+): { minY: number; maxY: number } | null {
+	const minX = Math.min(p1.x, p2.x);
+	const maxX = Math.max(p1.x, p2.x);
+	const clippedLeft = Math.max(minX, left);
+	const clippedRight = Math.min(maxX, right);
+	if (clippedLeft >= clippedRight) {
+		return null;
+	}
+
+	const yAt = (x: number): number => {
+		if (p1.x === p2.x) {
+			return Math.min(p1.y, p2.y);
+		}
+		return p1.y + ((p2.y - p1.y) * (x - p1.x)) / (p2.x - p1.x);
+	};
+	const yLeft = yAt(clippedLeft);
+	const yRight = yAt(clippedRight);
+	return {
+		minY: Math.min(yLeft, yRight),
+		maxY: Math.max(yLeft, yRight),
+	};
+}
+
+/**
+ * Replaces every layout edge spanning more than one layer with a chain of
+ * invisible spacer units, one per intermediate layer, so vertical relaxation
+ * keeps a clear corridor for the edge instead of routing it across nodes.
+ */
+function insertSpacerUnits(
+	units: LayoutUnit[],
+	unitById: Map<string, LayoutUnit>,
+	layerXPositions: Map<number, number>,
+): void {
+	const layerWidths = new Map<number, number>();
+	for (const unit of units) {
+		layerWidths.set(unit.layer, Math.max(layerWidths.get(unit.layer) ?? 0, unit.width));
+	}
+
+	for (const unit of [...units]) {
+		for (const succId of [...unit.succIds]) {
+			const succ = unitById.get(succId);
+			if (!succ || succ.layer - unit.layer < 2) {
+				continue;
+			}
+
+			// The edge is a straight line in X, so each spacer's blend factor
+			// comes from real X coordinates, not its layer index.
+			const sourceAnchorX = (layerXPositions.get(unit.layer) ?? 0) + unit.root.width;
+			const targetAnchorX = layerXPositions.get(succ.layer) ?? sourceAnchorX + 1;
+			const anchorSpanX = Math.max(1, targetAnchorX - sourceAnchorX);
+
+			unit.succIds.delete(succId);
+			succ.predIds.delete(unit.id);
+			let previous = unit;
+			for (let layer = unit.layer + 1; layer < succ.layer; layer += 1) {
+				const spacerX = (layerXPositions.get(layer) ?? 0) + (layerWidths.get(layer) ?? 0) / 2;
+				const chainT = Math.min(1, Math.max(0, (spacerX - sourceAnchorX) / anchorSpanX));
+				const spacerId = `spacer:${unit.id}:${succId}:${layer}`;
+				const spacer: LayoutUnit = {
+					id: spacerId,
+					root: {
+						id: spacerId,
+						type: 'text',
+						text: '',
+						x: 0,
+						y: 0,
+						width: SPACER_UNIT_SIZE,
+						height: SPACER_UNIT_SIZE,
+					},
+					attachments: [],
+					width: SPACER_UNIT_SIZE,
+					height: SPACER_UNIT_SIZE,
+					layer,
+					componentOrder: unit.componentOrder,
+					creationIndex: unit.creationIndex,
+					top: 0,
+					predIds: new Set([previous.id]),
+					succIds: new Set<string>(),
+					virtual: true,
+					chainSourceId: unit.id,
+					chainTargetId: succId,
+					chainT,
+				};
+				previous.succIds.add(spacerId);
+				unitById.set(spacerId, spacer);
+				units.push(spacer);
+				previous = spacer;
+			}
+
+			previous.succIds.add(succId);
+			succ.predIds.add(previous.id);
+		}
+	}
+}
+
+function computeLayerXPositions(
+	context: CanvasLayoutContext,
+	units: LayoutUnit[],
+	unitById: Map<string, LayoutUnit>,
+	unitIdByNodeId: Map<string, string>,
+): Map<number, number> {
+	const nodeById = new Map(context.nodes.map((node) => [node.id, node]));
+	const maxLayer = Math.max(...units.map((unit) => unit.layer));
+	const layerWidths = new Map<number, number>();
+	for (const unit of units) {
+		layerWidths.set(unit.layer, Math.max(layerWidths.get(unit.layer) ?? 0, unit.width));
+	}
+
+	// A boundary collapses to the tight gap when everything crossing it is a
+	// gate flowing into its dialogue node.
+	const tightBoundaries = new Map<number, boolean>();
+	for (const edge of context.edges) {
+		if (edge.fromSide === 'bottom' && edge.toSide === 'top') {
+			continue;
+		}
+
+		const fromUnit = unitById.get(unitIdByNodeId.get(edge.fromNode) ?? '');
+		const toUnit = unitById.get(unitIdByNodeId.get(edge.toNode) ?? '');
+		if (!fromUnit || !toUnit || toUnit.layer - fromUnit.layer !== 1) {
+			continue;
+		}
+
+		const fromNode = nodeById.get(edge.fromNode);
+		const toNode = nodeById.get(edge.toNode);
+		const isGateToDialogue = Boolean(
+			fromNode && toNode && isGateNode(fromNode) && isDialogueFileNode(toNode),
+		);
+		const boundary = fromUnit.layer;
+		const existing = tightBoundaries.get(boundary);
+		tightBoundaries.set(boundary, existing === undefined ? isGateToDialogue : existing && isGateToDialogue);
+	}
+
+	const xPositions = new Map<number, number>();
+	let cursorX = 0;
+	for (let layer = 0; layer <= maxLayer; layer += 1) {
+		xPositions.set(layer, cursorX);
+		const gapX = tightBoundaries.get(layer) ? MIN_HORIZONTAL_EDGE_GAP_X : LAYER_GAP_X;
+		cursorX += (layerWidths.get(layer) ?? 0) + gapX;
+	}
+
+	return xPositions;
+}
+
+function assignUnitTops(units: LayoutUnit[], unitById: Map<string, LayoutUnit>): void {
+	const unitsByLayer = new Map<number, LayoutUnit[]>();
+	for (const unit of units) {
+		const layerUnits = unitsByLayer.get(unit.layer) ?? [];
+		layerUnits.push(unit);
+		unitsByLayer.set(unit.layer, layerUnits);
+	}
+
+	const orderedLayers = [...unitsByLayer.keys()].sort((left, right) => left - right);
+	for (const layer of orderedLayers) {
+		const layerUnits = unitsByLayer.get(layer) ?? [];
+		layerUnits.sort(
+			(left, right) => left.componentOrder - right.componentOrder
+				|| left.creationIndex - right.creationIndex,
+		);
+		let cursorY = 0;
+		for (const unit of layerUnits) {
+			unit.top = cursorY;
+			cursorY += unit.height + LAYER_UNIT_GAP_Y;
+		}
+	}
+
+	const unitAnchorY = (unit: LayoutUnit): number => unit.top + unit.root.height / 2;
+	const neighborAlignedCenter = (unit: LayoutUnit, neighborIds: Set<string>): number | null => {
+		let total = 0;
+		let count = 0;
+		for (const neighborId of neighborIds) {
+			const neighbor = unitById.get(neighborId);
+			if (!neighbor) {
+				continue;
+			}
+
+			total += unitAnchorY(neighbor);
+			count += 1;
+		}
+		return count > 0 ? total / count : null;
+	};
+
+	const relaxLayer = (layerUnits: LayoutUnit[], mode: 'preds' | 'succs' | 'both'): void => {
+		if (layerUnits.length === 0) {
+			return;
+		}
+
+		const desiredCenters = new Map<string, number>();
+		for (const unit of layerUnits) {
+			// Spacer units track the straight line between the real endpoints
+			// of the long edge they stand in for, reserving its corridor.
+			const chainSource = unit.chainSourceId ? unitById.get(unit.chainSourceId) : undefined;
+			const chainTarget = unit.chainTargetId ? unitById.get(unit.chainTargetId) : undefined;
+			if (unit.virtual && chainSource && chainTarget && unit.chainT !== undefined) {
+				const sourceCenter = unitAnchorY(chainSource);
+				const targetCenter = unitAnchorY(chainTarget);
+				desiredCenters.set(unit.id, sourceCenter + (targetCenter - sourceCenter) * unit.chainT);
+				continue;
+			}
+
+			const neighborIds = mode === 'preds'
+				? unit.predIds
+				: mode === 'succs'
+					? unit.succIds
+					: new Set([...unit.predIds, ...unit.succIds]);
+			desiredCenters.set(unit.id, neighborAlignedCenter(unit, neighborIds) ?? unitAnchorY(unit));
+		}
+
+		const previousOrder = new Map(layerUnits.map((unit, index) => [unit.id, index]));
+		const ordered = [...layerUnits].sort(
+			(left, right) => (desiredCenters.get(left.id) ?? 0) - (desiredCenters.get(right.id) ?? 0)
+				|| (previousOrder.get(left.id) ?? 0) - (previousOrder.get(right.id) ?? 0),
+		);
+
+		const minimumTops: number[] = [];
+		let cumulativeTop = 0;
+		for (let index = 0; index < ordered.length; index += 1) {
+			minimumTops.push(cumulativeTop);
+			const unit = ordered[index];
+			const next = ordered[index + 1];
+			if (!unit || !next) {
+				continue;
+			}
+
+			cumulativeTop += unit.height + verticalUnitGap(unit, next);
+		}
+
+		const desiredOffsets = ordered.map((unit, index) => {
+			const desiredTop = (desiredCenters.get(unit.id) ?? 0) - unit.root.height / 2;
+			return desiredTop - (minimumTops[index] ?? 0);
+		});
+		const compactOffsets = compactIncreasingOffsets(desiredOffsets);
+		for (let index = 0; index < ordered.length; index += 1) {
+			const unit = ordered[index];
+			if (!unit) {
+				continue;
+			}
+
+			unit.top = (compactOffsets[index] ?? 0) + (minimumTops[index] ?? 0);
+		}
+
+		layerUnits.length = 0;
+		layerUnits.push(...ordered);
+	};
+
+	const sweepCount = 6;
+	for (let sweep = 0; sweep < sweepCount; sweep += 1) {
+		for (const layer of orderedLayers) {
+			relaxLayer(unitsByLayer.get(layer) ?? [], 'preds');
+		}
+		for (const layer of [...orderedLayers].reverse()) {
+			relaxLayer(unitsByLayer.get(layer) ?? [], 'succs');
+		}
+	}
+	for (const layer of orderedLayers) {
+		relaxLayer(unitsByLayer.get(layer) ?? [], 'both');
+	}
+}
+
+function verticalUnitGap(upper: LayoutUnit, lower: LayoutUnit): number {
+	if (upper.virtual || lower.virtual) {
+		return SPACER_UNIT_GAP_Y;
+	}
+	if (isChoiceNode(upper.root) && isChoiceNode(lower.root)) {
+		return CHOICE_STACK_GAP_Y;
+	}
+
+	return LAYER_UNIT_GAP_Y;
 }
 
 function normalizeCanvasOrigin(context: CanvasLayoutContext): void {
@@ -3200,23 +3067,6 @@ function normalizeCanvasOrigin(context: CanvasLayoutContext): void {
 
 	for (const node of context.nodes) {
 		node.x += deltaX;
-	}
-}
-
-function enforceGateDialogueCenterAlignment(context: CanvasLayoutContext): void {
-	const nodeById = new Map(context.nodes.map((node) => [node.id, node]));
-	for (const edge of context.edges) {
-		if (edge.fromSide !== 'right' || edge.toSide !== 'left') {
-			continue;
-		}
-
-		const gateNode = nodeById.get(edge.fromNode);
-		const dialogueNode = nodeById.get(edge.toNode);
-		if (!gateNode || !dialogueNode || !isGateNode(gateNode) || !isDialogueFileNode(dialogueNode)) {
-			continue;
-		}
-
-		gateNode.y = Math.round(dialogueNode.y + dialogueNode.height / 2 - gateNode.height / 2);
 	}
 }
 

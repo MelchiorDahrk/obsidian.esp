@@ -542,6 +542,20 @@ The shipped plugin feature follows the framework, with a few pragmatic deviation
 
 These choices should be treated as the current implementation contract unless a later revision proves that a different heuristic produces cleaner canvases on real vault data.
 
+### Layered Layout Pass
+
+Node and edge creation is decoupled from positioning. After every node and edge exists, a single global layered (Sugiyama-style) pass derives all coordinates from the finished graph:
+
+1. Bottom-to-top result attachments are folded into their parent dialogue node as one layout unit.
+2. Cycle-closing edges are dropped (for layout only) so the unit graph is a DAG.
+3. Layers are assigned by longest path from sources; entry units with no predecessors are pulled right, next to their earliest consumer.
+4. Layer X positions accumulate per-layer max widths; a boundary collapses to the tight 75px gap when everything crossing it is a gate flowing into its dialogue.
+5. Edges spanning more than one layer get invisible spacer units in each intermediate layer that track the straight source-to-target line (interpolated by real X distance), reserving a corridor.
+6. Vertical positions come from repeated neighbor-mean relaxation sweeps (predecessors forward, successors backward), with order-preserving pool-adjacent-violators compaction per layer and per-pair minimum gaps.
+7. A final nudge pass detects any straight edge still passing over a node and shifts that unit vertically until clear, restacking its layer.
+
+Headless tooling lives in `scripts/canvas-harness/`: `run.mjs` regenerates a quest canvas from the test vault without Obsidian, `metrics.mjs` reports crossings/overlaps/edge lengths, `render-svg.mjs` renders a canvas to SVG, and `compare-edges.mjs` diffs edge sets between two canvases.
+
 ## Repo Integration Points
 
 If this is implemented in the plugin, the cleanest home is a dedicated feature module.

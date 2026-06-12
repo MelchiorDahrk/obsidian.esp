@@ -1,0 +1,1144 @@
+{
+	"nodes": [
+		{
+			"id": "643dad25e3a19df5",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_Molaguradan/OAAB_TVos_Molaguradan 10.md",
+			"subpath": "#^obsidian-esp-canvas-5975016a91",
+			"x": 560,
+			"y": -157,
+			"width": 440,
+			"height": 210,
+			"color": "6"
+		},
+		{
+			"id": "cf295de8c2cf6024",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_Molaguradan/OAAB_TVos_Molaguradan 11.md",
+			"subpath": "#^obsidian-esp-canvas-6172e68fcd",
+			"x": 2880,
+			"y": 107,
+			"width": 440,
+			"height": 210,
+			"color": "6"
+		},
+		{
+			"id": "01bd8a0c12401992",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_Molaguradan/OAAB_TVos_Molaguradan 20.md",
+			"subpath": "#^obsidian-esp-canvas-30643af72a",
+			"x": 4480,
+			"y": 303,
+			"width": 440,
+			"height": 138,
+			"color": "6"
+		},
+		{
+			"id": "65d51c4b78b5713f",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_Molaguradan/OAAB_TVos_Molaguradan 30.md",
+			"subpath": "#^obsidian-esp-canvas-7546c6488e",
+			"x": 7640,
+			"y": -147,
+			"width": 440,
+			"height": 234,
+			"color": "6"
+		},
+		{
+			"id": "4a36d8f91c9a5d3d",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_Molaguradan/OAAB_TVos_Molaguradan 100.md",
+			"subpath": "#^obsidian-esp-canvas-40c81138c5",
+			"x": 7160,
+			"y": -148,
+			"width": 440,
+			"height": 210,
+			"color": "6"
+		},
+		{
+			"id": "a6a760c76355a2c3",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Molaguradan/Molaguradan ~11.md",
+			"subpath": "#^obsidian-esp-canvas-ddafb8d950",
+			"x": -60,
+			"y": -478,
+			"width": 440,
+			"height": 258,
+			"color": "3"
+		},
+		{
+			"id": "d473b91a9c7a6ac0",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman Service\nFaction = Ashlanders\nJournal - OAAB_TVos_Molaguradan = 0",
+			"x": -520,
+			"y": -410,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "96983fbc2a8d7d6e",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_Molaguradan 10#^obsidian-esp-canvas-5975016a91|OAAB_TVos_Molaguradan 10]]",
+			"x": -60,
+			"y": -190,
+			"width": 440,
+			"height": 74,
+			"color": "6"
+		},
+		{
+			"id": "04cef1a8b3a32ce0",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Molaguradan/Molaguradan ~12.md",
+			"subpath": "#^obsidian-esp-canvas-a7d941b6de",
+			"x": -60,
+			"y": 24,
+			"width": 440,
+			"height": 258,
+			"color": "3"
+		},
+		{
+			"id": "dfdebb7d4c2ce0a3",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman\nFaction = Ashlanders\nJournal - OAAB_TVos_Molaguradan = 0",
+			"x": -520,
+			"y": 92,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "8dc3b52bf6f3acfd",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_Molaguradan 10#^obsidian-esp-canvas-5975016a91|OAAB_TVos_Molaguradan 10]]",
+			"x": -60,
+			"y": 312,
+			"width": 440,
+			"height": 74,
+			"color": "6"
+		},
+		{
+			"id": "0f4dd680edbe6076",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Molaguradan/Molaguradan ~9.md",
+			"subpath": "#^obsidian-esp-canvas-0e76e95e98",
+			"x": 2260,
+			"y": -617,
+			"width": 440,
+			"height": 258,
+			"color": "3"
+		},
+		{
+			"id": "fb7debaf65b990d1",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman Service\nFaction = Ashlanders\nPC Faction = Telvanni\nJournal - OAAB_TVos_Molaguradan = 0",
+			"x": 1800,
+			"y": -561,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "db55772d04499657",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_Molaguradan 11#^obsidian-esp-canvas-6172e68fcd|OAAB_TVos_Molaguradan 11]]",
+			"x": 2260,
+			"y": -329,
+			"width": 440,
+			"height": 74,
+			"color": "6"
+		},
+		{
+			"id": "663913e2d559a702",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Molaguradan/Molaguradan ~10.md",
+			"subpath": "#^obsidian-esp-canvas-42672f0c97",
+			"x": 2260,
+			"y": 107,
+			"width": 440,
+			"height": 258,
+			"color": "3"
+		},
+		{
+			"id": "d4e1a13ff00282c1",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman\nFaction = Ashlanders\nPC Faction = Telvanni\nJournal - OAAB_TVos_Molaguradan = 0",
+			"x": 1800,
+			"y": 163,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "c062294977f6d9bf",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_Molaguradan 11#^obsidian-esp-canvas-6172e68fcd|OAAB_TVos_Molaguradan 11]]",
+			"x": 2260,
+			"y": 395,
+			"width": 440,
+			"height": 74,
+			"color": "6"
+		},
+		{
+			"id": "1f4d5b3dc3f7c5a7",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Molaguradan/Molaguradan ~8.md",
+			"subpath": "#^obsidian-esp-canvas-db89fdc350",
+			"x": 1540,
+			"y": 493,
+			"width": 440,
+			"height": 138,
+			"color": "3"
+		},
+		{
+			"id": "f37e738a045e3050",
+			"type": "text",
+			"text": "Disposition = 0\nID = aryon\nJournal - OAAB_TVos_Molaguradan < 20\nJournal - OAAB_TVos_Molaguradan >= 10",
+			"x": 1080,
+			"y": 501,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "a2b00d75b734bbbd",
+			"type": "text",
+			"text": "\"I learned that the ashlander tribes in the grazelands would like to regain access to Molaguradan.\" - Choice 1",
+			"x": 2140,
+			"y": 493,
+			"width": 320,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "6009fbf064cc78fc",
+			"type": "text",
+			"text": "\"Nevermind.\" - Choice 2",
+			"x": 2140,
+			"y": 639,
+			"width": 320,
+			"height": 50,
+			"color": "4"
+		},
+		{
+			"id": "34c9d406e3a12008",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Molaguradan/Molaguradan ~7.md",
+			"subpath": "#^obsidian-esp-canvas-d58a8928f3",
+			"x": 3100,
+			"y": 1010,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "c34b03199daf90ff",
+			"type": "text",
+			"text": "Disposition = 0\nID = aryon\nChoice = 2\nJournal - OAAB_TVos_Molaguradan < 20\nJournal - OAAB_TVos_Molaguradan >= 10",
+			"x": 2640,
+			"y": 994,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "f881b63b777b08b9",
+			"type": "text",
+			"text": "Goodbye",
+			"x": 3100,
+			"y": 1154,
+			"width": 440,
+			"height": 50,
+			"color": "5"
+		},
+		{
+			"id": "2b1815dc0068fd02",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/rat catcher/rat catcher ~5.md",
+			"subpath": "#^obsidian-esp-canvas-c27a3e0a93",
+			"x": 4180,
+			"y": -275,
+			"width": 440,
+			"height": 282,
+			"color": "3"
+		},
+		{
+			"id": "de48453b024e31b5",
+			"type": "text",
+			"text": "Disposition = 0\nID = goler andrethi\nItem - ABtv_note_VaroSlaveContract >= 1\nJournal - OAAB_TVos_VaroRats = 30",
+			"x": 3720,
+			"y": -195,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "7c5f73619ca91e53",
+			"type": "text",
+			"text": "Player->RemoveItem \"ABtv_note_VaroSlaveContract\" 1\nAddTopic \"[[the incident]]\"",
+			"x": 4180,
+			"y": 37,
+			"width": 440,
+			"height": 98,
+			"color": "5"
+		},
+		{
+			"id": "ec10ca2830c6f7f0",
+			"type": "text",
+			"text": "\"[Wait.]\" - Choice 1",
+			"x": 4780,
+			"y": 682,
+			"width": 320,
+			"height": 50,
+			"color": "4"
+		},
+		{
+			"id": "999d31606f2098f6",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/the incident/the incident ~1.md",
+			"subpath": "#^obsidian-esp-canvas-17c524ee83",
+			"x": 5260,
+			"y": 93,
+			"width": 440,
+			"height": 186,
+			"color": "3"
+		},
+		{
+			"id": "23c4026753538829",
+			"type": "text",
+			"text": "Disposition = 0\nID = goler andrethi\nJournal - OAAB_TVos_Molaguradan < 100",
+			"x": 4800,
+			"y": 137,
+			"width": 385,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "45ebf59c2a30690a",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Molaguradan/Molaguradan ~5.md",
+			"subpath": "#^obsidian-esp-canvas-36f4ab6200",
+			"x": 3100,
+			"y": 656,
+			"width": 440,
+			"height": 186,
+			"color": "3"
+		},
+		{
+			"id": "5a3b147b1cac643d",
+			"type": "text",
+			"text": "Disposition = 0\nID = aryon\nChoice = 1\nJournal - OAAB_TVos_Molaguradan < 20\nJournal - OAAB_TVos_Molaguradan >= 10\nJournal - OAAB_TVos_MolaguradanMonarch = 100",
+			"x": 2640,
+			"y": 652,
+			"width": 385,
+			"height": 194,
+			"color": "4"
+		},
+		{
+			"id": "5f18ced9c8cf867b",
+			"type": "text",
+			"text": "Player->AddItem gold_001 100\nJournal [[OAAB_TVos_Molaguradan 20#^obsidian-esp-canvas-30643af72a|OAAB_TVos_Molaguradan 20]]",
+			"x": 3100,
+			"y": 872,
+			"width": 440,
+			"height": 98,
+			"color": "6"
+		},
+		{
+			"id": "3a9d020b9ca2bd89",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Molaguradan/Molaguradan ~6.md",
+			"subpath": "#^obsidian-esp-canvas-6a9ed86571",
+			"x": 3860,
+			"y": 266,
+			"width": 440,
+			"height": 234,
+			"color": "3"
+		},
+		{
+			"id": "2588104c7b5b07ae",
+			"type": "text",
+			"text": "Disposition = 0\nID = aryon\nChoice = 1\nJournal - OAAB_TVos_Molaguradan < 20\nJournal - OAAB_TVos_Molaguradan >= 10",
+			"x": 3400,
+			"y": 310,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "294257b6161fa838",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_Molaguradan 20#^obsidian-esp-canvas-30643af72a|OAAB_TVos_Molaguradan 20]]\nPlayer->AddItem gold_001 100",
+			"x": 3860,
+			"y": 530,
+			"width": 440,
+			"height": 98,
+			"color": "6"
+		},
+		{
+			"id": "540ffe993cf68ba3",
+			"type": "text",
+			"text": "\"Go on.\" - Choice 10",
+			"x": 4460,
+			"y": 572,
+			"width": 320,
+			"height": 50,
+			"color": "4"
+		},
+		{
+			"id": "589cfa4e96b0c6c4",
+			"type": "text",
+			"text": "\"No, thank you.\" - Choice 20",
+			"x": 4460,
+			"y": 646,
+			"width": 320,
+			"height": 50,
+			"color": "4"
+		},
+		{
+			"id": "de71e6c2201552cc",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Molaguradan/Molaguradan ~3.md",
+			"subpath": "#^obsidian-esp-canvas-11c85fbc11",
+			"x": 5460,
+			"y": 392,
+			"width": 440,
+			"height": 186,
+			"color": "3"
+		},
+		{
+			"id": "f949be75de8a110b",
+			"type": "text",
+			"text": "Disposition = 0\nID = aryon\nChoice = 10\nJournal - OAAB_TVos_Molaguradan = 20",
+			"x": 5000,
+			"y": 424,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "627916174165bd6d",
+			"type": "text",
+			"text": "AddTopic \"[[Flame Monarch]]\"",
+			"x": 5460,
+			"y": 608,
+			"width": 440,
+			"height": 50,
+			"color": "5"
+		},
+		{
+			"id": "57e087d6e083c606",
+			"type": "text",
+			"text": "\"I will confront this flame monarch.\" - Choice 11",
+			"x": 6060,
+			"y": 947,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "549587d5c10953c9",
+			"type": "text",
+			"text": "\"I cannot accept your task right now.\" - Choice 20",
+			"x": 6060,
+			"y": 1045,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "ab84fb27f4c2efbd",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Molaguradan/Molaguradan ~2.md",
+			"subpath": "#^obsidian-esp-canvas-3b924949c9",
+			"x": 7020,
+			"y": 1078,
+			"width": 440,
+			"height": 306,
+			"color": "3"
+		},
+		{
+			"id": "e94bccb85219dd8a",
+			"type": "text",
+			"text": "Disposition = 0\nID = aryon\nChoice = 11\nJournal - OAAB_TVos_Molaguradan = 20",
+			"x": 6560,
+			"y": 1170,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "5a799df2cb3eeefc",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_Molaguradan 30#^obsidian-esp-canvas-7546c6488e|OAAB_TVos_Molaguradan 30]]",
+			"x": 7020,
+			"y": 1414,
+			"width": 440,
+			"height": 74,
+			"color": "6"
+		},
+		{
+			"id": "e30f84a9b6a09c8b",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Molaguradan/Molaguradan ~4.md",
+			"subpath": "#^obsidian-esp-canvas-7762f84761",
+			"x": 7020,
+			"y": 816,
+			"width": 440,
+			"height": 96,
+			"color": "3"
+		},
+		{
+			"id": "8d761ef647fec74c",
+			"type": "text",
+			"text": "Disposition = 0\nID = aryon\nChoice = 20\nJournal - OAAB_TVos_Molaguradan = 20",
+			"x": 6560,
+			"y": 803,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "5adbee4ce8fada16",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Flame Monarch/Flame Monarch ~1.md",
+			"subpath": "#^obsidian-esp-canvas-2e62480a61",
+			"x": 6540,
+			"y": -148,
+			"width": 440,
+			"height": 258,
+			"color": "3"
+		},
+		{
+			"id": "d0f28aab6bc93ef1",
+			"type": "text",
+			"text": "Disposition = 0\nID = aryon\nItem - ABtv_w_BlackSword = 1\nJournal - OAAB_TVos_Molaguradan < 100\nJournal - OAAB_TVos_MolaguradanMonarch = 100",
+			"x": 6080,
+			"y": -104,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "159597a98d630987",
+			"type": "text",
+			"text": "\"andil\"->ModMercantile -15\n\"alenus vendu\"->ModMercantile -15\n\"milar maryon\"->ModMercantile -15\n\"mirvon andrethi\"->ModMercantile -15\nPlayer->AddItem \"ABtv_pot_DragonsBlood\" 2\nJournal [[OAAB_TVos_Molaguradan 100#^obsidian-esp-canvas-40c81138c5|OAAB_TVos_Molaguradan 100]]",
+			"x": 6540,
+			"y": 140,
+			"width": 440,
+			"height": 194,
+			"color": "6"
+		},
+		{
+			"id": "c2c9fcf63b571214",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Flame Monarch/Flame Monarch ~3.md",
+			"subpath": "#^obsidian-esp-canvas-31feb970d3",
+			"x": 8620,
+			"y": 815,
+			"width": 440,
+			"height": 282,
+			"color": "3"
+		},
+		{
+			"id": "0390fec928063393",
+			"type": "text",
+			"text": "Disposition = 0\nID = aryon\nJournal - OAAB_TVos_Molaguradan >= 30\nJournal - OAAB_TVos_MolaguradanMonarch < 100",
+			"x": 8160,
+			"y": 883,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "09ae1f085371932e",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Molaguradan/Molaguradan ~1.md",
+			"subpath": "#^obsidian-esp-canvas-00a63e2674",
+			"x": 8720,
+			"y": 677,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "c430e157c48c3209",
+			"type": "text",
+			"text": "Disposition = 0\nID = aryon\nJournal - OAAB_TVos_Molaguradan >= 30",
+			"x": 8260,
+			"y": 685,
+			"width": 385,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "f89ee11924adc4c7",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Flame Monarch/Flame Monarch ~0.md",
+			"subpath": "#^obsidian-esp-canvas-3661c02f7f",
+			"x": 8140,
+			"y": -285,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "c8a4f3a60a6dde70",
+			"type": "text",
+			"text": "Disposition = 0\nID = aryon\nJournal - OAAB_TVos_Molaguradan = 100",
+			"x": 7680,
+			"y": -277,
+			"width": 385,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "8f8ef27b2346e8e5",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Flame Monarch/Flame Monarch ~2.md",
+			"subpath": "#^obsidian-esp-canvas-7a6d12edb7",
+			"x": 8140,
+			"y": 111,
+			"width": 440,
+			"height": 162,
+			"color": "3"
+		},
+		{
+			"id": "d9c7153cd609e3d2",
+			"type": "text",
+			"text": "Disposition = 0\nID = aryon\nItem - ABtv_w_BlackSword = 0\nJournal - OAAB_TVos_MolaguradanMonarch = 100",
+			"x": 7680,
+			"y": 119,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "121c13c575c61c7f",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Molaguradan/Molaguradan ~0.md",
+			"subpath": "#^obsidian-esp-canvas-08f3d52b56",
+			"x": 8240,
+			"y": 523,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "bc32fc320b8a9488",
+			"type": "text",
+			"text": "Disposition = 0\nID = aryon\nJournal - OAAB_TVos_Molaguradan >= 20\nJournal - OAAB_TVos_MolaguradanMonarch = 100",
+			"x": 7780,
+			"y": 507,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "a99b231d4559fe27",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/the incident/the incident ~0.md",
+			"subpath": "#^obsidian-esp-canvas-dfc43853a6",
+			"x": 8240,
+			"y": 297,
+			"width": 440,
+			"height": 186,
+			"color": "3"
+		},
+		{
+			"id": "56af5b02ffcb7028",
+			"type": "text",
+			"text": "Disposition = 0\nID = goler andrethi\nJournal - OAAB_TVos_Molaguradan >= 100",
+			"x": 7780,
+			"y": 341,
+			"width": 385,
+			"height": 98,
+			"color": "4"
+		}
+	],
+	"edges": [
+		{
+			"id": "2a9f1e224b93554e",
+			"fromNode": "d473b91a9c7a6ac0",
+			"fromSide": "right",
+			"toNode": "a6a760c76355a2c3",
+			"toSide": "left"
+		},
+		{
+			"id": "335d23cab45c0418",
+			"fromNode": "a6a760c76355a2c3",
+			"fromSide": "bottom",
+			"toNode": "96983fbc2a8d7d6e",
+			"toSide": "top"
+		},
+		{
+			"id": "daa6215dbe5183cd",
+			"fromNode": "a6a760c76355a2c3",
+			"fromSide": "right",
+			"toNode": "643dad25e3a19df5",
+			"toSide": "left"
+		},
+		{
+			"id": "628cd8863f7f6e06",
+			"fromNode": "dfdebb7d4c2ce0a3",
+			"fromSide": "right",
+			"toNode": "04cef1a8b3a32ce0",
+			"toSide": "left"
+		},
+		{
+			"id": "0e7debad40c592d9",
+			"fromNode": "04cef1a8b3a32ce0",
+			"fromSide": "bottom",
+			"toNode": "8dc3b52bf6f3acfd",
+			"toSide": "top"
+		},
+		{
+			"id": "eaa2225bb6f8d463",
+			"fromNode": "04cef1a8b3a32ce0",
+			"fromSide": "right",
+			"toNode": "643dad25e3a19df5",
+			"toSide": "left"
+		},
+		{
+			"id": "97cd6ffcdfea7cc6",
+			"fromNode": "fb7debaf65b990d1",
+			"fromSide": "right",
+			"toNode": "0f4dd680edbe6076",
+			"toSide": "left"
+		},
+		{
+			"id": "0328919136fc9c45",
+			"fromNode": "0f4dd680edbe6076",
+			"fromSide": "bottom",
+			"toNode": "db55772d04499657",
+			"toSide": "top"
+		},
+		{
+			"id": "52e055033f398e99",
+			"fromNode": "0f4dd680edbe6076",
+			"fromSide": "right",
+			"toNode": "cf295de8c2cf6024",
+			"toSide": "left"
+		},
+		{
+			"id": "3e0955f1ae45ef9b",
+			"fromNode": "d4e1a13ff00282c1",
+			"fromSide": "right",
+			"toNode": "663913e2d559a702",
+			"toSide": "left"
+		},
+		{
+			"id": "696bbbf8ea59410e",
+			"fromNode": "663913e2d559a702",
+			"fromSide": "bottom",
+			"toNode": "c062294977f6d9bf",
+			"toSide": "top"
+		},
+		{
+			"id": "f61f0b3cb8c1ec9a",
+			"fromNode": "663913e2d559a702",
+			"fromSide": "right",
+			"toNode": "cf295de8c2cf6024",
+			"toSide": "left"
+		},
+		{
+			"id": "def604bc629b38c6",
+			"fromNode": "f37e738a045e3050",
+			"fromSide": "right",
+			"toNode": "1f4d5b3dc3f7c5a7",
+			"toSide": "left"
+		},
+		{
+			"id": "49402761076631a1",
+			"fromNode": "1f4d5b3dc3f7c5a7",
+			"fromSide": "right",
+			"toNode": "a2b00d75b734bbbd",
+			"toSide": "left"
+		},
+		{
+			"id": "70bd2ee5430e843b",
+			"fromNode": "1f4d5b3dc3f7c5a7",
+			"fromSide": "right",
+			"toNode": "6009fbf064cc78fc",
+			"toSide": "left"
+		},
+		{
+			"id": "cb1deea9a783d7fd",
+			"fromNode": "c34b03199daf90ff",
+			"fromSide": "right",
+			"toNode": "34c9d406e3a12008",
+			"toSide": "left"
+		},
+		{
+			"id": "010d05ad74f76723",
+			"fromNode": "34c9d406e3a12008",
+			"fromSide": "bottom",
+			"toNode": "f881b63b777b08b9",
+			"toSide": "top"
+		},
+		{
+			"id": "7a65eca7179c4033",
+			"fromNode": "de48453b024e31b5",
+			"fromSide": "right",
+			"toNode": "2b1815dc0068fd02",
+			"toSide": "left"
+		},
+		{
+			"id": "939730a682f1aa50",
+			"fromNode": "2b1815dc0068fd02",
+			"fromSide": "bottom",
+			"toNode": "7c5f73619ca91e53",
+			"toSide": "top"
+		},
+		{
+			"id": "b41634c413e005d2",
+			"fromNode": "2b1815dc0068fd02",
+			"fromSide": "right",
+			"toNode": "ec10ca2830c6f7f0",
+			"toSide": "left"
+		},
+		{
+			"id": "c5cd0bf28b7ba72c",
+			"fromNode": "23c4026753538829",
+			"fromSide": "right",
+			"toNode": "999d31606f2098f6",
+			"toSide": "left"
+		},
+		{
+			"id": "fd6afdcff1b7b391",
+			"fromNode": "5a3b147b1cac643d",
+			"fromSide": "right",
+			"toNode": "45ebf59c2a30690a",
+			"toSide": "left"
+		},
+		{
+			"id": "3c696e8babcdc49d",
+			"fromNode": "45ebf59c2a30690a",
+			"fromSide": "bottom",
+			"toNode": "5f18ced9c8cf867b",
+			"toSide": "top"
+		},
+		{
+			"id": "4743842e728cb230",
+			"fromNode": "45ebf59c2a30690a",
+			"fromSide": "right",
+			"toNode": "01bd8a0c12401992",
+			"toSide": "left"
+		},
+		{
+			"id": "4c679d03c7601a39",
+			"fromNode": "2588104c7b5b07ae",
+			"fromSide": "right",
+			"toNode": "3a9d020b9ca2bd89",
+			"toSide": "left"
+		},
+		{
+			"id": "12ebf0c0c1cb8a64",
+			"fromNode": "3a9d020b9ca2bd89",
+			"fromSide": "bottom",
+			"toNode": "294257b6161fa838",
+			"toSide": "top"
+		},
+		{
+			"id": "ee67008025212654",
+			"fromNode": "3a9d020b9ca2bd89",
+			"fromSide": "right",
+			"toNode": "01bd8a0c12401992",
+			"toSide": "left"
+		},
+		{
+			"id": "67b667b92fe969e9",
+			"fromNode": "3a9d020b9ca2bd89",
+			"fromSide": "right",
+			"toNode": "540ffe993cf68ba3",
+			"toSide": "left"
+		},
+		{
+			"id": "2f8ae9a19818f9c7",
+			"fromNode": "3a9d020b9ca2bd89",
+			"fromSide": "right",
+			"toNode": "589cfa4e96b0c6c4",
+			"toSide": "left"
+		},
+		{
+			"id": "beb6dfe56be4210d",
+			"fromNode": "f949be75de8a110b",
+			"fromSide": "right",
+			"toNode": "de71e6c2201552cc",
+			"toSide": "left"
+		},
+		{
+			"id": "722d4fcdb663ab99",
+			"fromNode": "de71e6c2201552cc",
+			"fromSide": "bottom",
+			"toNode": "627916174165bd6d",
+			"toSide": "top"
+		},
+		{
+			"id": "d3be64d5a1ed92d3",
+			"fromNode": "de71e6c2201552cc",
+			"fromSide": "right",
+			"toNode": "57e087d6e083c606",
+			"toSide": "left"
+		},
+		{
+			"id": "6163a87e738b57c8",
+			"fromNode": "de71e6c2201552cc",
+			"fromSide": "right",
+			"toNode": "549587d5c10953c9",
+			"toSide": "left"
+		},
+		{
+			"id": "08ae98c47c75422e",
+			"fromNode": "e94bccb85219dd8a",
+			"fromSide": "right",
+			"toNode": "ab84fb27f4c2efbd",
+			"toSide": "left"
+		},
+		{
+			"id": "c805c83d12f40df5",
+			"fromNode": "ab84fb27f4c2efbd",
+			"fromSide": "bottom",
+			"toNode": "5a799df2cb3eeefc",
+			"toSide": "top"
+		},
+		{
+			"id": "4acbf646720f42b4",
+			"fromNode": "ab84fb27f4c2efbd",
+			"fromSide": "right",
+			"toNode": "65d51c4b78b5713f",
+			"toSide": "left"
+		},
+		{
+			"id": "5864b21303f7a40f",
+			"fromNode": "8d761ef647fec74c",
+			"fromSide": "right",
+			"toNode": "e30f84a9b6a09c8b",
+			"toSide": "left"
+		},
+		{
+			"id": "c496a8e4c60b091c",
+			"fromNode": "d0f28aab6bc93ef1",
+			"fromSide": "right",
+			"toNode": "5adbee4ce8fada16",
+			"toSide": "left"
+		},
+		{
+			"id": "18b4a34212400f14",
+			"fromNode": "5adbee4ce8fada16",
+			"fromSide": "bottom",
+			"toNode": "159597a98d630987",
+			"toSide": "top"
+		},
+		{
+			"id": "e42df34bcb2c8681",
+			"fromNode": "5adbee4ce8fada16",
+			"fromSide": "right",
+			"toNode": "4a36d8f91c9a5d3d",
+			"toSide": "left"
+		},
+		{
+			"id": "38f95f385e7ae69e",
+			"fromNode": "0390fec928063393",
+			"fromSide": "right",
+			"toNode": "c2c9fcf63b571214",
+			"toSide": "left"
+		},
+		{
+			"id": "e3cb999d3b1a36cd",
+			"fromNode": "c430e157c48c3209",
+			"fromSide": "right",
+			"toNode": "09ae1f085371932e",
+			"toSide": "left"
+		},
+		{
+			"id": "f066b0477f0f1c3b",
+			"fromNode": "c8a4f3a60a6dde70",
+			"fromSide": "right",
+			"toNode": "f89ee11924adc4c7",
+			"toSide": "left"
+		},
+		{
+			"id": "c13eeb281df3cf7a",
+			"fromNode": "d9c7153cd609e3d2",
+			"fromSide": "right",
+			"toNode": "8f8ef27b2346e8e5",
+			"toSide": "left"
+		},
+		{
+			"id": "2e4276cbb5871317",
+			"fromNode": "bc32fc320b8a9488",
+			"fromSide": "right",
+			"toNode": "121c13c575c61c7f",
+			"toSide": "left"
+		},
+		{
+			"id": "0f3dfdb34379e7a9",
+			"fromNode": "56af5b02ffcb7028",
+			"fromSide": "right",
+			"toNode": "a99b231d4559fe27",
+			"toSide": "left"
+		},
+		{
+			"id": "132fa65ec1908b48",
+			"fromNode": "a2b00d75b734bbbd",
+			"fromSide": "right",
+			"toNode": "5a3b147b1cac643d",
+			"toSide": "left"
+		},
+		{
+			"id": "b7b79e5c117e2944",
+			"fromNode": "a2b00d75b734bbbd",
+			"fromSide": "right",
+			"toNode": "2588104c7b5b07ae",
+			"toSide": "left"
+		},
+		{
+			"id": "e48ad745a53c78ab",
+			"fromNode": "6009fbf064cc78fc",
+			"fromSide": "right",
+			"toNode": "c34b03199daf90ff",
+			"toSide": "left"
+		},
+		{
+			"id": "7343dadefcd527ce",
+			"fromNode": "540ffe993cf68ba3",
+			"fromSide": "right",
+			"toNode": "f949be75de8a110b",
+			"toSide": "left"
+		},
+		{
+			"id": "61139d5ca6c2e278",
+			"fromNode": "589cfa4e96b0c6c4",
+			"fromSide": "right",
+			"toNode": "8d761ef647fec74c",
+			"toSide": "left"
+		},
+		{
+			"id": "41a73f7f34d2178f",
+			"fromNode": "57e087d6e083c606",
+			"fromSide": "right",
+			"toNode": "e94bccb85219dd8a",
+			"toSide": "left"
+		},
+		{
+			"id": "97a97c8eeeab0eaa",
+			"fromNode": "549587d5c10953c9",
+			"fromSide": "right",
+			"toNode": "8d761ef647fec74c",
+			"toSide": "left"
+		},
+		{
+			"id": "faadb3d58afcb275",
+			"fromNode": "643dad25e3a19df5",
+			"fromSide": "right",
+			"toNode": "23c4026753538829",
+			"toSide": "left"
+		},
+		{
+			"id": "9068837f44476acb",
+			"fromNode": "643dad25e3a19df5",
+			"fromSide": "right",
+			"toNode": "f37e738a045e3050",
+			"toSide": "left"
+		},
+		{
+			"id": "998c0b3a50c6a550",
+			"fromNode": "65d51c4b78b5713f",
+			"fromSide": "right",
+			"toNode": "0390fec928063393",
+			"toSide": "left"
+		},
+		{
+			"id": "d42a9cff007cf90f",
+			"fromNode": "65d51c4b78b5713f",
+			"fromSide": "right",
+			"toNode": "c430e157c48c3209",
+			"toSide": "left"
+		},
+		{
+			"id": "3692c50424b2466a",
+			"fromNode": "4a36d8f91c9a5d3d",
+			"fromSide": "right",
+			"toNode": "56af5b02ffcb7028",
+			"toSide": "left"
+		},
+		{
+			"id": "ab2c1775876db669",
+			"fromNode": "4a36d8f91c9a5d3d",
+			"fromSide": "right",
+			"toNode": "bc32fc320b8a9488",
+			"toSide": "left"
+		},
+		{
+			"id": "07733cae9ca38b9a",
+			"fromNode": "4a36d8f91c9a5d3d",
+			"fromSide": "right",
+			"toNode": "c8a4f3a60a6dde70",
+			"toSide": "left"
+		},
+		{
+			"id": "aaa7c53fe3732f31",
+			"fromNode": "4a36d8f91c9a5d3d",
+			"fromSide": "right",
+			"toNode": "d9c7153cd609e3d2",
+			"toSide": "left"
+		},
+		{
+			"id": "6f4e1b98d932f47e",
+			"fromNode": "cf295de8c2cf6024",
+			"fromSide": "right",
+			"toNode": "2588104c7b5b07ae",
+			"toSide": "left"
+		},
+		{
+			"id": "b3303984cdecc310",
+			"fromNode": "01bd8a0c12401992",
+			"fromSide": "right",
+			"toNode": "f949be75de8a110b",
+			"toSide": "left"
+		},
+		{
+			"id": "63d28e483c584452",
+			"fromNode": "643dad25e3a19df5",
+			"fromSide": "right",
+			"toNode": "d0f28aab6bc93ef1",
+			"toSide": "left"
+		},
+		{
+			"id": "a538402327ab39af",
+			"fromNode": "01bd8a0c12401992",
+			"fromSide": "right",
+			"toNode": "bc32fc320b8a9488",
+			"toSide": "left"
+		},
+		{
+			"id": "a0883c5e6251cf82",
+			"fromNode": "de71e6c2201552cc",
+			"fromSide": "right",
+			"toNode": "d0f28aab6bc93ef1",
+			"toSide": "left",
+			"label": "AddTopic"
+		},
+		{
+			"id": "5fdb2db63a81da5a",
+			"fromNode": "2b1815dc0068fd02",
+			"fromSide": "right",
+			"toNode": "56af5b02ffcb7028",
+			"toSide": "left",
+			"label": "AddTopic"
+		},
+		{
+			"id": "1f193c6323888275",
+			"fromNode": "2b1815dc0068fd02",
+			"fromSide": "right",
+			"toNode": "23c4026753538829",
+			"toSide": "left",
+			"label": "AddTopic"
+		}
+	],
+	"metadata": {
+		"version": "1.0-1.0",
+		"frontmatter": {}
+	}
+}

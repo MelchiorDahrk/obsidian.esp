@@ -1,0 +1,11 @@
+{
+	"version": "0.0.1",
+	"configurations": [
+		{
+			"name": "canvas-viewer",
+			"runtimeExecutable": "node",
+			"runtimeArgs": ["scripts/canvas-harness/serve.mjs"],
+			"port": 4173
+		}
+	]
+}

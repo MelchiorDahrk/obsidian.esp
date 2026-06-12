@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>canvas harness viewer</title>
+<style>
+	body { margin: 0; background: #161616; }
+	img { display: block; width: 100%; }
+</style>
+</head>
+<body>
+<script>
+	const file = new URLSearchParams(location.search).get('file') ?? '.out/domain-layered.svg';
+	const img = document.createElement('img');
+	img.src = file;
+	document.body.appendChild(img);
+</script>
+</body>
+</html>

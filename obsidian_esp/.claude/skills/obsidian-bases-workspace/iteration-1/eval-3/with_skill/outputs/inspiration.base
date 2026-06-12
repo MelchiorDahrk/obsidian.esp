@@ -1,0 +1,10 @@
+filters:
+  and:
+    - file.inFolder("Inspiration")
+views:
+  - type: cards
+    name: "Inspiration Gallery"
+    cardSize: 200
+    imageProperty: "cover"
+    imageFit: "cover"
+    imageAspectRatio: 1

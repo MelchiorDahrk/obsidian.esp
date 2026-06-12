@@ -1,0 +1,15 @@
+filters:
+  and:
+    - file.hasTag("quest")
+formulas:
+  difficulty_level: "level * 10"
+properties:
+  formula.difficulty_level:
+    displayName: "Difficulty Level"
+views:
+  - type: table
+    name: "Quests"
+    order:
+      - file.name
+      - formula.difficulty_level
+      - status
