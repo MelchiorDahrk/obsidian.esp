@@ -7,6 +7,7 @@ import { dirname, resolve } from 'node:path';
 const here = dirname(fileURLToPath(import.meta.url));
 const jiti = createJiti(import.meta.url);
 const {
+	hasSelectedQuestJournalFilter,
 	numericConditionRangesAreCompatible,
 	speakerConditionValuesAreCompatible,
 } = jiti(resolve(here, '../src/features/quest-canvas-conditions.ts'));
@@ -46,5 +47,27 @@ test('numeric condition matching allows overlapping journal ranges', () => {
 			{ operator: '=', value: 102 },
 		),
 		false,
+	);
+});
+
+test('selected quest journal filter matching rejects other quest filters', () => {
+	assert.equal(
+		hasSelectedQuestJournalFilter(
+			[
+				{ kind: 'speaker' },
+				{ kind: 'journal', questId: 'HT_DahrkMezalf' },
+			],
+			['OAAB_TVos_SmokeskinWillpower'],
+		),
+		false,
+	);
+	assert.equal(
+		hasSelectedQuestJournalFilter(
+			[
+				{ kind: 'journal', questId: 'OAAB_TVos_SmokeskinWillpower' },
+			],
+			['OAAB_TVos_SmokeskinWillpower'],
+		),
+		true,
 	);
 });

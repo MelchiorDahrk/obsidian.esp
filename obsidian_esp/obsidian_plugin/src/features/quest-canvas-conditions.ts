@@ -59,6 +59,20 @@ export function numericConditionRangesAreCompatible(
 	return true;
 }
 
+export interface QuestJournalFilterInput {
+	kind: string;
+	questId?: string;
+}
+
+export function hasSelectedQuestJournalFilter(
+	conditions: QuestJournalFilterInput[],
+	questIds: string[],
+): boolean {
+	return conditions.some((condition) => condition.kind === 'journal'
+		&& condition.questId !== undefined
+		&& questIds.includes(condition.questId));
+}
+
 function numericConditionRange(condition: NumericConditionRangeInput): NumericConditionRange {
 	const value = condition.value ?? 0;
 	switch (condition.operator) {

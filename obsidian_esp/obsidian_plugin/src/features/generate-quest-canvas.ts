@@ -4,6 +4,7 @@ import { selectVaultFolder } from '../ui/folder-suggest-modal';
 import { ProgressBar } from '../ui/progress-bar';
 import { splitFrontmatter } from '../utils/obsidian-utils';
 import {
+	hasSelectedQuestJournalFilter,
 	numericConditionRangesAreCompatible,
 	speakerConditionValuesAreCompatible,
 } from './quest-canvas-conditions';
@@ -523,7 +524,7 @@ export async function buildQuestCanvas(app: App, scope: QuestScope): Promise<Can
 
 	connectChoiceTransitions(canvasContext, canvasRecords);
 	routeJournalRangeChoiceTransitions(canvasContext, canvasRecords);
-	connectAddTopicTransitions(canvasContext, canvasRecords);
+	connectAddTopicTransitions(canvasContext, canvasRecords, scope.questIds);
 	connectBodyTopicLinkTransitions(canvasContext, canvasRecords);
 	connectPendingPhaseEntryEdges(canvasContext, pendingPhaseEntryEdges);
 	connectJournalConditionMilestones(canvasContext, canvasRecords, scope.journalMilestones, scope.questIds);
@@ -1788,7 +1789,7 @@ function hasJournalRangeCondition(record: DialogueRecord): boolean {
 	return false;
 }
 
-function connectAddTopicTransitions(context: CanvasLayoutContext, records: DialogueRecord[]): void {
+function connectAddTopicTransitions(context: CanvasLayoutContext, records: DialogueRecord[], questIds: string[]): void {
 	const orderedRecordsByTopic = groupRecordsByNormalizedTopic(records);
 	const transitions: AddTopicTransition[] = [];
 
@@ -1798,7 +1799,7 @@ function connectAddTopicTransitions(context: CanvasLayoutContext, records: Dialo
 				continue;
 			}
 
-			const targetRecords = resolveAddTopicTransitionTargets(sourceRecord, action.targetTopic, orderedRecordsByTopic);
+			const targetRecords = resolveAddTopicTransitionTargets(sourceRecord, action.targetTopic, orderedRecordsByTopic, questIds);
 			if (targetRecords.length === 0) {
 				continue;
 			}
@@ -2050,9 +2051,13 @@ function resolveAddTopicTransitionTargets(
 	sourceRecord: DialogueRecord,
 	targetTopic: string,
 	orderedRecordsByTopic: Map<string, DialogueRecord[]>,
+	questIds?: string[],
 ): DialogueRecord[] {
 	const targetRecords = orderedRecordsByTopic.get(normalizeTopicKey(targetTopic)) ?? [];
-	const candidates = targetRecords.filter((candidate) => conditionsCanFollowAddTopic(sourceRecord, candidate));
+	const candidates = targetRecords.filter((candidate) => (
+		conditionsCanFollowAddTopic(sourceRecord, candidate)
+		&& (questIds === undefined || recordHasSelectedQuestJournalFilter(candidate, questIds))
+	));
 	if (candidates.length <= 1) {
 		return candidates;
 	}
@@ -2084,6 +2089,10 @@ function extractBodyTopicLinks(bodyText: string): string[] {
 		match = linkPattern.exec(bodyText);
 	}
 	return topics;
+}
+
+function recordHasSelectedQuestJournalFilter(record: DialogueRecord, questIds: string[]): boolean {
+	return hasSelectedQuestJournalFilter(record.conditions, questIds);
 }
 
 function normalizeWikilinkTopic(rawLink: string): string {
@@ -4021,7 +4030,7 @@ function resolvePropagatedRelevantRecords(
 					relevant.add(candidate.id);
 					changed = true;
 				}
-				for (const candidate of resolveAddTopicTargetRecords(record, recordsByNormalizedTopic)) {
+				for (const candidate of resolveAddTopicTargetRecords(record, recordsByNormalizedTopic, questIds)) {
 					if (hasOnlyJournalResultsForOtherQuests(candidate, questIds) || relevant.has(candidate.id)) {
 						continue;
 					}
@@ -4032,7 +4041,7 @@ function resolvePropagatedRelevantRecords(
 				continue;
 			}
 
-			if (recordLeadsToRelevantRecord(record, topicRecords, recordsByNormalizedTopic, relevant)) {
+			if (recordLeadsToRelevantRecord(record, topicRecords, recordsByNormalizedTopic, relevant, questIds)) {
 				relevant.add(record.id);
 				changed = true;
 			}
@@ -4047,9 +4056,10 @@ function recordLeadsToRelevantRecord(
 	topicRecords: DialogueRecord[],
 	recordsByNormalizedTopic: Map<string, DialogueRecord[]>,
 	relevant: Set<string>,
+	questIds: string[],
 ): boolean {
 	return resolveChoiceTargetRecords(record, topicRecords).some((candidate) => relevant.has(candidate.id))
-		|| resolveAddTopicTargetRecords(record, recordsByNormalizedTopic).some((candidate) => relevant.has(candidate.id));
+		|| resolveAddTopicTargetRecords(record, recordsByNormalizedTopic, questIds).some((candidate) => relevant.has(candidate.id));
 }
 
 function resolveChoiceTargetRecords(
@@ -4078,6 +4088,7 @@ function resolveChoiceTargetRecords(
 function resolveAddTopicTargetRecords(
 	sourceRecord: DialogueRecord,
 	recordsByNormalizedTopic: Map<string, DialogueRecord[]>,
+	questIds: string[],
 ): DialogueRecord[] {
 	const targetRecords: DialogueRecord[] = [];
 	for (const action of sourceRecord.resultActions) {
@@ -4085,7 +4096,7 @@ function resolveAddTopicTargetRecords(
 			continue;
 		}
 
-		const resolvedTargets = resolveAddTopicTransitionTargets(sourceRecord, action.targetTopic, recordsByNormalizedTopic);
+		const resolvedTargets = resolveAddTopicTransitionTargets(sourceRecord, action.targetTopic, recordsByNormalizedTopic, questIds);
 		for (const targetRecord of resolvedTargets) {
 			if (!targetRecords.some((candidate) => candidate.id === targetRecord.id)) {
 				targetRecords.push(targetRecord);
