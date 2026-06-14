@@ -3,6 +3,7 @@ import { PathManager } from './path-manager';
 import { selectVaultFolder } from '../ui/folder-suggest-modal';
 import { ProgressBar } from '../ui/progress-bar';
 import { splitFrontmatter } from '../utils/obsidian-utils';
+import { selectFirstQuestTreeAddTopicTargets } from './quest-canvas-add-topic';
 import {
 	hasSelectedQuestJournalFilter,
 	numericConditionRangesAreCompatible,
@@ -1914,7 +1915,7 @@ function connectAddTopicTransitions(context: CanvasLayoutContext, records: Dialo
 				continue;
 			}
 
-			const targetRecords = resolveAddTopicTransitionTargets(sourceRecord, action.targetTopic, orderedRecordsByTopic, questIds);
+			const targetRecords = resolveAddTopicTransitionTargets(sourceRecord, action.targetTopic, orderedRecordsByTopic, questIds, context);
 			if (targetRecords.length === 0) {
 				continue;
 			}
@@ -2167,14 +2168,22 @@ function resolveAddTopicTransitionTargets(
 	targetTopic: string,
 	orderedRecordsByTopic: Map<string, DialogueRecord[]>,
 	questIds?: string[],
+	context?: CanvasLayoutContext,
 ): DialogueRecord[] {
 	const targetRecords = orderedRecordsByTopic.get(normalizeTopicKey(targetTopic)) ?? [];
 	const candidates = targetRecords.filter((candidate) => (
 		conditionsCanFollowAddTopic(sourceRecord, candidate)
-		&& (questIds === undefined || recordHasSelectedQuestJournalFilter(candidate, questIds))
+		&& (context !== undefined || questIds === undefined || recordHasSelectedQuestJournalFilter(candidate, questIds))
 	));
 	if (candidates.length <= 1) {
 		return candidates;
+	}
+
+	if (context) {
+		const firstQuestTreeTargets = firstQuestTreeAddTopicTargets(context, sourceRecord, candidates);
+		if (firstQuestTreeTargets.length > 0) {
+			return firstQuestTreeTargets;
+		}
 	}
 
 	const scoredCandidates = candidates.map((candidate) => ({
@@ -2187,6 +2196,28 @@ function resolveAddTopicTransitionTargets(
 		.map((item) => item.candidate);
 
 	return bestScore > 0 ? bestCandidates : [candidates[0] as DialogueRecord];
+}
+
+function firstQuestTreeAddTopicTargets(
+	context: CanvasLayoutContext,
+	sourceRecord: DialogueRecord,
+	candidates: DialogueRecord[],
+): DialogueRecord[] {
+	const positionedCandidates = candidates
+		.map((candidate) => {
+			const nodeId = context.recordEntryNodeIds.get(candidate.id);
+			const node = nodeId ? findCanvasNode(context, nodeId) : undefined;
+			return node ? {
+				target: candidate,
+				nodeId,
+				x: node.x,
+				y: node.y,
+				score: scoreAddTopicTransitionTarget(sourceRecord, candidate),
+			} : null;
+		})
+		.filter((item): item is { target: DialogueRecord; nodeId: string; x: number; y: number; score: number } => item !== null);
+
+	return selectFirstQuestTreeAddTopicTargets(positionedCandidates);
 }
 
 function extractBodyTopicLinks(bodyText: string): string[] {
