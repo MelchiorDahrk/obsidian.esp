@@ -8,6 +8,9 @@ Index: 40
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-I have found what's left of Alenus Vendu's merchandise. It appears that they were eaten and then shat into a pile in a hidden room within [[Tel Vos]]. They are all completely devoid of [[enchantment]] now. I should let her know what I found.
+
+I have found what's left of Alenus Vendu's merchandise. It appears that they were eaten and then shat into a pile in a hidden room within [[Tel Vos]]. They are all completely devoid of [[enchantment]] now. I should let her know what I found. ^obsidian-esp-canvas-2b3abe95a0

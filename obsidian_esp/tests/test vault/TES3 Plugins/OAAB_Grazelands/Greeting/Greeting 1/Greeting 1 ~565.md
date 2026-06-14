@@ -21,6 +21,9 @@ Function0: Journal
 Variable0: OAAB_TVos_MoraTrader < 10
 Function1: Function
 Variable1: Choice = 4
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-You rude %PCRace! Fine, then! Just leave me here to die of the chills.
+
+You rude %PCRace! Fine, then! Just leave me here to die of the chills. ^obsidian-esp-canvas-72c9ba8975

@@ -28,6 +28,9 @@ Function3: Journal
 Variable3: MV_OutcastAshlanders < 100
 Function4: Journal
 Variable4: MV_OutcastAshlandersGuar = 110
+canvas:
+  - "[[MV_OutcastAshlanders.canvas]]"
 ---
 
-Thank you for getting my hides and [[guar]] back. It's good to hear you were able to make at least one of those fetchers pay as well. Make sure to see Berwen in [[Tel Mora]] for your [[reward]]. I'll send word along the trade routes to make sure she keeps an eye out for %PCName.
+
+Thank you for getting my hides and [[guar]] back. It's good to hear you were able to make at least one of those fetchers pay as well. Make sure to see Berwen in [[Tel Mora]] for your [[reward]]. I'll send word along the trade routes to make sure she keeps an eye out for %PCName. ^obsidian-esp-canvas-1c5003ea49

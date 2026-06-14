@@ -23,6 +23,9 @@ Result: |
   AddTopic "little secret"
 Function0: Function
 Variable0: Choice = 1
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-Yes, now %Name is free. Thanks is not enough, but %Name knows a [[little secret]] which good friend, %PCName may wish to know.
+
+Yes, now %Name is free. Thanks is not enough, but %Name knows a [[little secret]] which good friend, %PCName may wish to know. ^obsidian-esp-canvas-5d66c7e56a

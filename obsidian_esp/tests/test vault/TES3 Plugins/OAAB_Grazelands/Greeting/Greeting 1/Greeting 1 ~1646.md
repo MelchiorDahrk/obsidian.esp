@@ -19,6 +19,9 @@ Result: |
   AddTopic "Dwemer Ideographer"
 Function0: Journal
 Variable0: OAAB_TVos_DwemerMuseum = 15
+canvas:
+  - "[[Imitation is the Sincerest Form of Forgery.canvas]]"
 ---
 
-Well, well. Aryon's pet back to snoop around. Find what you were looking for then, %PCName? Perhaps instead of killing each other, we can strike a bargain. Aryon can have the dwemer ideographer -- for a price. I have figured out a way to replicate the process on a smaller scale which suits my needs. And I could use some of Aryon's gold to invest in my tower and attract my own retainers.
+
+Well, well. Aryon's pet back to snoop around. Find what you were looking for then, %PCName? Perhaps instead of killing each other, we can strike a bargain. Aryon can have the dwemer ideographer -- for a price. I have figured out a way to replicate the process on a smaller scale which suits my needs. And I could use some of Aryon's gold to invest in my tower and attract my own retainers. ^obsidian-esp-canvas-3604a80c46

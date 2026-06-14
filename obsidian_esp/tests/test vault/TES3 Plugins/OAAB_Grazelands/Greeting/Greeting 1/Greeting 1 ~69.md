@@ -21,6 +21,9 @@ Function0: Journal
 Variable0: OAAB_TVos_SmokeskinWillpower < 100
 Function1: Function
 Variable1: SameRace = 1
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-No time for talk. Leave us.
+
+No time for talk. Leave us. ^obsidian-esp-canvas-2d498bb8e9

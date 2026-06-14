@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_VaroRats = 30
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-I sent word ahead to Goler Andrethi that I was interested in purchasing the [[slave]]. Should be no surprise. You'll find them both down in the [[Tel Vos]] Jail.
+
+I sent word ahead to Goler Andrethi that I was interested in purchasing the [[slave]]. Should be no surprise. You'll find them both down in the [[Tel Vos]] Jail. ^obsidian-esp-canvas-c616af70c4

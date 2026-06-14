@@ -8,6 +8,9 @@ Index: 10
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[Waxing Pathetic Scamps.canvas]]"
 ---
 
-Galos Mathendis asked me to get 10 scraps of scamp skin for him. He plans to render scamp tallow from it to make special enchanting candles to help with his [[enchanting research]] in [[Tel Vos]]. He mentioned that Felara Andrethi in [[Tel Aruhn]] generally keeps some in stock. Otherwise I can hunt scamp in [[Daedric]] [[shrines]].
+
+Galos Mathendis asked me to get 10 scraps of scamp skin for him. He plans to render scamp tallow from it to make special enchanting candles to help with his [[enchanting research]] in [[Tel Vos]]. He mentioned that Felara Andrethi in [[Tel Aruhn]] generally keeps some in stock. Otherwise I can hunt scamp in [[Daedric]] [[shrines]]. ^obsidian-esp-canvas-4cd90132e7

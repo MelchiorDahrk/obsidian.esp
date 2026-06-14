@@ -8,6 +8,9 @@ Index: 10
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-I came across a [[Breton]] [[trader]] in [[Tel Mora]] who was afflicted by a [[curse of paralysis]] after angering [[Mistress Dratha]]. He asked me to help him remove the curse and suggested that I ask around town. He said that Kirsty brought him some food and may be willing to help more.
+
+I came across a [[Breton]] [[trader]] in [[Tel Mora]] who was afflicted by a [[curse of paralysis]] after angering [[Mistress Dratha]]. He asked me to help him remove the curse and suggested that I ask around town. He said that Kirsty brought him some food and may be willing to help more. ^obsidian-esp-canvas-e0333d38dc

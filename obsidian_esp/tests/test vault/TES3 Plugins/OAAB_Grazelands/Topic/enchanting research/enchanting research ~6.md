@@ -17,6 +17,11 @@ PC Rank:
 Result: AddTopic "Scamp tallow"
 Function0: Journal
 Variable0: OAAB_TVos_GalosMouth = 100
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
+  - "[[Waxing Pathetic Scamps.canvas]]"
 ---
 
-Back when I was Aryon's [[Mouth]], I didn't have much time for my own research. Now that I'm retired, I have some catching up I'd like to do. First off, I [[need]] some scamp tallow.
+
+
+Back when I was Aryon's [[Mouth]], I didn't have much time for my own research. Now that I'm retired, I have some catching up I'd like to do. First off, I [[need]] some scamp tallow. ^obsidian-esp-canvas-fddb9881bf

@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_MoraTrader = 102
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Thank you again for removing my curse.
+
+Thank you again for removing my curse. ^obsidian-esp-canvas-00a0a25a3c

@@ -23,6 +23,9 @@ Function2: Function
 Variable2: Choice = 500
 Function3: Function
 Variable3: PcSpeechcraft >= 60
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Please, what is it you want? Money? I can pay you. Just please, please give me the [[potion]]!
+
+Please, what is it you want? Money? I can pay you. Just please, please give me the [[potion]]! ^obsidian-esp-canvas-88ceb36f25

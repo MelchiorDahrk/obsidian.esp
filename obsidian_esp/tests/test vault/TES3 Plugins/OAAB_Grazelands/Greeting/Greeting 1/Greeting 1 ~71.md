@@ -23,6 +23,9 @@ Function1: Function
 Variable1: SameRace = 0
 Function2: Not Race
 Variable2: Dark Elf = 1
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-No time for talk, warmblood. Leave us.
+
+No time for talk, warmblood. Leave us. ^obsidian-esp-canvas-6a5aef2b6e

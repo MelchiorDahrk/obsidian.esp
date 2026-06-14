@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_MoraTrader < 10
 Function2: Not ID
 Variable2: a shady smuggler = 0
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Come to gawk, %PCRace?
+
+Come to gawk, %PCRace? ^obsidian-esp-canvas-9f080c60b3

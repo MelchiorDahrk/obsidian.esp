@@ -8,6 +8,9 @@ Index: 20
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-I talked to Kirsty in [[Tel Mora]] who said she can't help but suggested that I talk to [[Master Aryon]] in [[Tel Vos]] who may be able to remove the [[Breton]] [[trader]]'s [[curse of paralysis]].
+
+I talked to Kirsty in [[Tel Mora]] who said she can't help but suggested that I talk to [[Master Aryon]] in [[Tel Vos]] who may be able to remove the [[Breton]] [[trader]]'s [[curse of paralysis]]. ^obsidian-esp-canvas-9b3e5291ad

@@ -17,6 +17,9 @@ PC Rank:
 Result: Goodbye
 Function0: Journal
 Variable0: OAAB_TVos_VenduThief >= 31
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-What want? We give manflesh tower-key. Master will find us... master will not be pleased. It stinking man-thing's fault! Want bite! Want POP its arms. Off.
+
+What want? We give manflesh tower-key. Master will find us... master will not be pleased. It stinking man-thing's fault! Want bite! Want POP its arms. Off. ^obsidian-esp-canvas-1b9b7c4af6

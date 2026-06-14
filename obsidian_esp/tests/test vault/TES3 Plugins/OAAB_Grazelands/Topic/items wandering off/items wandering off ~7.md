@@ -21,6 +21,9 @@ Function0: Journal
 Variable0: OAAB_TVos_VenduThief = 0
 Function1: Function
 Variable1: Choice = 3
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-Oh, I'm such a fool! How did I not consider that before? My wards would keep out a mortal soul such as you or me. Or even a [[rat]]. But would have no effect on a daedra or undead spirit. I'll place additional wards down. But I would still like to recover my lost items and confirm who or what is behind the disappearances. Are you willing to [[help me]]?
+
+Oh, I'm such a fool! How did I not consider that before? My wards would keep out a mortal soul such as you or me. Or even a [[rat]]. But would have no effect on a daedra or undead spirit. I'll place additional wards down. But I would still like to recover my lost items and confirm who or what is behind the disappearances. Are you willing to [[help me]]? ^obsidian-esp-canvas-dc7c48a06f

@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_MoraTrader < 10
 Function1: Function
 Variable1: Choice = 2
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-It's because I liked the view before; but now you've gone and ruined it.
+
+It's because I liked the view before; but now you've gone and ruined it. ^obsidian-esp-canvas-ae98d687ba

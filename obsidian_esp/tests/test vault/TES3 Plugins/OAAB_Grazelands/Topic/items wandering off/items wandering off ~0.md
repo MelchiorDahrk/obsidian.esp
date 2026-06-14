@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_VenduThief < 100
 Function1: Not ID
 Variable1: alenus vendu = 1
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-Alenus Vendu has reported the missing items multiple times. But we have not observed anyone entering or leaving the tower during the night hours when she reports they are stolen.
+
+Alenus Vendu has reported the missing items multiple times. But we have not observed anyone entering or leaving the tower during the night hours when she reports they are stolen. ^obsidian-esp-canvas-4db9af431d

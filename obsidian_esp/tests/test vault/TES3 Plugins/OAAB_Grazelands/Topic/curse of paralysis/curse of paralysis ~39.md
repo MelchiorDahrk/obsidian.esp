@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_MoraTrader >= 10
 Function1: Journal
 Variable1: OAAB_TVos_MoraTrader <= 30
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-I can't remove it myself. Maybe someone in town will have an idea. Kirsty right there in the housepod brought me some food yesterday. Maybe she'll help.
+
+I can't remove it myself. Maybe someone in town will have an idea. Kirsty right there in the housepod brought me some food yesterday. Maybe she'll help. ^obsidian-esp-canvas-51c9fe7394

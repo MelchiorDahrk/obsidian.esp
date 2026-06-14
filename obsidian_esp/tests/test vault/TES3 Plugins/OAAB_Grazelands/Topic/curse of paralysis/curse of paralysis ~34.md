@@ -21,6 +21,9 @@ Function1: Item
 Variable1: ABtv_pot_CureParalysis >= 1
 Function2: Function
 Variable2: Choice = 22
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-How dare you insult me like that!... but you're right, I only came out here because I wasn't having any [[luck]] in the Hlaalu and Redoran towns. I suppose I could give it a try at this tradehouse. Can I have the [[potion]] now?
+
+How dare you insult me like that!... but you're right, I only came out here because I wasn't having any [[luck]] in the Hlaalu and Redoran towns. I suppose I could give it a try at this tradehouse. Can I have the [[potion]] now? ^obsidian-esp-canvas-72e93f12d2

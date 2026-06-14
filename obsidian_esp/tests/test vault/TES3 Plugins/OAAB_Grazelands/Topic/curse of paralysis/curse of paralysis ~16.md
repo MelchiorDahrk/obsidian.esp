@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_MoraTrader >= 100
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-I try not to think about it.
+
+I try not to think about it. ^obsidian-esp-canvas-834b374a02

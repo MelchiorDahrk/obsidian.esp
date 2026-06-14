@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_MoraTrader >= 10
 Function1: Journal
 Variable1: OAAB_TVos_MoraTrader <= 40
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-That [[Breton]] broke the [[law]] of the mage-lord. Do not interfere.
+
+That [[Breton]] broke the [[law]] of the mage-lord. Do not interfere. ^obsidian-esp-canvas-61a08ba74d

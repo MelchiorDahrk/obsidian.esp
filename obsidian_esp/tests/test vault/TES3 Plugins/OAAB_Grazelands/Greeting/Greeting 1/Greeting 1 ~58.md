@@ -23,6 +23,9 @@ Function1: Journal
 Variable1: OAAB_TVos_ConservatoryWater >= 20
 Function2: Global
 Variable2: Random100 <= 33
+canvas:
+  - "[[Conserving Water.canvas]]"
 ---
 
-Do you know what I found when I went into my conservatory, %PCName? No water... my patience is growing thin.
+
+Do you know what I found when I went into my conservatory, %PCName? No water... my patience is growing thin. ^obsidian-esp-canvas-d8ec551cc1

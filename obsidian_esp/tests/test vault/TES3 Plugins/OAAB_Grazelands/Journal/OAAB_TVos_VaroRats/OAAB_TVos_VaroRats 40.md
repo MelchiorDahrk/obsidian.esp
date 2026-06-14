@@ -8,6 +8,9 @@ Index: 40
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-I delivered the [[contract]] to Goler Andrethi. He accepted it and gave me the key to release the [[slave]]. I expect Varo wishes me to bring his new "servant" to the tradehouse in [[Vos]].
+
+I delivered the [[contract]] to Goler Andrethi. He accepted it and gave me the key to release the [[slave]]. I expect Varo wishes me to bring his new "servant" to the tradehouse in [[Vos]]. ^obsidian-esp-canvas-0401d22db6

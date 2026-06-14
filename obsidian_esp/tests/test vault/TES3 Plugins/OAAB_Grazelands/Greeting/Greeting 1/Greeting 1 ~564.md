@@ -21,6 +21,9 @@ Function0: Journal
 Variable0: OAAB_TVos_MoraTrader < 10
 Function1: Function
 Variable1: Choice = 3
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Never mind me then. I'm just dying of the chills on account of standing out in the rain for days. A merry journey to you, orc-shit.
+
+Never mind me then. I'm just dying of the chills on account of standing out in the rain for days. A merry journey to you, orc-shit. ^obsidian-esp-canvas-48fe3dfc80

@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_SmokeskinWillpower < 100
 Function1: Not ID
 Variable1: smokeskin_killer = 1
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-He's patrolling [[the Dwemer]] Museum. I wouldn't try talking to him right now though. Milar Maryon usually brings some [[potions]] that cheer him up. But he hasn't in a while that I have noticed anyway.
+
+He's patrolling [[the Dwemer]] Museum. I wouldn't try talking to him right now though. Milar Maryon usually brings some [[potions]] that cheer him up. But he hasn't in a while that I have noticed anyway. ^obsidian-esp-canvas-40edf0948c

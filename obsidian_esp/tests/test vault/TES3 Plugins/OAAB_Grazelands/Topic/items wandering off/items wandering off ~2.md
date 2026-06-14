@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_VenduThief = 100
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-I doubt I'll have any more items wander off now thanks to you.
+
+I doubt I'll have any more items wander off now thanks to you. ^obsidian-esp-canvas-f3b1c8e125

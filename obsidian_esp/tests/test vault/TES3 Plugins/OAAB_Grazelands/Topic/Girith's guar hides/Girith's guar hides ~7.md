@@ -28,6 +28,9 @@ Function3: Journal
 Variable3: MV_OutcastAshlanders < 100
 Function4: Journal
 Variable4: MV_OutcastAshlandersGuar = 110
+canvas:
+  - "[[MV_OutcastAshlanders.canvas]]"
 ---
 
-Good to finally have my hides and [[guar]] back. Don't know how I would have made it without them. Shame you couldn't get rid of those two [[Ashlanders]], but I thank you for your help. Remember to talk to [[my friend]] Berwen in [[Tel Mora]]. I'll send word to her to keep an eye out for you, %PCName.
+
+Good to finally have my hides and [[guar]] back. Don't know how I would have made it without them. Shame you couldn't get rid of those two [[Ashlanders]], but I thank you for your help. Remember to talk to [[my friend]] Berwen in [[Tel Mora]]. I'll send word to her to keep an eye out for you, %PCName. ^obsidian-esp-canvas-1d720c5002

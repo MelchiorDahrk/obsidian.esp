@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_MoraTrader >= 20
 Function1: Journal
 Variable1: OAAB_TVos_MoraTrader <= 30
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Like I said, maybe [[Master Aryon]] will help. You'll [[need]] to go talk to him in [[Tel Vos]].
+
+Like I said, maybe [[Master Aryon]] will help. You'll [[need]] to go talk to him in [[Tel Vos]]. ^obsidian-esp-canvas-ef87c66ed9

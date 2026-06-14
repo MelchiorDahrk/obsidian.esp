@@ -21,6 +21,9 @@ Function1: Item
 Variable1: ABtv_pot_CureParalysis >= 1
 Function2: Function
 Variable2: Choice = 2
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-You want me to go sell my wares in a Telvanni tradehouse? Are you crazy? These spore-huffing elves are all insane!
+
+You want me to go sell my wares in a Telvanni tradehouse? Are you crazy? These spore-huffing elves are all insane! ^obsidian-esp-canvas-7ae724370e

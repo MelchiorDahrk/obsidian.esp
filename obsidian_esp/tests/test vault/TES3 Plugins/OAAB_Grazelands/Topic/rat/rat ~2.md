@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_VaroRats = 20
 Function1: Function
 Variable1: Choice = 2
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-Thank you for offering. But I am looking for a longer term solution to this issue. I fear that if you kill the rats, more will arrive the day you depart. No, I [[need]] a [[rat catcher]].
+
+Thank you for offering. But I am looking for a longer term solution to this issue. I fear that if you kill the rats, more will arrive the day you depart. No, I [[need]] a [[rat catcher]]. ^obsidian-esp-canvas-17860ae10d

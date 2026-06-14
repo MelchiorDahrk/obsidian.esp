@@ -8,6 +8,9 @@ Index: 5
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[Let The Ebony Flow.canvas]]"
 ---
 
-I heard a rumor that Turedus Talanian is looking for a member of [[House Telvanni]] to conduct some more [[work]] for him.
+
+I heard a rumor that Turedus Talanian is looking for a member of [[House Telvanni]] to conduct some more [[work]] for him. ^obsidian-esp-canvas-087a6d8aa3

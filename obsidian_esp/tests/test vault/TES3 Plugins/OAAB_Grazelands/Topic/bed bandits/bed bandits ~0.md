@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_BenBandits = 100
+canvas:
+  - "[[Bed Bandits.canvas]]"
 ---
 
-Thank you for helping me.
+
+Thank you for helping me. ^obsidian-esp-canvas-7506371b70

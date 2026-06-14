@@ -17,6 +17,11 @@ PC Rank:
 Result: Choice "Set the slave free." 1 "Nevermind." 2
 Function0: Item
 Variable0: key_telvosjailslaves_01 >= 1
+Function1: Journal
+Variable1: OAAB_TVos_VaroRats = 40
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-Go free? You let %Name [[go free]]?
+
+Go free? You let %Name [[go free]]? ^obsidian-esp-canvas-ce51ed43b0

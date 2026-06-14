@@ -20,6 +20,9 @@ Function1: Item
 Variable1: ABtv_pot_CureParalysis >= 1
 Function2: Function
 Variable2: Choice = 3
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Please, hurry!
+
+Please, hurry! ^obsidian-esp-canvas-135a221824

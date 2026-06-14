@@ -24,6 +24,9 @@ Function1: Item
 Variable1: p_cure_paralyzation_s >= 1
 Function2: Function
 Variable2: SameFaction = 0
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Let me see that [[potion]]. There, that should do it. Now, before you go, please remember to ask the [[trader]] to come to the Varo Tradehouse. If you are successful, come talk to me again and I'll give you an appropriate [[reward]].
+
+Let me see that [[potion]]. There, that should do it. Now, before you go, please remember to ask the [[trader]] to come to the Varo Tradehouse. If you are successful, come talk to me again and I'll give you an appropriate [[reward]]. ^obsidian-esp-canvas-6cded7ea3f

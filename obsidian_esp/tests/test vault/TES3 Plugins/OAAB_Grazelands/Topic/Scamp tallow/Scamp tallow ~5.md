@@ -17,6 +17,11 @@ PC Rank:
 Result: Choice "So how can I help?" 1 "Magetallow?" 2
 Function0: Journal
 Variable0: OAAB_TVos_GalosMouth = 100
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
+  - "[[Waxing Pathetic Scamps.canvas]]"
 ---
 
-You may not know this, but the candles surrounding an enchanter's table aren't just for show. Skilled [[enchanters]] can use the aura cast by particular candles to create better [[enchantments]]. In the West -- especially in [[High Rock]] -- magetallow is frequently used. And some Telvanni use it as well. But scamp tallow candles are almost as powerful and much more... tastefully acquired.
+
+
+You may not know this, but the candles surrounding an enchanter's table aren't just for show. Skilled [[enchanters]] can use the aura cast by particular candles to create better [[enchantments]]. In the West -- especially in [[High Rock]] -- magetallow is frequently used. And some Telvanni use it as well. But scamp tallow candles are almost as powerful and much more... tastefully acquired. ^obsidian-esp-canvas-d0fb90da01

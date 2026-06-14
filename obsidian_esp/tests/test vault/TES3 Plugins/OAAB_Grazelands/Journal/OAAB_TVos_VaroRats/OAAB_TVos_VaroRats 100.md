@@ -8,6 +8,9 @@ Index: 100
 Quest Name: false
 Finished: true
 Restart: false
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-Burcanius Varo thanked me for bringing him a [[rat catcher]]. He rewarded me with a lifetime supply of [[scuttle]]. He said that he gets new shipments in once per week.
+
+Burcanius Varo thanked me for bringing him a [[rat catcher]]. He rewarded me with a lifetime supply of [[scuttle]]. He said that he gets new shipments in once per week. ^obsidian-esp-canvas-aaae8cf88a

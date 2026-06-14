@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_SmokeskinWillpower = 0
 Function1: Function
 Variable1: Choice = 1
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-I have plenty of [[wickwheat]], but I [[need]] more than one ingredient to be able to brew the fortify [[willpower]] [[potions]] I [[need]]. The [[potions]] are for [[Smokeskin-Killer]], the [[Argonian]] mercenary in Aryon's [[Dwemer]] museum. Bloat and [[scrib jelly]] both have fortify [[willpower]] effects and can conveniently both be found in the nearby [[kwama egg]] mines. I [[need]] 5 portions of each. Some of the [[kwama]] may be aggressive and [[kwama colonies]] have other dangers... are you still interested?
+
+I have plenty of [[wickwheat]], but I [[need]] more than one ingredient to be able to brew the fortify [[willpower]] [[potions]] I [[need]]. The [[potions]] are for [[Smokeskin-Killer]], the [[Argonian]] mercenary in Aryon's [[Dwemer]] museum. Bloat and [[scrib jelly]] both have fortify [[willpower]] effects and can conveniently both be found in the nearby [[kwama egg]] mines. I [[need]] 5 portions of each. Some of the [[kwama]] may be aggressive and [[kwama colonies]] have other dangers... are you still interested? ^obsidian-esp-canvas-6c8f476be0

@@ -22,6 +22,11 @@ Function2: Journal
 Variable2: OAAB_TVos_DwemerMuseum > 0
 Function3: Journal
 Variable3: OAAB_TVos_DwemerMuseum < 100
+canvas:
+  - "[[Imitation is the Sincerest Form of Forgery.canvas]]"
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-The museum has many exhibits, but it is missing something essential... has it found what it seeks?
+
+
+The museum has many exhibits, but it is missing something essential... has it found what it seeks? ^obsidian-esp-canvas-14ca4fe4ad

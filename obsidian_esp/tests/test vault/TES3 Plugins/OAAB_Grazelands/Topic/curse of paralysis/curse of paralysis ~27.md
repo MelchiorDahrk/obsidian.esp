@@ -25,6 +25,9 @@ Function2: Function
 Variable2: Choice = 110
 Function3: Item
 Variable3: Gold_001 < 100
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-You don't have enough coin, %PCRace. Come back when you'e ready to deal.
+
+You don't have enough coin, %PCRace. Come back when you'e ready to deal. ^obsidian-esp-canvas-b9310c1e32

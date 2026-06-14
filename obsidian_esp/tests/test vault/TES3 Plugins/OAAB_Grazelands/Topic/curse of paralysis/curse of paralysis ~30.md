@@ -26,6 +26,9 @@ Function2: Function
 Variable2: PcStrength < 60
 Function3: Function
 Variable3: Choice = 12
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Ha! You don't look like you could hurt a [[rat]]. How about I call the guards over here? They want me to die slowly after all. Wander off, %PCRace.
+
+Ha! You don't look like you could hurt a [[rat]]. How about I call the guards over here? They want me to die slowly after all. Wander off, %PCRace. ^obsidian-esp-canvas-442aced6f2

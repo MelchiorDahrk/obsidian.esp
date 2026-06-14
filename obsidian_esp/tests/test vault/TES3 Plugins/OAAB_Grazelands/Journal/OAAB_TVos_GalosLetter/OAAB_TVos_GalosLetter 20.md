@@ -8,6 +8,9 @@ Index: 20
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[Enchanted Quill Acquaintances.canvas]]"
 ---
 
-Milyn Faram read the letter from Galos Mathendis and asked me to tell him that he "understands". And gave me an inscribed key to bring back to Galos.
+
+Milyn Faram read the letter from Galos Mathendis and asked me to tell him that he "understands". And gave me an inscribed key to bring back to Galos. ^obsidian-esp-canvas-affd684fb3

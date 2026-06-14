@@ -28,6 +28,9 @@ Function1: Item
 Variable1: ABtv_pot_CureParalysis >= 1
 Function2: Item
 Variable2: Gold_001 >= 110
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Pleasure doing [[business]] with you, %PCName. I'll go to the tradehouse after you give me the [[potion]]...
+
+Pleasure doing [[business]] with you, %PCName. I'll go to the tradehouse after you give me the [[potion]]... ^obsidian-esp-canvas-2eb8362105

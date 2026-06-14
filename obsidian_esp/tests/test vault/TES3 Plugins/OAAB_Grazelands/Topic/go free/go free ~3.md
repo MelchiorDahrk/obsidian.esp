@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_VaroRats = 120
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-Thank you for freeing %Name.
+
+Thank you for freeing %Name. ^obsidian-esp-canvas-04904f3c07

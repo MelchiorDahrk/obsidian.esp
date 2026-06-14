@@ -21,6 +21,9 @@ Function0: Journal
 Variable0: OAAB_TVos_VaroRats = 10
 Function1: Dead
 Variable1: goler andrethi = 1
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-A [[rat]]? I am so sorry, %PCName. Please take this refund for your room. Ever since I ordered that cheese from [[Cyrodiil]], I have been dealing with a [[rat]] problem.
+
+A [[rat]]? I am so sorry, %PCName. Please take this refund for your room. Ever since I ordered that cheese from [[Cyrodiil]], I have been dealing with a [[rat]] problem. ^obsidian-esp-canvas-00508aa0ce

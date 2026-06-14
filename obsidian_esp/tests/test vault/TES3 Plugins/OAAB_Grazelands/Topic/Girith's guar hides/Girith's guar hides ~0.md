@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: MV_OutcastAshlanders >= 100
+canvas:
+  - "[[MV_OutcastAshlanders.canvas]]"
 ---
 
-I'm glad this [[business]] is over.
+
+I'm glad this [[business]] is over. ^obsidian-esp-canvas-508ba673ce

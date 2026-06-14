@@ -8,6 +8,9 @@ Index: 50
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-I heard about a weaponmaster named Ulyno Uvirith who works in the Redoran Canton in [[Vivec]]. She might know more about [[Reynel Uvirith]]'s arrival.
+
+I heard about a weaponmaster named Ulyno Uvirith who works in the Redoran Canton in [[Vivec]]. She might know more about [[Reynel Uvirith]]'s arrival. ^obsidian-esp-canvas-1180bef42c

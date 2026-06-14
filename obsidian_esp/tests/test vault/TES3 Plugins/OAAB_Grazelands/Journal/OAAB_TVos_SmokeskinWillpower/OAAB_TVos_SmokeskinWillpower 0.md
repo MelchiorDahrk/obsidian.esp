@@ -8,6 +8,9 @@ Index: 0
 Quest Name: true
 Finished: false
 Restart: false
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-Smokeskin-Willer
+
+Smokeskin-Willer ^obsidian-esp-canvas-58dff5bfe7

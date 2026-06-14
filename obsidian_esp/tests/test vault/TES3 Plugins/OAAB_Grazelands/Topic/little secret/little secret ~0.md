@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_VaroRats = 120
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-%Name helped build tower. Knows of many, many secrets. Unfinished tower towards setting sun has metal [[ring]] to pull. Leads to secret place. There are more secret places. Look for walls which are not walls and floors which are not floors. What a strange place. %Name will not miss it.
+
+%Name helped build tower. Knows of many, many secrets. Unfinished tower towards setting sun has metal [[ring]] to pull. Leads to secret place. There are more secret places. Look for walls which are not walls and floors which are not floors. What a strange place. %Name will not miss it. ^obsidian-esp-canvas-10dbe817d2

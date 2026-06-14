@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_VaroRats >= 50
 Function1: Journal
 Variable1: OAAB_TVos_VaroRats <= 100
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-No, there is no hope for %Name. Serve Master Varo now.
+
+No, there is no hope for %Name. Serve Master Varo now. ^obsidian-esp-canvas-2e5a38c929

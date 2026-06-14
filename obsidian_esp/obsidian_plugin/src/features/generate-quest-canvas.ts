@@ -270,6 +270,12 @@ interface CanvasBuildResult {
 	warnings: string[];
 }
 
+interface QuestCanvasGenerationResult {
+	questTitle: string;
+	outputCanvasPath: string;
+	warnings: string[];
+}
+
 interface FileNodeTarget {
 	file: TFile;
 	subpath: string;
@@ -302,30 +308,27 @@ export function canGenerateQuestCanvasFromFolder(folder: TFolder): boolean {
 	return folder.parent?.name === JOURNAL_FOLDER_NAME;
 }
 
+export function canGenerateAllQuestCanvasesFromFolder(folder: TFolder): boolean {
+	const projectRoot = PathManager.findPluginRoot(folder);
+	if (!projectRoot) {
+		return false;
+	}
+	return folder.path === normalizePath(`${projectRoot.path}/${JOURNAL_FOLDER_NAME}`);
+}
+
 export async function generateQuestCanvasForFolder(
 	app: App,
 	folder: TFolder,
 ): Promise<void> {
 	const progress = new ProgressBar('Generating quest canvas');
 	try {
-		progress.update(5, 'Checking the selected folder');
-		const scope = await discoverQuestScope(app, folder);
-		progress.update(25, `Resolving dialogue for ${scope.questTitle}`);
-		const buildResult = await buildQuestCanvas(app, scope);
-		progress.update(80, 'Writing canvas and backlinks');
-		await writeCanvasPlan(app, scope.outputCanvasPath, buildResult.nodes, buildResult.edges);
-		await updateCanvasLinksAndBodyBlocks(
+		const result = await generateQuestCanvasForFolderWithProgress(
 			app,
-			buildResult.relatedFiles,
-			buildResult.fileNodeTargets,
-			scope.outputCanvasPath,
+			folder,
+			(percent, message) => progress.update(percent, message),
 		);
-
-		const warningSuffix =
-			buildResult.warnings.length > 0
-				? ` ${buildResult.warnings[0]}`
-				: '';
-		new Notice(`Generated ${scope.questTitle}.canvas.${warningSuffix}`);
+		const warningSuffix = result.warnings.length > 0 ? ` ${result.warnings[0]}` : '';
+		new Notice(`Generated ${result.questTitle}.canvas.${warningSuffix}`);
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
 		new Notice(`Failed to generate quest canvas: ${message}`, 10000);
@@ -337,6 +340,118 @@ export async function generateQuestCanvasForFolder(
 			// Best-effort UI cleanup.
 		}
 	}
+}
+
+export async function generateAllQuestCanvasesForJournalFolder(
+	app: App,
+	folder: TFolder,
+): Promise<void> {
+	const progress = new ProgressBar('Generating all quest canvases');
+	try {
+		progress.update(1, 'Checking the Journal folder');
+		if (!canGenerateAllQuestCanvasesFromFolder(folder)) {
+			throw new Error('Select the project Journal folder.');
+		}
+
+		const questFolders = folder.children
+			.filter((child): child is TFolder => child instanceof TFolder)
+			.sort((left, right) => left.path.localeCompare(right.path));
+		if (questFolders.length === 0) {
+			throw new Error('No quest folders were found in Journal.');
+		}
+
+		const generatedCanvasPaths = new Set<string>();
+		const failures: string[] = [];
+		const warnings: string[] = [];
+		let generatedCount = 0;
+		let skippedCount = 0;
+
+		for (let index = 0; index < questFolders.length; index += 1) {
+			const questFolder = questFolders[index] as TFolder;
+			const prefix = `${index + 1}/${questFolders.length}`;
+			try {
+				progress.update(batchProgress(index, questFolders.length, 5), `${prefix}: Checking ${questFolder.name}`);
+				const scope = await discoverQuestScope(app, questFolder);
+				if (generatedCanvasPaths.has(scope.outputCanvasPath)) {
+					skippedCount += 1;
+					progress.update(batchProgress(index + 1, questFolders.length, 0), `${prefix}: Skipped linked quest folder`);
+					continue;
+				}
+
+				const result = await generateQuestCanvasForScope(
+					app,
+					scope,
+					(percent, message) => {
+						progress.update(batchProgress(index, questFolders.length, percent), `${prefix}: ${message}`);
+					},
+				);
+				generatedCanvasPaths.add(result.outputCanvasPath);
+				generatedCount += 1;
+				if (result.warnings.length > 0) {
+					warnings.push(`${result.questTitle}: ${result.warnings[0]}`);
+				}
+			} catch (error) {
+				const message = error instanceof Error ? error.message : String(error);
+				failures.push(`${questFolder.name}: ${message}`);
+			}
+		}
+
+		const skippedSuffix = skippedCount > 0 ? `, skipped ${skippedCount} linked folder${skippedCount === 1 ? '' : 's'}` : '';
+		const failedSuffix = failures.length > 0 ? `, ${failures.length} failed` : '';
+		new Notice(`Generated ${generatedCount} quest canvas${generatedCount === 1 ? '' : 'es'}${skippedSuffix}${failedSuffix}.`);
+
+		const details = [...failures, ...warnings].slice(0, 5);
+		if (details.length > 0) {
+			new Notice(details.join('\n'), 10000);
+		}
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		new Notice(`Failed to generate quest canvases: ${message}`, 10000);
+	} finally {
+		progress.update(100, 'Done');
+		try {
+			progress.hide();
+		} catch {
+			// Best-effort UI cleanup.
+		}
+	}
+}
+
+async function generateQuestCanvasForFolderWithProgress(
+	app: App,
+	folder: TFolder,
+	updateProgress: (percent: number, message: string) => void,
+): Promise<QuestCanvasGenerationResult> {
+	updateProgress(5, 'Checking the selected folder');
+	const scope = await discoverQuestScope(app, folder);
+	return generateQuestCanvasForScope(app, scope, updateProgress);
+}
+
+async function generateQuestCanvasForScope(
+	app: App,
+	scope: QuestScope,
+	updateProgress: (percent: number, message: string) => void,
+): Promise<QuestCanvasGenerationResult> {
+	updateProgress(25, `Resolving dialogue for ${scope.questTitle}`);
+	const buildResult = await buildQuestCanvas(app, scope);
+	updateProgress(80, 'Writing canvas and backlinks');
+	await writeCanvasPlan(app, scope.outputCanvasPath, buildResult.nodes, buildResult.edges);
+	await updateCanvasLinksAndBodyBlocks(
+		app,
+		buildResult.relatedFiles,
+		buildResult.fileNodeTargets,
+		scope.outputCanvasPath,
+	);
+
+	return {
+		questTitle: scope.questTitle,
+		outputCanvasPath: scope.outputCanvasPath,
+		warnings: buildResult.warnings,
+	};
+}
+
+function batchProgress(folderIndex: number, folderCount: number, folderPercent: number): number {
+	return ((folderIndex + folderPercent / 100) / folderCount) * 100;
 }
 
 export async function discoverQuestScope(app: App, folder: TFolder): Promise<QuestScope> {

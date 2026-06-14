@@ -26,6 +26,9 @@ Function1: Journal
 Variable1: OAAB_TVos_SmokeskinWillpower < 100
 Function2: Function
 Variable2: Choice = 7
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-Of course. Here you are. Thank you again for your help.
+
+Of course. Here you are. Thank you again for your help. ^obsidian-esp-canvas-7210c89e2b

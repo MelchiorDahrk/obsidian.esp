@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_MoraTrader = 30
 Function1: Item
 Variable1: p_cure_paralyzation_s < 1
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-I'll make some changes to the cure paralyzation [[potion]] when you bring it to me.
+
+I'll make some changes to the cure paralyzation [[potion]] when you bring it to me. ^obsidian-esp-canvas-6e00e05032

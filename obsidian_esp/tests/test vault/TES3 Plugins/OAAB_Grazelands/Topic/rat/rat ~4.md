@@ -17,6 +17,9 @@ PC Rank:
 Result: Choice "Looking for someone to take care of your rat problem?" 2
 Function0: Journal
 Variable0: OAAB_TVos_VaroRats = 20
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-Please accept my humble apology again, %PCName. Those rats had a taste of good [[Cyrodiil]] cheese and now I'm afraid I'll never be rid of them.
+
+Please accept my humble apology again, %PCName. Those rats had a taste of good [[Cyrodiil]] cheese and now I'm afraid I'll never be rid of them. ^obsidian-esp-canvas-0551621fd0

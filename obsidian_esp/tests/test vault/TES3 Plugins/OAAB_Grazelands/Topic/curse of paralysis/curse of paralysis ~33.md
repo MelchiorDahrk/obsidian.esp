@@ -21,6 +21,9 @@ Function1: Item
 Variable1: ABtv_pot_CureParalysis >= 1
 Function2: Function
 Variable2: Choice = 21
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-I [[know you]]'re right... I shouldn't be so quick to judge. But talk about getting off on the wrong foot! If [[Master Aryon]] is as admirable as you say, then I'm sure I'll be content at this tradehouse. Can I have the [[potion]] now?
+
+I [[know you]]'re right... I shouldn't be so quick to judge. But talk about getting off on the wrong foot! If [[Master Aryon]] is as admirable as you say, then I'm sure I'll be content at this tradehouse. Can I have the [[potion]] now? ^obsidian-esp-canvas-7786dcf988

@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_SmokeskinWillpower >= 100
 Function1: Not ID
 Variable1: smokeskin_killer = 1
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-He's patrolling [[the Dwemer]] Museum. He's been in a much better mood lately.
+
+He's patrolling [[the Dwemer]] Museum. He's been in a much better mood lately. ^obsidian-esp-canvas-795c30e1af

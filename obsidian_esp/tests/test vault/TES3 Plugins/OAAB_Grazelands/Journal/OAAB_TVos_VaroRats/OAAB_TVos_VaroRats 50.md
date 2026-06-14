@@ -8,6 +8,9 @@ Index: 50
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-I brought Burcanius Varo's new servant to his tradehouse. Now would be a good time to ask for a [[reward]].
+
+I brought Burcanius Varo's new servant to his tradehouse. Now would be a good time to ask for a [[reward]]. ^obsidian-esp-canvas-e289bfe6d0

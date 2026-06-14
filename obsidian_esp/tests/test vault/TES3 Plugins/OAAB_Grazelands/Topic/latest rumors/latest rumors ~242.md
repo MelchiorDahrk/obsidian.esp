@@ -26,6 +26,9 @@ Function4: Not ID
 Variable4: Dro'zharim = 1
 Function5: Not Cell
 Variable5: Tel Vos, Central Tower = 1
+canvas:
+  - "[[Imitation is the Sincerest Form of Forgery.canvas]]"
 ---
 
-Have you visited the [[Tel [[Vos]] [[Dwemer]] Museum]]? [[Master Aryon]] has filled it with many strange dwarf-made artifacts. Last time I visited, his museum [[guard]], an [[Argonian]], was looking for a Telvanni who might be able to help with something. He wouldn't divulge the details with me.
+
+Have you visited the [[Tel [[Vos]] [[Dwemer]] Museum]]? [[Master Aryon]] has filled it with many strange dwarf-made artifacts. Last time I visited, his museum [[guard]], an [[Argonian]], was looking for a Telvanni who might be able to help with something. He wouldn't divulge the details with me. ^obsidian-esp-canvas-3d3fad2f04

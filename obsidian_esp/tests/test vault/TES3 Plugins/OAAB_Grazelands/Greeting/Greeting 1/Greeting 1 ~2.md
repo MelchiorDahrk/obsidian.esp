@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_VaroRats = 40
 Function1: Function
 Variable1: Choice = 2
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-Oh, %PCName is wise. Guards will see. Take %Name out of the city.
+
+Oh, %PCName is wise. Guards will see. Take %Name out of the city. ^obsidian-esp-canvas-28dd949dc9

@@ -8,6 +8,9 @@ Index: 31
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-After confronting the wretched scamp a second time, I convinced it to give me a passkey to [[Tel Vos]] which should allow me access to the room where it hid what remains of the items. It said that it was up the ladder from where I found it.
+
+After confronting the wretched scamp a second time, I convinced it to give me a passkey to [[Tel Vos]] which should allow me access to the room where it hid what remains of the items. It said that it was up the ladder from where I found it. ^obsidian-esp-canvas-848894cddf

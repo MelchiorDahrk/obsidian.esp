@@ -8,6 +8,9 @@ Index: 100
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-I convinced the [[Breton]] [[trader]] to go to the Varo Tradehouse after I removed his [[curse of paralysis]]. I should talk to [[Master Aryon]] about my [[reward]].
+
+I convinced the [[Breton]] [[trader]] to go to the Varo Tradehouse after I removed his [[curse of paralysis]]. I should talk to [[Master Aryon]] about my [[reward]]. ^obsidian-esp-canvas-8302e79247

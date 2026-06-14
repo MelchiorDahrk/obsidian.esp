@@ -23,6 +23,9 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosLetter = 20
 Function1: Item
 Variable1: ABtv_Key_MilynInscribed >= 1
+canvas:
+  - "[[Enchanted Quill Acquaintances.canvas]]"
 ---
 
-Oh yes, thank you! This is just what I needed. Here, I made this amulet for practice, but don't really [[need]] it. Maybe you'll have a use for it. Or sell it, I'm not sentimental.
+
+Oh yes, thank you! This is just what I needed. Here, I made this amulet for practice, but don't really [[need]] it. Maybe you'll have a use for it. Or sell it, I'm not sentimental. ^obsidian-esp-canvas-dba5dbae2a

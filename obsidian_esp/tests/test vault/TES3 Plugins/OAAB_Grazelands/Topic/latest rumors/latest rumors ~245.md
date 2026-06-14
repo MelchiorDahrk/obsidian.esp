@@ -22,6 +22,9 @@ Function2: Journal
 Variable2: OAAB_TVos_VenduThief = 0
 Function3: Not ID
 Variable3: Dro'zharim = 1
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-I heard that the enchanter in [[Tel Vos]] has been having problems with items "walking off". Sounds like there's a thief in the tower to me. Probably one of those [[outlander]] [[mercenaries]].
+
+I heard that the enchanter in [[Tel Vos]] has been having problems with items "walking off". Sounds like there's a thief in the tower to me. Probably one of those [[outlander]] [[mercenaries]]. ^obsidian-esp-canvas-128e52644e

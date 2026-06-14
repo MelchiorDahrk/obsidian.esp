@@ -30,6 +30,9 @@ Function2: Function
 Variable2: Choice = 110
 Function3: Item
 Variable3: Gold_001 >= 100
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Pleasure doing [[business]] with you, %PCName. I'll go to the tradehouse after you give me the [[potion]]...
+
+Pleasure doing [[business]] with you, %PCName. I'll go to the tradehouse after you give me the [[potion]]... ^obsidian-esp-canvas-f649f5d479

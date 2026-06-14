@@ -20,6 +20,9 @@ Function1: Global
 Variable1: ABtv_DwemerMuseumStage >= 1
 Function2: Global
 Variable2: ABtv_DwemerMuseumStage < 3
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-Museum of [[the Dwemer]] is looking better all the time, traveler. Come look at the exhibits.
+
+Museum of [[the Dwemer]] is looking better all the time, traveler. Come look at the exhibits. ^obsidian-esp-canvas-a3ba54ae9a

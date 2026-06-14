@@ -21,6 +21,9 @@ Function0: Journal
 Variable0: OAAB_TVos_VaroRats = 30
 Function1: Function
 Variable1: Choice = 1
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-This [[contract]] reeks of [[Imperial]] equivocation. But everything appears to be in order. Here is the key to the [[slave]]'s... err the servant's bracer. It will also unlock the cell door. I'm not running a delivery service, so you'll have to take the khajiit to Varo yourself.
+
+This [[contract]] reeks of [[Imperial]] equivocation. But everything appears to be in order. Here is the key to the [[slave]]'s... err the servant's bracer. It will also unlock the cell door. I'm not running a delivery service, so you'll have to take the khajiit to Varo yourself. ^obsidian-esp-canvas-ca79b62f88

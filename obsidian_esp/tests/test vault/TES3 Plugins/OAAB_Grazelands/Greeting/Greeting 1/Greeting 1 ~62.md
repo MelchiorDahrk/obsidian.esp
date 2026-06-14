@@ -21,6 +21,9 @@ Function1: Journal
 Variable1: OAAB_TVos_ConservatoryWater = 0
 Function2: Function
 Variable2: SameFaction = 1
+canvas:
+  - "[[Conserving Water.canvas]]"
 ---
 
-Pardon my curtness, but what do you [[need]], %PCRank? I have been somewhat morose since my [[conservatory water]] shut off.
+
+Pardon my curtness, but what do you [[need]], %PCRank? I have been somewhat morose since my [[conservatory water]] shut off. ^obsidian-esp-canvas-3f7baaaffd

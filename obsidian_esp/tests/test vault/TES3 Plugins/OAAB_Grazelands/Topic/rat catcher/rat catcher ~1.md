@@ -19,6 +19,9 @@ Result: |
   Goodbye
 Function0: Journal
 Variable0: OAAB_TVos_VaroRats = 115
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-That'll teach me to trust an incompetent adventuring type to [[escort]] a single person down a hill... let's just drop the subject.
+
+That'll teach me to trust an incompetent adventuring type to [[escort]] a single person down a hill... let's just drop the subject. ^obsidian-esp-canvas-2eb8602e50

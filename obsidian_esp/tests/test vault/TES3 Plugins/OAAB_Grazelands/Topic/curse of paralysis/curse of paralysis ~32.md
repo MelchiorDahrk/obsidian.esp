@@ -21,6 +21,9 @@ Function1: Item
 Variable1: ABtv_pot_CureParalysis >= 1
 Function2: Function
 Variable2: Choice = 1
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-A [[potion]] with stipulations? What do you take me for? I'm a [[Breton]], not an [[Orc]]; [[potions]] don't [[work]] that way. Now are you going to dump that [[potion]] down my throat or leave me here to die?
+
+A [[potion]] with stipulations? What do you take me for? I'm a [[Breton]], not an [[Orc]]; [[potions]] don't [[work]] that way. Now are you going to dump that [[potion]] down my throat or leave me here to die? ^obsidian-esp-canvas-4f97f8ac26

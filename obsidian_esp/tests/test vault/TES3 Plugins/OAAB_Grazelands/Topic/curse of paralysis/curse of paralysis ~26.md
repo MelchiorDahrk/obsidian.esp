@@ -20,6 +20,9 @@ Function1: Item
 Variable1: ABtv_pot_CureParalysis >= 1
 Function2: Item
 Variable2: Gold_001 < 100
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-You don't have enough coin, %PCRace. Come back when you'e ready to deal.
+
+You don't have enough coin, %PCRace. Come back when you'e ready to deal. ^obsidian-esp-canvas-8645b383eb

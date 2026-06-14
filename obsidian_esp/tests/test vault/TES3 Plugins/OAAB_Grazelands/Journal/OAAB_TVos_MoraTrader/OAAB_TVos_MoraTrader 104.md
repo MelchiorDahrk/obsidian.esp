@@ -8,6 +8,9 @@ Index: 104
 Quest Name: false
 Finished: true
 Restart: false
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-I decided not to give the [[Breton]] [[trader]] the [[potion]] after all. He'll die out there in the cold, but that's not my problem.
+
+I decided not to give the [[Breton]] [[trader]] the [[potion]] after all. He'll die out there in the cold, but that's not my problem. ^obsidian-esp-canvas-5444775670

@@ -23,6 +23,9 @@ Function2: Item
 Variable2: mehrunes'_razor_unique >= 1
 Function3: Item
 Variable3: ABtv_w_MoonReiver >= 1
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-We swallow shinies. They taste like rats and [[hunger]]. But master lets me taste them only, while he eats the souls. It can have them back, they don't smell half so bad as MAN-KIN!
+
+We swallow shinies. They taste like rats and [[hunger]]. But master lets me taste them only, while he eats the souls. It can have them back, they don't smell half so bad as MAN-KIN! ^obsidian-esp-canvas-81cd9d862a

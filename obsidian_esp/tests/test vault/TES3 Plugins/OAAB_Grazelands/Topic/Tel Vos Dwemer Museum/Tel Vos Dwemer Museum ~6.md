@@ -25,6 +25,9 @@ Function3: Journal
 Variable3: HT_Odirniran >= 100
 Function4: Dead
 Variable4: milyn faram = 0
+canvas:
+  - "[[Imitation is the Sincerest Form of Forgery.canvas]]"
 ---
 
-I overheard [[Master Aryon]] speaking to one of his retainers when he last visited to congratulate us on our stewardship of his museum. He mentioned something about a dwemer machine which can create drawings on parchment. You are Telvanni; perhaps he will speak to you of it.
+
+I overheard [[Master Aryon]] speaking to one of his retainers when he last visited to congratulate us on our stewardship of his museum. He mentioned something about a dwemer machine which can create drawings on parchment. You are Telvanni; perhaps he will speak to you of it. ^obsidian-esp-canvas-7ce89605ee

@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_SmokeskinWillpower >= 100
 Function1: Global
 Variable1: ABtv_DwemerMuseumStage < 1
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-It can look at the displays and leave us alone, yes? Do not touch. We cut and kill thieves.
+
+It can look at the displays and leave us alone, yes? Do not touch. We cut and kill thieves. ^obsidian-esp-canvas-3d477d7576

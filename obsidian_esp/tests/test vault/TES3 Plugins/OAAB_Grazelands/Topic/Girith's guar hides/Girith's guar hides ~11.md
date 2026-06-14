@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: MV_OutcastAshlanders = 110
+canvas:
+  - "[[MV_OutcastAshlanders.canvas]]"
 ---
 
-Thank you again for helping us out with that Ashlander [[business]].
+
+Thank you again for helping us out with that Ashlander [[business]]. ^obsidian-esp-canvas-8d45083193

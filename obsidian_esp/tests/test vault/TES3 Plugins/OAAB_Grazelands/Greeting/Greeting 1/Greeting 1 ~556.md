@@ -17,6 +17,9 @@ PC Rank:
 Result: goodbye
 Function0: Journal
 Variable0: OAAB_TVos_MoraTrader >= 103
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-[He's ignoring you.]
+
+[He's ignoring you.] ^obsidian-esp-canvas-010e8a7f12

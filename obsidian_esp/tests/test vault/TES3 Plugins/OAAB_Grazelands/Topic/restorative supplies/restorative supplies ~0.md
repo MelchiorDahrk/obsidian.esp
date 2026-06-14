@@ -27,6 +27,9 @@ Function1: Journal
 Variable1: OAAB_TVos_SmokeskinWillpower < 100
 Function2: Function
 Variable2: Choice = 6
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-Wonderful. It's fairly simple, really. [Milar teaches you a self-healing spell and you feel your grasp of [[restoration]] increase.] You have natural talent! May you walk in [[health]] and [[security]], friend.
+
+Wonderful. It's fairly simple, really. [Milar teaches you a self-healing spell and you feel your grasp of [[restoration]] increase.] You have natural talent! May you walk in [[health]] and [[security]], friend. ^obsidian-esp-canvas-3f257003e8

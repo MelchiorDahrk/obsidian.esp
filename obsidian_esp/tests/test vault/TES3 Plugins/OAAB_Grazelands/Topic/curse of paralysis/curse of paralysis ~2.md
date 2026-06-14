@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_MoraTrader > 100
 Function1: Journal
 Variable1: OAAB_TVos_MoraTrader < 200
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-It's disappointing that you failed to convince the [[trader]] to come to [[Vos]], but I knew it wasn't a sure thing.
+
+It's disappointing that you failed to convince the [[trader]] to come to [[Vos]], but I knew it wasn't a sure thing. ^obsidian-esp-canvas-d456bf5108

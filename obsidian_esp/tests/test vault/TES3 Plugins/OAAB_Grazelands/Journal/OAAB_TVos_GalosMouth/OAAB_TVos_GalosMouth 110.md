@@ -8,6 +8,9 @@ Index: 110
 Quest Name: false
 Finished: true
 Restart: false
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-I refused to help Galos Mathendis locate a new [[Mouth]] for Aryon. He was very upset and won't talk to me any longer.
+
+I refused to help Galos Mathendis locate a new [[Mouth]] for Aryon. He was very upset and won't talk to me any longer. ^obsidian-esp-canvas-4eb6b5d976

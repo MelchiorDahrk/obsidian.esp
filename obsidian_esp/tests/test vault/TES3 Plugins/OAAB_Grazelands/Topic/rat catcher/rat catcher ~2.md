@@ -19,6 +19,9 @@ Result: |
   Goodbye
 Function0: Journal
 Variable0: OAAB_TVos_VaroRats = 120
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-You're here, but my servant is not. What did you do, %PCName? If I find out that you freed him... well, you wouldn't be my first bad investment. But you're no longer welcome here.
+
+You're here, but my servant is not. What did you do, %PCName? If I find out that you freed him... well, you wouldn't be my first bad investment. But you're no longer welcome here. ^obsidian-esp-canvas-9d4d5df17b

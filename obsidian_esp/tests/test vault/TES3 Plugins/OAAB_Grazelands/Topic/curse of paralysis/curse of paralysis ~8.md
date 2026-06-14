@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_MoraTrader = 20
 Function1: Function
 Variable1: Choice = 1
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Given the extenuating circumstances, I will. Bring me a [[potion]] of cure paralyzation. Andil in the [[Services]] Tower might have one.
+
+Given the extenuating circumstances, I will. Bring me a [[potion]] of cure paralyzation. Andil in the [[Services]] Tower might have one. ^obsidian-esp-canvas-d399e5db8f

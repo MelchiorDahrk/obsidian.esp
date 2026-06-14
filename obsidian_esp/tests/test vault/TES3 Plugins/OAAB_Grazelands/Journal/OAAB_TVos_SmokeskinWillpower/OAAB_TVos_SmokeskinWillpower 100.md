@@ -8,6 +8,9 @@ Index: 100
 Quest Name: false
 Finished: true
 Restart: false
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-I delivered the [[bloat]] and [[scrib jelly]] to Milar Maryon. He thanked and rewarded me for my service.
+
+I delivered the [[bloat]] and [[scrib jelly]] to Milar Maryon. He thanked and rewarded me for my service. ^obsidian-esp-canvas-07626702c7

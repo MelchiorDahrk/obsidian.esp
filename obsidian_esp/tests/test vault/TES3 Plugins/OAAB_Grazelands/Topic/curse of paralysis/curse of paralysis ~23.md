@@ -27,6 +27,9 @@ Function1: Item
 Variable1: ABtv_pot_CureParalysis >= 1
 Function2: Function
 Variable2: Choice = 400
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Ah, thank you, %PCName. You have no idea how good this feels. Yes, I will go to [[work]] at this tradehouse. I don't know if it will last, but I'll give it a shot.
+
+Ah, thank you, %PCName. You have no idea how good this feels. Yes, I will go to [[work]] at this tradehouse. I don't know if it will last, but I'll give it a shot. ^obsidian-esp-canvas-8cf34eba6f

@@ -23,6 +23,9 @@ Function1: Global
 Variable1: ABtv_DwemerMuseumStage >= 3
 Function2: Global
 Variable2: ABtv_DwemerMuseumTopic = 0
+canvas:
+  - "[[Imitation is the Sincerest Form of Forgery.canvas]]"
 ---
 
-Have you been to visit my dwemer museum lately, %PCName?
+
+Have you been to visit my dwemer museum lately, %PCName? ^obsidian-esp-canvas-124f527183

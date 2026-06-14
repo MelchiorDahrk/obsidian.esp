@@ -20,6 +20,9 @@ Result: |
   Journal OAAB_TVos_VenduThief 100
 Function0: Journal
 Variable0: OAAB_TVos_VenduThief = 40
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-Ugh... that's disgusting. No, please. I don't want any of it returned. At least I know what to ward against now. I hope you disposed of that wretched creature. Someone needs to tell Aryon that his infatuation with daedra is becoming a problem for us lesser folk. Here, please accept this as a token of my gratitude.
+
+Ugh... that's disgusting. No, please. I don't want any of it returned. At least I know what to ward against now. I hope you disposed of that wretched creature. Someone needs to tell Aryon that his infatuation with daedra is becoming a problem for us lesser folk. Here, please accept this as a token of my gratitude. ^obsidian-esp-canvas-bb4388944f

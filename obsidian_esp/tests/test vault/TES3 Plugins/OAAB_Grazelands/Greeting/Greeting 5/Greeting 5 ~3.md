@@ -19,6 +19,9 @@ Function0: Global
 Variable0: ABtv_GalosRetired = 2
 Function1: Journal
 Variable1: OAAB_TVos_GalosMouth = 110
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-[Galos Mathendis looks at you with disgust.]
+
+[Galos Mathendis looks at you with disgust.] ^obsidian-esp-canvas-7f106470e9

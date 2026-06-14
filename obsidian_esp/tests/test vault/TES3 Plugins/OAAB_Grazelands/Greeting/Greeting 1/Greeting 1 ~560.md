@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_MoraTrader >= 10
 Function1: Journal
 Variable1: OAAB_TVos_MoraTrader <= 40
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Please go find someone [[who can help]] me.
+
+Please go find someone [[who can help]] me. ^obsidian-esp-canvas-0cc1fa6812

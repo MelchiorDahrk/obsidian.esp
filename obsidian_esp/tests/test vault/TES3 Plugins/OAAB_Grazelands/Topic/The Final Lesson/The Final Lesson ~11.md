@@ -21,7 +21,9 @@ Function1: Item
 Variable1: bookskill_enchant5 = 0
 canvas:
   - "[[A Lesson in Thieving.canvas]]"
+  - "[[Waxing Pathetic Scamps.canvas]]"
 ---
+
 
 
 The book deals with some enchanting topics that I am interested in. Unfortunately, I have not had the opportunity to study it in quite some time and it is rather difficult to acquire. Normally, I would wait for my order to be fulfilled with a bookseller, but age has made me impatient. So I'm asking you to steal a copy for me. What do you say? ^obsidian-esp-canvas-ca4627a10d

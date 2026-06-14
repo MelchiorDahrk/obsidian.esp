@@ -20,7 +20,9 @@ Function1: Function
 Variable1: Choice = 2
 canvas:
   - "[[A Lesson in Thieving.canvas]]"
+  - "[[Enchanted Quill Acquaintances.canvas]]"
 ---
+
 
 
 If you change your mind, I'll be here. ^obsidian-esp-canvas-6f67b98a0b

@@ -19,6 +19,11 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosMouth = 100
 Function1: Function
 Variable1: Choice = 2
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
+  - "[[Waxing Pathetic Scamps.canvas]]"
 ---
 
-[[Scamp tallow]] is rendered from the fat left clumped under scamp skin. Magetallow, well, I'll let you think about how it is made.
+
+
+[[Scamp tallow]] is rendered from the fat left clumped under scamp skin. Magetallow, well, I'll let you think about how it is made. ^obsidian-esp-canvas-d16978fff6

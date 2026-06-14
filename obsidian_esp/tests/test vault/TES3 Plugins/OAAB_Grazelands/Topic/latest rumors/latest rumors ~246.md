@@ -22,6 +22,9 @@ Function2: Journal
 Variable2: OAAB_TVos_VenduThief = 0
 Function3: Not ID
 Variable3: Dro'zharim = 1
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-I heard that Alenus Vendu, the enchanter, has been having problems with items "walking off". Some thieving Ashlander if you ask me.
+
+I heard that Alenus Vendu, the enchanter, has been having problems with items "walking off". Some thieving Ashlander if you ask me. ^obsidian-esp-canvas-697bd79368

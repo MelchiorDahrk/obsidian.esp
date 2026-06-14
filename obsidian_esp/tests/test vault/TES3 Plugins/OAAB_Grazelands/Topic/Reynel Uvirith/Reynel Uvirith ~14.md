@@ -17,6 +17,9 @@ PC Rank:
 Result: Journal OAAB_TVos_GalosMouth 40
 Function0: Journal
 Variable0: OAAB_TVos_GalosMouth = 30
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-A woman by that name did come here seeking guide service. I didn't tell you this, but she was headed to [[Vivec]],
+
+A woman by that name did come here seeking guide service. I didn't tell you this, but she was headed to [[Vivec]], ^obsidian-esp-canvas-5f482a7698

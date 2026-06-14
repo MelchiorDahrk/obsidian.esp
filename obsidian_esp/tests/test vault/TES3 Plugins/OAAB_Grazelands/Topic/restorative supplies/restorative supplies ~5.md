@@ -20,6 +20,9 @@ Function1: Journal
 Variable1: OAAB_TVos_SmokeskinWillpower < 100
 Function2: Function
 Variable2: Choice = 5
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-Please don't delay for long, %PCName. I'm not sure how much longer we can tolerate the scaly f'lah.
+
+Please don't delay for long, %PCName. I'm not sure how much longer we can tolerate the scaly f'lah. ^obsidian-esp-canvas-45d30b3a02

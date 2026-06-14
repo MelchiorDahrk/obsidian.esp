@@ -8,6 +8,9 @@ Index: 30
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[Imitation is the Sincerest Form of Forgery.canvas]]"
 ---
 
-Aryon agreed to Milyn's terms and will arrange to have the dwemer ideographer moved to [[Tel Vos]]. He suggested that I talk to him a week.
+
+Aryon agreed to Milyn's terms and will arrange to have the dwemer ideographer moved to [[Tel Vos]]. He suggested that I talk to him a week. ^obsidian-esp-canvas-c31fb3a4eb

@@ -8,6 +8,9 @@ Index: 120
 Quest Name: false
 Finished: true
 Restart: false
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-I freed the [[slave]] which Burcanius Varo purchased [[to serve]] as his [[rat catcher]].
+
+I freed the [[slave]] which Burcanius Varo purchased [[to serve]] as his [[rat catcher]]. ^obsidian-esp-canvas-aab1485ac0

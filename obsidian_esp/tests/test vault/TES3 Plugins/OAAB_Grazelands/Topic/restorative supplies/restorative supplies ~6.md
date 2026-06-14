@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_SmokeskinWillpower >= 10
 Function1: Journal
 Variable1: OAAB_TVos_SmokeskinWillpower < 100
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-Have you found enough [[bloat]] and [[scrib jelly]]? Remember I needed 5 portions of each.
+
+Have you found enough [[bloat]] and [[scrib jelly]]? Remember I needed 5 portions of each. ^obsidian-esp-canvas-dde4681d20

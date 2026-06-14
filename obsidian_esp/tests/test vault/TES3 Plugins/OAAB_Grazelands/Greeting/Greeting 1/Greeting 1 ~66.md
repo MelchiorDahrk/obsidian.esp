@@ -21,6 +21,11 @@ Function1: Global
 Variable1: ABtv_DwemerMuseumStage >= 3
 Function2: Journal
 Variable2: OAAB_TVos_DwemerMuseum = 0
+canvas:
+  - "[[Imitation is the Sincerest Form of Forgery.canvas]]"
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-[[Master Aryon]] tells us that he is well pleased with the museum. We delight in his approval and desire more. It is willing to help expand the [[Tel [[Vos]] [[Dwemer]] Museum]]?
+
+
+[[Master Aryon]] tells us that he is well pleased with the museum. We delight in his approval and desire more. It is willing to help expand the [[Tel [[Vos]] [[Dwemer]] Museum]]? ^obsidian-esp-canvas-6bb7d513bc

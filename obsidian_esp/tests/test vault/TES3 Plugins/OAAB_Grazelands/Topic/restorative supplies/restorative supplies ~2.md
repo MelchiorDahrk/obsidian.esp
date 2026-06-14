@@ -28,6 +28,9 @@ Function3: Item
 Variable3: ingred_scrib_jelly_01 >= 5
 Function4: Function
 Variable4: Choice = 4
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-Excellent! Thank you for your help, %PCName! This is enough to make all the [[potions]] I [[need]] for a while. As a [[reward]], I'll give you a choice: I can teach you some things about [[restoration]] and show you a cheap spell of healing that I created or I can give you a package of [[restorative supplies]] from my stock.
+
+Excellent! Thank you for your help, %PCName! This is enough to make all the [[potions]] I [[need]] for a while. As a [[reward]], I'll give you a choice: I can teach you some things about [[restoration]] and show you a cheap spell of healing that I created or I can give you a package of [[restorative supplies]] from my stock. ^obsidian-esp-canvas-e797f2a115

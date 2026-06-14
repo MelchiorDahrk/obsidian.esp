@@ -8,6 +8,9 @@ Index: 0
 Quest Name: true
 Finished: false
 Restart: false
+canvas:
+  - "[[Waxing Pathetic Scamps.canvas]]"
 ---
 
-Waxing Pathetic Scamps
+
+Waxing Pathetic Scamps ^obsidian-esp-canvas-bfe3fe957d

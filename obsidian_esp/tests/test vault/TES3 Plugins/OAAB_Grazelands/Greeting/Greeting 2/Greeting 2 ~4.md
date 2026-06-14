@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosMouth <= 50
 Function1: Function
 Variable1: Choice = 6
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-Even so, why should I stay in [[House Telvanni]]? I haven't gotten an advancement in years despite all my efforts.
+
+Even so, why should I stay in [[House Telvanni]]? I haven't gotten an advancement in years despite all my efforts. ^obsidian-esp-canvas-8af9413d02

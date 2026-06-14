@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Function
 Variable0: Choice = 2
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-%Name is so very sorry. Please do not punish poor %Name.
+
+%Name is so very sorry. Please do not punish poor %Name. ^obsidian-esp-canvas-c85278a8de

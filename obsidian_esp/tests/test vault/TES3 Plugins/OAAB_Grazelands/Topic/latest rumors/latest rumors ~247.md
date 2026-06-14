@@ -21,6 +21,9 @@ Function1: Not ID
 Variable1: turedus talanian = 1
 Function2: Journal
 Variable2: OAAB_TVos_AshlanderEbony = 0
+canvas:
+  - "[[Let The Ebony Flow.canvas]]"
 ---
 
-[[House Hlaalu]] has made a move to build trade relations with the [[Zainab]] Ashlander tribe. Aryon's captain, Turedus Talanian, is looking for someone to turn this to benefit [[Tel Vos]]. With how well you handled the Ashlander nomads the first time, I'm sure he would welcome your help again.
+
+[[House Hlaalu]] has made a move to build trade relations with the [[Zainab]] Ashlander tribe. Aryon's captain, Turedus Talanian, is looking for someone to turn this to benefit [[Tel Vos]]. With how well you handled the Ashlander nomads the first time, I'm sure he would welcome your help again. ^obsidian-esp-canvas-a17e572e83

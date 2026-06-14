@@ -24,6 +24,9 @@ Function3: Journal
 Variable3: OAAB_TVos_DwemerMuseum = 0
 Function4: Not Cell
 Variable4: Tel Vos, Central Tower = 1
+canvas:
+  - "[[Imitation is the Sincerest Form of Forgery.canvas]]"
 ---
 
-Have you visited the [[Tel [[Vos]] [[Dwemer]] Museum]]? [[Master Aryon]] has filled it with many strange dwarf-made artifacts. Last time I visited, his museum [[guard]], [[Smokeskin-Killer]], was looking for a Telvanni who might be able to help acquire some new contraption. I didn't understand the details.
+
+Have you visited the [[Tel [[Vos]] [[Dwemer]] Museum]]? [[Master Aryon]] has filled it with many strange dwarf-made artifacts. Last time I visited, his museum [[guard]], [[Smokeskin-Killer]], was looking for a Telvanni who might be able to help acquire some new contraption. I didn't understand the details. ^obsidian-esp-canvas-38dca67030

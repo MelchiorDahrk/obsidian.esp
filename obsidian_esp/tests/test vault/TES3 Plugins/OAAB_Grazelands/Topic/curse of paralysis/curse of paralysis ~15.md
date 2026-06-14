@@ -20,6 +20,9 @@ Function1: Journal
 Variable1: OAAB_TVos_MoraTrader >= 10
 Function2: Journal
 Variable2: OAAB_TVos_MoraTrader <= 40
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Would the little man like a curse of his own?
+
+Would the little man like a curse of his own? ^obsidian-esp-canvas-ccda062da4

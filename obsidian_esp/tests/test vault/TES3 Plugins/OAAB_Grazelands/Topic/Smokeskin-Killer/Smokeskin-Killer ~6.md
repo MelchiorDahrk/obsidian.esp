@@ -20,6 +20,9 @@ Function1: Not ID
 Variable1: smokeskin_killer = 1
 Function2: Not ID
 Variable2: aryon = 1
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-You'll find him in the central tower.
+
+You'll find him in the central tower. ^obsidian-esp-canvas-d3641743b7

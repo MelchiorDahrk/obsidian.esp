@@ -20,6 +20,9 @@ Result: |
   Choice "Thank you." 1 "Looking for someone to take care of your rat problem?" 2
 Function0: Journal
 Variable0: OAAB_TVos_VaroRats = 10
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-A [[rat]]? I am so sorry, %PCName. Please take this refund for your room. Ever since I ordered that cheese from [[Cyrodiil]], I have been dealing with a [[rat]] problem. Even now that the cheese is gone, they keep hanging around.
+
+A [[rat]]? I am so sorry, %PCName. Please take this refund for your room. Ever since I ordered that cheese from [[Cyrodiil]], I have been dealing with a [[rat]] problem. Even now that the cheese is gone, they keep hanging around. ^obsidian-esp-canvas-75c2b67a6e

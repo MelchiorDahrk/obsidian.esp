@@ -8,6 +8,9 @@ Index: 0
 Quest Name: true
 Finished: false
 Restart: false
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-Rats in Varo Tradehouse
+
+Rats in Varo Tradehouse ^obsidian-esp-canvas-f783c3dda3

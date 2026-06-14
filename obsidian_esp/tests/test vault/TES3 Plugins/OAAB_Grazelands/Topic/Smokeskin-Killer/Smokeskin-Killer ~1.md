@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_SmokeskinWillpower >= 100
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-Yesss?
+
+Yesss? ^obsidian-esp-canvas-6226b0a0cf

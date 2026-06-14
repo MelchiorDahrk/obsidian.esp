@@ -21,6 +21,9 @@ Function1: Item
 Variable1: ABtv_pot_CureParalysis >= 1
 Function2: Function
 Variable2: Choice = 11
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Why? What's in it for you? Tell you what, give me one hundred septims and I'll go to this tradehouse. I'm no fool. If you want you're [[reward]], then I want a cut.
+
+Why? What's in it for you? Tell you what, give me one hundred septims and I'll go to this tradehouse. I'm no fool. If you want you're [[reward]], then I want a cut. ^obsidian-esp-canvas-82c0a7e83d

@@ -8,6 +8,9 @@ Index: 110
 Quest Name: false
 Finished: true
 Restart: false
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-I refused to help Burcanius Varo purchase the khajiit [[slave]] [[to serve]] as a [[rat catcher]] for him.
+
+I refused to help Burcanius Varo purchase the khajiit [[slave]] [[to serve]] as a [[rat catcher]] for him. ^obsidian-esp-canvas-bbebeee73d

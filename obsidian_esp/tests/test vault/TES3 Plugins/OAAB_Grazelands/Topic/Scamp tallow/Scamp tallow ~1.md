@@ -22,6 +22,9 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosTallow = 10
 Function1: Item
 Variable1: ingred_scamp_skin_01 >= 10
+canvas:
+  - "[[Waxing Pathetic Scamps.canvas]]"
 ---
 
-That looks like enough scamp skin, %PCName. Thank you very much. Here's some gold to cover your expenses. I have some more [[enchanting research]] you can [[help me]] with while you wait for me to finish the candles. If you're still interested, of course.
+
+That looks like enough scamp skin, %PCName. Thank you very much. Here's some gold to cover your expenses. I have some more [[enchanting research]] you can [[help me]] with while you wait for me to finish the candles. If you're still interested, of course. ^obsidian-esp-canvas-fd37bb3ebe

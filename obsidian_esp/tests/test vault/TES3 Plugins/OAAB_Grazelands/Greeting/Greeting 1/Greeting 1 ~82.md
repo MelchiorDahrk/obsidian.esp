@@ -23,6 +23,9 @@ Function0: Local
 Variable0: ScampThiefIntimidated = 1
 Function1: Journal
 Variable1: OAAB_TVos_VenduThief < 31
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-We'll tell it where we put shinies. Don't hurt. Bite. Stab! Up the ladder. Not through glowing door. But THROUGH glowing door, yes. Yes! It must be special tower-friend. We know way. We show nice man-thing way. Take. Read. Now LEAVE!
+
+We'll tell it where we put shinies. Don't hurt. Bite. Stab! Up the ladder. Not through glowing door. But THROUGH glowing door, yes. Yes! It must be special tower-friend. We know way. We show nice man-thing way. Take. Read. Now LEAVE! ^obsidian-esp-canvas-652a4b2d21

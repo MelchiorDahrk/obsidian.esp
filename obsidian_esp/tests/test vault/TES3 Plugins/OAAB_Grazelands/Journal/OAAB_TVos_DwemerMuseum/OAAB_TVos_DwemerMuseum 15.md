@@ -8,6 +8,9 @@ Index: 15
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[Imitation is the Sincerest Form of Forgery.canvas]]"
 ---
 
-I found the dwemer device in [[Odirniran]], but it is far too large to be moved easily. As soon as I entered the room, however, Milyn Faram appeared behind me.
+
+I found the dwemer device in [[Odirniran]], but it is far too large to be moved easily. As soon as I entered the room, however, Milyn Faram appeared behind me. ^obsidian-esp-canvas-dfe7ec3701

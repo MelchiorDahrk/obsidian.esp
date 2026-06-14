@@ -8,6 +8,9 @@ Index: 105
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-Burcanius Varo thanked me for letting him know about the [[rat]] problem and refunded me for my room.
+
+Burcanius Varo thanked me for letting him know about the [[rat]] problem and refunded me for my room. ^obsidian-esp-canvas-84af5659d6

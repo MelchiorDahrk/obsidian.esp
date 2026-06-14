@@ -8,6 +8,9 @@ Index: 100
 Quest Name: false
 Finished: true
 Restart: false
+canvas:
+  - "[[Imitation is the Sincerest Form of Forgery.canvas]]"
 ---
 
-Aryon told me that the dwemer ideographer has been installed in his laboratory. Which is located at the top of the second tallest tower in [[Tel Vos]]. He said that I can buy some standard blank scrolls from Alenus Vendu in the [[Services]] Tower which I will [[need]] to use the machine.
+
+Aryon told me that the dwemer ideographer has been installed in his laboratory. Which is located at the top of the second tallest tower in [[Tel Vos]]. He said that I can buy some standard blank scrolls from Alenus Vendu in the [[Services]] Tower which I will [[need]] to use the machine. ^obsidian-esp-canvas-413a4a7c4d

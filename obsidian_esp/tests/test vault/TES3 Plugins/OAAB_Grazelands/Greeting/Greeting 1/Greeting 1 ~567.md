@@ -17,6 +17,9 @@ PC Rank:
 Result: Choice "How can I help?" 1 "Why are you standing there so stiffly?" 2 "I'm very busy, sorry." 3 "Scratch your own nose, Breton." 4
 Function0: Journal
 Variable0: OAAB_TVos_MoraTrader < 10
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Please, can you [[help me]]?
+
+Please, can you [[help me]]? ^obsidian-esp-canvas-3db0dd6b62

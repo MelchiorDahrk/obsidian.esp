@@ -25,6 +25,9 @@ Function0: Journal
 Variable0: MV_OutcastAshlanders < 110
 Function1: Journal
 Variable1: MV_OutcastAshlanders >= 100
+canvas:
+  - "[[MV_OutcastAshlanders.canvas]]"
 ---
 
-Ahhh... my old friend Girith! I heard you helped him out of some serious trouble not long ago. Some [[business]] with a couple of no-good [[Ashlanders]], right? They'll never learn. Anyway, you have my thanks; I had quite an investment in those [[guar hides]]. Would have taken quite a beating had Girith not been able to sell them. Here, take these [[potions]] and this powerful [[ring]] a token of our appreciation.
+
+Ahhh... my old friend Girith! I heard you helped him out of some serious trouble not long ago. Some [[business]] with a couple of no-good [[Ashlanders]], right? They'll never learn. Anyway, you have my thanks; I had quite an investment in those [[guar hides]]. Would have taken quite a beating had Girith not been able to sell them. Here, take these [[potions]] and this powerful [[ring]] a token of our appreciation. ^obsidian-esp-canvas-e6af1dd37b

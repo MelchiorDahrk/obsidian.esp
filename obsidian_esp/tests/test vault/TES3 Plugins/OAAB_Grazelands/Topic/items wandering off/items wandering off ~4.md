@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_VenduThief >= 10
 Function1: Journal
 Variable1: OAAB_TVos_VenduThief < 40
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-Please let me know straight away if you learn anything about my [[items wandering off]].
+
+Please let me know straight away if you learn anything about my [[items wandering off]]. ^obsidian-esp-canvas-e17d201f33

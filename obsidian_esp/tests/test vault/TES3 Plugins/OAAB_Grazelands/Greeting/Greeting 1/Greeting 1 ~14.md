@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_VaroRats = 40
 Function1: Function
 Variable1: Choice = 1
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-A new master? %Name will be a servant? This is not freedom.
+
+A new master? %Name will be a servant? This is not freedom. ^obsidian-esp-canvas-b2b2ea5cb3

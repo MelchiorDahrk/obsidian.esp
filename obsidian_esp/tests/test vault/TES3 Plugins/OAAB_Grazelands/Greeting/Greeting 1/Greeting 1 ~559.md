@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_MoraTrader = 91
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Have you brought enough gold to settle our deal, %PCName? Let's talk about my [[curse of paralysis]].
+
+Have you brought enough gold to settle our deal, %PCName? Let's talk about my [[curse of paralysis]]. ^obsidian-esp-canvas-32aa3f1c32

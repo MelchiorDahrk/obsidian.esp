@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_DwemerMuseum < 10
 Function1: Function
 Variable1: Choice = 1
+canvas:
+  - "[[Imitation is the Sincerest Form of Forgery.canvas]]"
 ---
 
-The artifact which I seek has the ability to duplicate images onto parchment. Tossing aside the obvious applications already filled by the [[Imperial]] printing press, this machine is imbued with dwemer efficiency and I would like to study it more closely. Milyn has worked out a way to create magical scrolls with this device. If you can acquire it for me, then you will be welcome to use it yourself. Still interested?
+
+The artifact which I seek has the ability to duplicate images onto parchment. Tossing aside the obvious applications already filled by the [[Imperial]] printing press, this machine is imbued with dwemer efficiency and I would like to study it more closely. Milyn has worked out a way to create magical scrolls with this device. If you can acquire it for me, then you will be welcome to use it yourself. Still interested? ^obsidian-esp-canvas-9d1d8046f0

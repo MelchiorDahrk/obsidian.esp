@@ -8,6 +8,9 @@ Index: 0
 Quest Name: true
 Finished: false
 Restart: false
+canvas:
+  - "[[Imitation is the Sincerest Form of Forgery.canvas]]"
 ---
 
-Imitation is the Sincerest Form of Forgery
+
+Imitation is the Sincerest Form of Forgery ^obsidian-esp-canvas-10efd751d8

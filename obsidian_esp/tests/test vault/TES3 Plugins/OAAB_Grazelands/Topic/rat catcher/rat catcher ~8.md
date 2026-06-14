@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_VaroRats = 20
 Function1: Function
 Variable1: Choice = 3
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-Keep your innocence then, %PCName. Perhaps one day you'll come to realize how the real world operates. I would give that khajiit a purpose and hope for a better future.
+
+Keep your innocence then, %PCName. Perhaps one day you'll come to realize how the real world operates. I would give that khajiit a purpose and hope for a better future. ^obsidian-esp-canvas-2936defb6a

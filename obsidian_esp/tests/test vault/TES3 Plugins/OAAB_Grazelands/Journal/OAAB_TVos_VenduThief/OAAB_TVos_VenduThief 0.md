@@ -8,6 +8,9 @@ Index: 0
 Quest Name: true
 Finished: false
 Restart: false
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-Magical Misdeeds
+
+Magical Misdeeds ^obsidian-esp-canvas-4351171535

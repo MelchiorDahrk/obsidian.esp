@@ -5,7 +5,9 @@ import {
 	compileVaultFolder,
 } from './features/compile-folder';
 import {
+	canGenerateAllQuestCanvasesFromFolder,
 	canGenerateQuestCanvasFromFolder,
+	generateAllQuestCanvasesForJournalFolder,
 	generateQuestCanvasForFolder,
 	generateQuestCanvasFromVaultFolder,
 } from './features/generate-quest-canvas';
@@ -107,6 +109,17 @@ export default class ObsidianEsp extends Plugin {
 								.setIcon('layout-dashboard')
 								.onClick(() => {
 									void this.generateQuestCanvasForSelectedFolder(file);
+								});
+						});
+					}
+
+					if (canGenerateAllQuestCanvasesFromFolder(file)) {
+						submenu.addItem((subItem) => {
+							subItem
+								.setTitle('Generate all quest canvases')
+								.setIcon('layout-list')
+								.onClick(() => {
+									void this.generateAllQuestCanvasesForSelectedFolder(file);
 								});
 						});
 					}
@@ -346,6 +359,13 @@ export default class ObsidianEsp extends Plugin {
 	 */
 	async generateQuestCanvasForSelectedFolder(folder: TFolder) {
 		await generateQuestCanvasForFolder(this.app, folder);
+	}
+
+	/**
+	 * Generates quest canvases for every quest folder in the selected Journal folder.
+	 */
+	async generateAllQuestCanvasesForSelectedFolder(folder: TFolder) {
+		await generateAllQuestCanvasesForJournalFolder(this.app, folder);
 	}
 
 	/**

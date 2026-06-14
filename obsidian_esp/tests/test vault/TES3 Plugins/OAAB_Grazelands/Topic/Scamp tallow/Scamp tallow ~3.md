@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_GalosMouth = 100
 Function1: Function
 Variable1: Choice = 1
+canvas:
+  - "[[Waxing Pathetic Scamps.canvas]]"
 ---
 
-I think I can render enough tallow from ten scraps of scamp skin. Felara Andrethi in [[Tel Aruhn]] generally has some in stock. Otherwise, I would suggest hunting scamp in [[Daedric]] [[shrines]] or here in the [[Grazelands]] where you'll occassionally find them wandering.
+
+I think I can render enough tallow from ten scraps of scamp skin. Felara Andrethi in [[Tel Aruhn]] generally has some in stock. Otherwise, I would suggest hunting scamp in [[Daedric]] [[shrines]] or here in the [[Grazelands]] where you'll occassionally find them wandering. ^obsidian-esp-canvas-adaa4a7413

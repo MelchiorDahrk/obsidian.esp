@@ -17,6 +17,9 @@ PC Rank:
 Result: Choice "So will you help the trader?" 1
 Function0: Journal
 Variable0: OAAB_TVos_MoraTrader = 20
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-So [[Dratha]] cursed another man that wandered into her tower, did she? Normally I wouldn't interfere in such a trifling matter, but you say he is a [[trader]]? Well, Burcanius Varo, the proprietor of the Varo Tradehouse in [[Vos]], has been looking for someone to bring some trade to his tradehouse. We don't get many peddlers this far from the big cities so he's gotten rather desperate and I think he would accept just about anyone at this point.
+
+So [[Dratha]] cursed another man that wandered into her tower, did she? Normally I wouldn't interfere in such a trifling matter, but you say he is a [[trader]]? Well, Burcanius Varo, the proprietor of the Varo Tradehouse in [[Vos]], has been looking for someone to bring some trade to his tradehouse. We don't get many peddlers this far from the big cities so he's gotten rather desperate and I think he would accept just about anyone at this point. ^obsidian-esp-canvas-937b4ad6d7

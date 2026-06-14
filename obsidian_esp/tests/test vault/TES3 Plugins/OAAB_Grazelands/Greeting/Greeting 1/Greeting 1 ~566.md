@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_MoraTrader < 10
 Function1: Function
 Variable1: Choice = 5
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-I've been cursed with paralysis. I've passed out five times after I couldn't scratch an itch. You have no idea what it's like!
+
+I've been cursed with paralysis. I've passed out five times after I couldn't scratch an itch. You have no idea what it's like! ^obsidian-esp-canvas-356346660f

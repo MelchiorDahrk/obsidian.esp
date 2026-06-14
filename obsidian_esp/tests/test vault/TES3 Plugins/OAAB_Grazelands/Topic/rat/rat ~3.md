@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_VaroRats = 20
 Function1: Function
 Variable1: Choice = 1
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-I hope you won't hold this against the Varo Tradehouse and will come again, %PCName. Good morrow to you.
+
+I hope you won't hold this against the Varo Tradehouse and will come again, %PCName. Good morrow to you. ^obsidian-esp-canvas-df17ca9480

@@ -24,7 +24,9 @@ Function1: Item
 Variable1: ABtv_note_VaroSlaveContract >= 1
 canvas:
   - "[[The Domain of Living Fire.canvas]]"
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
+
 
 
 Varo informed me that he had an interest in the [[slave]] we're holding. [[Master Aryon]] isn't overly interested in keeping [[slaves]] around -- he prefers [[mercenaries]] and paid workers. But the contractor working on the tower had a few in his employ before [[the incident]]. This one was caught hoarding [[Dwemer artifacts]] unearthed during their excavation of the dungeon. Let me see the paperwork Varo sent with you. ^obsidian-esp-canvas-c27a3e0a93

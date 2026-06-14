@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_SmokeskinWillpower >= 100
 Function1: Global
 Variable1: ABtv_DwemerMuseumStage < 3
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-The master is a scholar of the deep folk. This museum enshrines his devotion to the pursuit of improvement. We will warn you only once: do not despoil this shrine. It will displease [[Master Aryon]] and we will not suffer that.
+
+The master is a scholar of the deep folk. This museum enshrines his devotion to the pursuit of improvement. We will warn you only once: do not despoil this shrine. It will displease [[Master Aryon]] and we will not suffer that. ^obsidian-esp-canvas-d795f55654

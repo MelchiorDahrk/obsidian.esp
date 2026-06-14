@@ -8,6 +8,9 @@ Index: 100
 Quest Name: false
 Finished: true
 Restart: false
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-Alenus Vendu was grateful that I solved the mystery of her [[items wandering off]]. She gave me a powerful [[scroll]] as a [[reward]]. But I think the Passkey may be the true [[reward]] for this job. I wonder what other secrets it may reveal here in [[Tel Vos]].
+
+Alenus Vendu was grateful that I solved the mystery of her [[items wandering off]]. She gave me a powerful [[scroll]] as a [[reward]]. But I think the Passkey may be the true [[reward]] for this job. I wonder what other secrets it may reveal here in [[Tel Vos]]. ^obsidian-esp-canvas-31f5273079

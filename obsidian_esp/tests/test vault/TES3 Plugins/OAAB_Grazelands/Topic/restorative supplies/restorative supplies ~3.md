@@ -22,6 +22,9 @@ Function2: Function
 Variable2: Choice = 4
 Function3: Item
 Variable3: ingred_scrib_jelly_01 < 5
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-I'm afraid that isn't quite enough, %PCName. I [[need]] 5 portions each of [[bloat]] and [[scrib jelly]] to make enough [[potions]].
+
+I'm afraid that isn't quite enough, %PCName. I [[need]] 5 portions each of [[bloat]] and [[scrib jelly]] to make enough [[potions]]. ^obsidian-esp-canvas-af29b254ae

@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_SmokeskinWillpower >= 100
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-There are many towers but it is called just a tower. Because it is [[Master Aryon]]'s tower. Master is at the top.
+
+There are many towers but it is called just a tower. Because it is [[Master Aryon]]'s tower. Master is at the top. ^obsidian-esp-canvas-9189123de1

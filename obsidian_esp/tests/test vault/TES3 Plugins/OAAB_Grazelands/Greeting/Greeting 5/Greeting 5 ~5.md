@@ -21,6 +21,9 @@ Function1: Journal
 Variable1: OAAB_TVos_GalosMouth = 0
 Function2: Journal
 Variable2: HT_Stronghold >= 100
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-Oh, %PCName. How fortuitous that you stopped by. I dispatched a courier to your Stronghold, but you were away at the time. I wonder if you would be willing to [[help me]] select [[a new mouth for Aryon]].
+
+Oh, %PCName. How fortuitous that you stopped by. I dispatched a courier to your Stronghold, but you were away at the time. I wonder if you would be willing to [[help me]] select [[a new mouth for Aryon]]. ^obsidian-esp-canvas-e7b2152ee5

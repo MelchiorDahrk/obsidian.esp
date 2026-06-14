@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_SmokeskinWillpower >= 100
+canvas:
+  - "[[Smokeskin-Willer.canvas]]"
 ---
 
-The master is not like other smokeskins. He is devious, but fair to his retainers and subjects. We serve him willingly.
+
+The master is not like other smokeskins. He is devious, but fair to his retainers and subjects. We serve him willingly. ^obsidian-esp-canvas-1680e3b1ec

@@ -24,6 +24,9 @@ Function0: Journal
 Variable0: OAAB_TVos_VenduThief = 10
 Function1: Function
 Variable1: Choice = 1
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-Oooo-oh! No, please don't touch us! We don't like popping. Get away from us!
+
+Oooo-oh! No, please don't touch us! We don't like popping. Get away from us! ^obsidian-esp-canvas-f888c4a7d6

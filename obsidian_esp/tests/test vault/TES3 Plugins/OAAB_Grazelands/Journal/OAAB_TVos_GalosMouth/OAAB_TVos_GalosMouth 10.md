@@ -8,6 +8,9 @@ Index: 10
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-One of my retainers informed me that a courier arrived from [[Tel Vos]] in my absence. She left a letter from Aryon's old [[Mouth]].
+
+One of my retainers informed me that a courier arrived from [[Tel Vos]] in my absence. She left a letter from Aryon's old [[Mouth]]. ^obsidian-esp-canvas-01e9f7c82b

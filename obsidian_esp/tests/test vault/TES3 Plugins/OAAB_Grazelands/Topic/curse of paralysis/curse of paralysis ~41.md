@@ -26,6 +26,9 @@ Function4: Not ID
 Variable4: ABtv_TelMoraTrader = 0
 Function5: Journal
 Variable5: OAAB_TVos_MoraTrader <= 40
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-I don't want to get involved, sorry.
+
+I don't want to get involved, sorry. ^obsidian-esp-canvas-948d7742ec

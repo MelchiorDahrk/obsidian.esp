@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_VaroRats = 100
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-He is serving admirably. I'm confident that we've seen the last of any rats in my tradehouse.
+
+He is serving admirably. I'm confident that we've seen the last of any rats in my tradehouse. ^obsidian-esp-canvas-f6b5e09373

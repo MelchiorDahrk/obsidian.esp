@@ -8,6 +8,9 @@ Index: 0
 Quest Name: true
 Finished: false
 Restart: false
+canvas:
+  - "[[A New Mouth for Master Aryon.canvas]]"
 ---
 
-A New [[Mouth]] for [[Master Aryon]]
+
+A New [[Mouth]] for [[Master Aryon]] ^obsidian-esp-canvas-8a38195fbd

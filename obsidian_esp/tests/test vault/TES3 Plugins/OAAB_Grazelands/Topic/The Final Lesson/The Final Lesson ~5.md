@@ -21,7 +21,9 @@ Function1: Function
 Variable1: Choice = 4
 canvas:
   - "[[A Lesson in Thieving.canvas]]"
+  - "[[Waxing Pathetic Scamps.canvas]]"
 ---
+
 
 
 Of course. It's fairly simple to make a small amount of light bend around you... [Galos teaches you a simple chameleon spell]. And that's it. Please let me know if you succeed in obtaining a copy of the book for me. ^obsidian-esp-canvas-545ffd1a20

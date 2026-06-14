@@ -8,6 +8,9 @@ Index: 91
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-I brought the [[potion]] back to the [[Breton]] [[trader]], but he figured out that I was only helping him for the [[reward]]. I agreed to give him a cut of the [[reward]] [[Master Aryon]] offered me in the amount of one hundred septims.
+
+I brought the [[potion]] back to the [[Breton]] [[trader]], but he figured out that I was only helping him for the [[reward]]. I agreed to give him a cut of the [[reward]] [[Master Aryon]] offered me in the amount of one hundred septims. ^obsidian-esp-canvas-67b14f8d3c

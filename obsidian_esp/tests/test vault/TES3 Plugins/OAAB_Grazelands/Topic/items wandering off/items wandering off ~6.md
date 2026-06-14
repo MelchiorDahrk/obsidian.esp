@@ -18,6 +18,9 @@ Function0: Journal
 Variable0: OAAB_TVos_VenduThief = 0
 Function1: Function
 Variable1: Choice = 2
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-Please reconsider if you find the time.
+
+Please reconsider if you find the time. ^obsidian-esp-canvas-e9ffd15dc1

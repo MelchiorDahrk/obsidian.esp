@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_VenduThief = 10
 Function1: Function
 Variable1: Choice = 5
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-I knew you were a nice man-thing. Act nice and go away!
+
+I knew you were a nice man-thing. Act nice and go away! ^obsidian-esp-canvas-87a0cb8b7d

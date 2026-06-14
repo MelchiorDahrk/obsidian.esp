@@ -8,6 +8,9 @@ Index: 1
 Quest Name: false
 Finished: false
 Restart: false
+canvas:
+  - "[[Imitation is the Sincerest Form of Forgery.canvas]]"
 ---
 
-[[Smokeskin-Killer]] informed me that [[Master Aryon]] may be interested in a new addition to the [[Tel [[Vos]] [[Dwemer]] Museum]].
+
+[[Smokeskin-Killer]] informed me that [[Master Aryon]] may be interested in a new addition to the [[Tel [[Vos]] [[Dwemer]] Museum]]. ^obsidian-esp-canvas-10f1fec486

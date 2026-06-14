@@ -16,6 +16,9 @@ PC Faction:
 PC Rank:
 Function0: Journal
 Variable0: OAAB_TVos_MoraTrader >= 40
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-I'm happy to hear that [[Master Aryon]] agreed to help that poor man-elf.
+
+I'm happy to hear that [[Master Aryon]] agreed to help that poor man-elf. ^obsidian-esp-canvas-5e1cc4314c

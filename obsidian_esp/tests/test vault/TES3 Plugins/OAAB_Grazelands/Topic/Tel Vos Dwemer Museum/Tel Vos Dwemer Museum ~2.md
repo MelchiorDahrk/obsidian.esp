@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_DwemerMuseum < 10
 Function1: Function
 Variable1: Choice = 2
+canvas:
+  - "[[Imitation is the Sincerest Form of Forgery.canvas]]"
 ---
 
-Very well.
+
+Very well. ^obsidian-esp-canvas-4b619de9da

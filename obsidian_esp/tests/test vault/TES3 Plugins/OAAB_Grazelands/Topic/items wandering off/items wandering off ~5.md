@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_VenduThief = 0
 Function1: Function
 Variable1: Choice = 1
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-I am relieved to hear that. I don't know who is stealing my goods, but I do know that [[Tel Vos]] is full of secret passages and strange things. I would suggest you look for a hidden way into this tower. The guards outside should have seen someone skulking through the front doors.
+
+I am relieved to hear that. I don't know who is stealing my goods, but I do know that [[Tel Vos]] is full of secret passages and strange things. I would suggest you look for a hidden way into this tower. The guards outside should have seen someone skulking through the front doors. ^obsidian-esp-canvas-51ee747a3e

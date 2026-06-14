@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_VaroRats = 40
 Function1: Function
 Variable1: Choice = 3
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-%Name will follow %PCName.
+
+%Name will follow %PCName. ^obsidian-esp-canvas-18dfa2e08e

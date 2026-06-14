@@ -23,6 +23,9 @@ Function0: Journal
 Variable0: OAAB_TVos_VaroRats = 40
 Function1: Local
 Variable1: slaveStatus <= 1
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-%Name saw the [[Dunmer]] give you a key. WIll you let %Name [[go free]]?
+
+%Name saw the [[Dunmer]] give you a key. WIll you let %Name [[go free]]? ^obsidian-esp-canvas-b24dbabd1d

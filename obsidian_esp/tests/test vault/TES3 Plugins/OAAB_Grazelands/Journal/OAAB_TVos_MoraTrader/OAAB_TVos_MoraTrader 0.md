@@ -8,6 +8,9 @@ Index: 0
 Quest Name: true
 Finished: false
 Restart: false
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-A Smidge Too Far
+
+A Smidge Too Far ^obsidian-esp-canvas-2f068a8f1b

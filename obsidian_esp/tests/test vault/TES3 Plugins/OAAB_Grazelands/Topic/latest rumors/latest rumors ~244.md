@@ -26,6 +26,9 @@ Function4: Not Cell
 Variable4: Tel Vos, Central Tower = 1
 Function5: Not ID
 Variable5: Dro'zharim = 1
+canvas:
+  - "[[Imitation is the Sincerest Form of Forgery.canvas]]"
 ---
 
-Have you visited the [[Tel [[Vos]] [[Dwemer]] Museum]]? [[Master Aryon]] has filled it with many strange dwarf-made artifacts. [[Smokeskin-Killer]], the caretaker, is always trying to get people to go on missions into [[Dwemer ruins]]. Apparently Aryon doesn't like sending him in if it hasn't already been explored.
+
+Have you visited the [[Tel [[Vos]] [[Dwemer]] Museum]]? [[Master Aryon]] has filled it with many strange dwarf-made artifacts. [[Smokeskin-Killer]], the caretaker, is always trying to get people to go on missions into [[Dwemer ruins]]. Apparently Aryon doesn't like sending him in if it hasn't already been explored. ^obsidian-esp-canvas-101354f141

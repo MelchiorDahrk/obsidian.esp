@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_DwemerMuseum = 30
 Function1: Global
 Variable1: ABtv_DwPrintMachineInstall = 1
+canvas:
+  - "[[Imitation is the Sincerest Form of Forgery.canvas]]"
 ---
 
-The ideographer has been installed in my laboratory which is located at the top of the second tallest tower. You are free to use it whenever you like. You can buy some standard blank scrolls from Alenus Vendu in the [[Services]] Tower. You'll [[need]] them to run through the machine. I've left some notes down in the lab which Milyn sent with the machine.
+
+The ideographer has been installed in my laboratory which is located at the top of the second tallest tower. You are free to use it whenever you like. You can buy some standard blank scrolls from Alenus Vendu in the [[Services]] Tower. You'll [[need]] them to run through the machine. I've left some notes down in the lab which Milyn sent with the machine. ^obsidian-esp-canvas-5ce23e5422

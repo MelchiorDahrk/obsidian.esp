@@ -21,6 +21,9 @@ Function1: Dead
 Variable1: goler andrethi = 0
 Function2: Dead
 Variable2: Dro'zharim = 0
+canvas:
+  - "[[Rats in Varo Tradehouse.canvas]]"
 ---
 
-Back in [[Cyrodiil]], I owned a dog to keep the vermin out of my tavern. But that was before I decided to join the [[Imperial]] colonists headed to [[Vvardenfell]]. You don't see many dogs here in [[Morrowind]] -- or cats for that matter. Apparently the Dark Elves actually domesticated some larger breeds of rats and trained them as ratters. Fascinating, isn't that? But I have another idea. Maybe something you can [[help me]] with.
+
+Back in [[Cyrodiil]], I owned a dog to keep the vermin out of my tavern. But that was before I decided to join the [[Imperial]] colonists headed to [[Vvardenfell]]. You don't see many dogs here in [[Morrowind]] -- or cats for that matter. Apparently the Dark Elves actually domesticated some larger breeds of rats and trained them as ratters. Fascinating, isn't that? But I have another idea. Maybe something you can [[help me]] with. ^obsidian-esp-canvas-01be23d188

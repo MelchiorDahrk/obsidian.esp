@@ -20,6 +20,9 @@ Function1: Not Class
 Variable1: Guard = 1
 Function2: Not ID
 Variable2: alenus vendu = 1
+canvas:
+  - "[[Magical Misdeeds.canvas]]"
 ---
 
-Alenus Vendu has had trouble with items from her shop going missing recently. [[Tel Vos]] is a strange place; there could be any number of [[explanations]].
+
+Alenus Vendu has had trouble with items from her shop going missing recently. [[Tel Vos]] is a strange place; there could be any number of [[explanations]]. ^obsidian-esp-canvas-80a69adefb

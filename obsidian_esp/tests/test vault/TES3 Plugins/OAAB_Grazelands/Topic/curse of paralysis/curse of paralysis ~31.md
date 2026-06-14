@@ -30,6 +30,9 @@ Function2: Function
 Variable2: PcStrength >= 60
 Function3: Function
 Variable3: Choice = 12
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-No, please! Okay, okay, I'll go to this tradehouse, just calm down and give me the [[potion]]...
+
+No, please! Okay, okay, I'll go to this tradehouse, just calm down and give me the [[potion]]... ^obsidian-esp-canvas-844969db44

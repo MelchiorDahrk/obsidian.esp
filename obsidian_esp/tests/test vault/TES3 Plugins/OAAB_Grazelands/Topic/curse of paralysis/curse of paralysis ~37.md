@@ -19,6 +19,9 @@ Function0: Journal
 Variable0: OAAB_TVos_MoraTrader = 40
 Function1: Item
 Variable1: ABtv_pot_CureParalysis >= 1
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-Have you managed to find anyone [[who can help]] me? I think my toes might hurt if I could feel them!
+
+Have you managed to find anyone [[who can help]] me? I think my toes might hurt if I could feel them! ^obsidian-esp-canvas-20df3dd50c

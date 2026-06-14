@@ -8,6 +8,9 @@ Index: 200
 Quest Name: false
 Finished: true
 Restart: false
+canvas:
+  - "[[A Smidge Too Far.canvas]]"
 ---
 
-[[Master Aryon]] thanked me for convincing the [[Breton]] [[trader]] to [[work]] at the Varo tradehouse and gave me a [[reward]] for my assistance.
+
+[[Master Aryon]] thanked me for convincing the [[Breton]] [[trader]] to [[work]] at the Varo tradehouse and gave me a [[reward]] for my assistance. ^obsidian-esp-canvas-8dbe345d70
