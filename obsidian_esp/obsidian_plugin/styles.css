@@ -225,3 +225,25 @@ body.esp-hide-canvas-properties .canvas-node .markdown-embed .metadata-container
 body.esp-hide-canvas-properties .canvas-node .markdown-source-view .metadata-container {
 	display: none;
 }
+
+/* -----------------------------------------------------------------------
+ * Quest inspector
+ * ----------------------------------------------------------------------- */
+
+.esp-quest-inspector .esp-inspector-file {
+	display: block;
+	font-size: var(--font-ui-small);
+	margin-bottom: var(--size-4-2);
+	overflow-wrap: anywhere;
+}
+
+.esp-quest-inspector .esp-inspector-rows .setting-item {
+	border: none;
+	padding: var(--size-2-1) 0;
+}
+
+.esp-quest-inspector .esp-inspector-expression {
+	flex-grow: 1;
+	font-family: var(--font-monospace);
+	font-size: var(--font-ui-small);
+}

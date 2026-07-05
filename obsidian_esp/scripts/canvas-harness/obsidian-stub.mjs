@@ -66,3 +66,29 @@ export class App {
 		this.metadataCache = null;
 	}
 }
+
+// UI base classes referenced (but never instantiated) by inspector.ts when
+// the whole quest-canvas package is bundled headlessly.
+export class Plugin {
+	constructor() {
+		this.app = null;
+	}
+
+	registerEvent() {}
+
+	registerView() {}
+}
+
+export class ItemView {
+	constructor(leaf) {
+		this.leaf = leaf;
+		this.app = null;
+		this.contentEl = null;
+	}
+}
+
+export class FuzzySuggestModal extends Modal {}
+
+export class Setting {
+	constructor() {}
+}

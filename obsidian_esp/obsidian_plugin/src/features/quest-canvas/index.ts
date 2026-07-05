@@ -13,6 +13,17 @@ export { discoverQuestScope } from './discovery';
 export { cleanCanvasBlockIds, stripCanvasSubpaths } from './migration';
 export { getCardMeta, setCardMeta } from './card-meta';
 export { QuestCanvasSyncEngine } from './sync';
+export { QuestInspectorView, QUEST_INSPECTOR_VIEW_TYPE, registerQuestInspector } from './inspector';
+export {
+	applyActionPlanToCanvas,
+	pickFreeNotePath,
+	planAddChoiceBranch,
+	planAddSpeakerVariant,
+	planLinkJournalMilestone,
+	planRenumberChoice,
+	refreshCardFromNote,
+} from './actions';
+export type { ActionPlan, ActionResult } from './actions';
 export {
 	applyResultCardLines,
 	applySyncPlanToCanvas,

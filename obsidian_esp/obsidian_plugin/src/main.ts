@@ -12,6 +12,7 @@ import {
 	generateQuestCanvasForFolder,
 	generateQuestCanvasFromVaultFolder,
 	QuestCanvasSyncEngine,
+	registerQuestInspector,
 } from './features/quest-canvas';
 import { generatePropertyFilesForFolder } from './features/generate-properties';
 import {
@@ -94,6 +95,7 @@ export default class ObsidianEsp extends Plugin {
 
 		this.applyCanvasPropertyVisibility();
 		new QuestCanvasSyncEngine(this).register();
+		registerQuestInspector(this);
 
 		// Vault Context Menu Integration
 		this.registerEvent(
