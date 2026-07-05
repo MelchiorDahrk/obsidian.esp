@@ -13,6 +13,8 @@ export { discoverQuestScope } from './discovery';
 export { cleanCanvasBlockIds, stripCanvasSubpaths } from './migration';
 export { getCardMeta, setCardMeta } from './card-meta';
 export { QuestCanvasSyncEngine } from './sync';
+export { mergeCanvasPreservingLayout } from './refresh';
+export type { RefreshStats } from './refresh';
 export { QuestInspectorView, QUEST_INSPECTOR_VIEW_TYPE, registerQuestInspector } from './inspector';
 export {
 	applyActionPlanToCanvas,

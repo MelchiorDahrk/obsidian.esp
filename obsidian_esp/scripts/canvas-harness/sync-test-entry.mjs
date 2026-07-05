@@ -12,6 +12,7 @@ import {
 	planEdgeGestures,
 	planSyncFromEdits,
 } from '../../obsidian_plugin/src/features/quest-canvas/sync-core.ts';
+import { mergeCanvasPreservingLayout } from '../../obsidian_plugin/src/features/quest-canvas/refresh.ts';
 
 let testCount = 0;
 function check(name, fn) {
@@ -467,6 +468,63 @@ check('ambiguous and derived edges are ignored', () => {
 	const notes = makeNotes();
 	const { edits } = edgeGestureRun(previous, next, notes);
 	assert.deepEqual(edits, []);
+});
+
+// --- provenance-matched refresh (Phase 5) ------------------------------------------
+check('refresh keeps manual layout, remaps ids, and drops orphans', () => {
+	// The user's tended canvas: nodes moved, one personal note + wire, plus a
+	// stale generated gate whose note no longer produces one.
+	const existing = makeCanvas();
+	existing.nodes[2].x = 5000; // gate g1 moved
+	existing.nodes[2].y = -300;
+	existing.nodes[3].x = 5600; // dialogue d1 moved
+	existing.nodes.push({
+		id: 'orphan-gate', type: 'text', text: 'Dead someone > 0', x: 1, y: 1, width: 385, height: 60,
+		espCard: meta('gate', 'TES3 Plugins/Test/Topic/gone/gone ~1.md'),
+	});
+	existing.edges.push({ id: 'user-wire', fromNode: 'user-note', fromSide: 'right', toNode: 'd1', toSide: 'left' });
+
+	// Fresh regeneration: same provenance for g1/d1/j10/j20/r1, a renamed
+	// choice card (same provenance, new node id), and a brand-new gate wired
+	// to d1.
+	const fresh = makeCanvas();
+	fresh.nodes = fresh.nodes.filter((n) => n.id !== 'user-note');
+	const renamedChoice = fresh.nodes.find((n) => n.id === 'c1');
+	renamedChoice.id = 'c1-renamed';
+	renamedChoice.text = 'Yes, absolutely.';
+	const newGate = {
+		id: 'g-new', type: 'text', text: 'Choice = 2', x: 900, y: 340, width: 385, height: 60,
+		espCard: meta('gate', 'TES3 Plugins/Test/Topic/test topic/new.md'),
+	};
+	fresh.nodes.push(newGate);
+	fresh.edges.push({ id: 'e-new', fromNode: 'd1', fromSide: 'right', toNode: 'g-new', toSide: 'left' });
+
+	const { merged, stats } = mergeCanvasPreservingLayout(existing, fresh);
+
+	// Matched nodes keep the user's positions.
+	const gate = merged.nodes.find((n) => n.id === 'g1');
+	assert.equal(gate.x, 5000);
+	assert.equal(gate.y, -300);
+	const dialogue = merged.nodes.find((n) => n.id === 'd1');
+	assert.equal(dialogue.x, 5600);
+
+	// The renamed choice card matched by provenance despite the new id.
+	const choice = merged.nodes.find((n) => n.id === 'c1-renamed');
+	assert.ok(choice, 'renamed choice card present');
+	assert.equal(choice.text, 'Yes, absolutely.');
+	assert.equal(choice.x, 700, 'kept the old choice card position');
+
+	// New node placed relative to its (moved) neighbor, not at raw layout
+	// coords: d1 sits at x=400 in the fresh layout but x=5600 on the canvas.
+	const placed = merged.nodes.find((n) => n.id === 'g-new');
+	assert.equal(placed.x, 5600 + (900 - 400));
+	assert.equal(placed.y, 200 + (340 - 200));
+
+	// Orphaned generated node removed; user assets survive.
+	assert.ok(!merged.nodes.some((n) => n.id === 'orphan-gate'));
+	assert.ok(merged.nodes.some((n) => n.id === 'user-note'));
+	assert.ok(merged.edges.some((e) => e.id === 'user-wire'));
+	assert.deepEqual(stats, { matched: 6, added: 1, removed: 1, userNodesKept: 1, userEdgesKept: 1 });
 });
 
 console.log(`sync-test: ${testCount} checks passed`);

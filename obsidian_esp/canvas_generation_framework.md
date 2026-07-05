@@ -600,9 +600,31 @@ That sequence will validate the hard part first, which is graph extraction and l
 
 ## Current Plugin Entry Points
 
-The implemented feature is wired into the Obsidian plugin in two places.
+The implemented feature is wired into the Obsidian plugin in these places.
 
-- Command palette: `Generate quest canvas`
-- Folder context menu: `Generate quest canvas` for folders directly under `Journal/`
+- Command palette: `Refresh quest canvas` (position-preserving, the everyday default) and `Regenerate quest canvas (full relayout)`
+- Folder context menu: the same two entries for folders directly under `Journal/`
+- Command palette: `Clean canvas block ID markers` (one-shot migration for vaults generated before canvases became read-only over notes)
 
 The feature expects the selected folder to be a quest journal folder, not the `Journal/` root and not a dialogue topic folder.
+
+## Editing Contract (canvas <-> notes)
+
+Quest canvases are an editable projection of the dialogue notes (see `canvas_editing_plan.md`). The load-bearing rules:
+
+- **Notes are the source of truth.** Every canvas edit is translated into a note edit by the sync engine (`quest-canvas/sync-core.ts` + `sync.ts`); the canvas is then re-rendered from the note ("echo"), which normalizes the edit into the canonical grammar. If a note and the canvas ever disagree, the note wins.
+- **Provenance metadata.** Every generated node carries an `espCard` object (`role`, `file`, `choiceValue`, `questId`, `rev`) written through the accessors in `card-meta.ts`. Nodes without `espCard` (user notes, pasted nodes) are ignored by the sync engine. Generated edges the engine must not interpret carry `espCard: {role: "derived"}`.
+- **Card grammar.** Gate cards display exactly the frontmatter filter grammar from `md_dialogue_spec.md` section 6 (`Class = Wise Woman`, `Journal my_quest >= 10`, `Choice = 2`); result cards display the raw MW script lines (Journal lines may render as milestone wikilinks but always write back as raw lines); choice cards display only the prompt string. `cards.ts` holds the symmetric parse/render pairs.
+- **Format-preserving writes.** All note writes go through the frontmatter surgeon (`frontmatter-surgeon.ts`): line surgery only, never YAML re-serialization, so exporter-written files (empty keys, `Result: |` block scalars, key order, unknown keys) round-trip byte-identical.
+- **Validation UX.** Card text that fails to parse writes nothing; the card is re-rendered with a leading warning line and the user's text preserved below it.
+- **Functional edges.** Only four unambiguous gestures write data: dialogue -> journal (Journal result line), dialogue -> choice card (Choice result pair), choice card -> gate (Choice filter), journal -> gate (Journal availability filter). Deleting one of these edges asks for confirmation naming the exact frontmatter change. Everything else is visual and a refresh restores it.
+- **Deletion semantics.** Deleting nodes is a layout action; it never deletes note data. Data deletion is explicit (clearing card lines, edge-removal confirmation, inspector actions).
+- **Generation is read-only over notes.** Generating or refreshing a canvas modifies zero dialogue notes (the optional `canvas:` backlink has its own setting, default off). The legacy `^obsidian-esp-canvas-*` block ids are retired; `Clean canvas block ID markers` strips them from older vaults.
+- **Refresh vs regenerate.** `Refresh quest canvas` rebuilds cards and wiring from the notes but matches nodes by provenance and keeps manual positions/sizes (`refresh.ts`); orphaned generated nodes are removed and new nodes are placed near their graph neighbors. `Regenerate quest canvas (full relayout)` recomputes the whole layout.
+- **Ecosystem.** The Enhanced Canvas plugin's property syncing can race these writes; the plugin shows a warning when it is enabled. Content-hash loop guards keep our writes idempotent either way.
+
+Headless verification lives in `scripts/canvas-harness/`: `cards-test.mjs` (grammar round-trips), `sync-test.mjs` (sync engine + edges + refresh merge fixtures), `actions-test.mjs` (generative actions), `migrate.mjs` (block-id migration driver).
+
+### Manual spike checklist: unknown canvas keys
+
+`espCard` relies on Obsidian preserving unknown node keys in `.canvas` files (undocumented but relied on by major community plugins). Before trusting a new Obsidian release, verify in a scratch vault that `espCard` survives: moving/resizing nodes, editing text nodes, copy/paste of nodes, undo/redo, and app restart. If preservation breaks, swap the storage backend inside `card-meta.ts` (sidecar map keyed by node id) — it is the only module that reads or writes `node.espCard`.

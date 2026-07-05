@@ -1,4 +1,5 @@
 import { type App, Modal, Notice, Plugin, Setting, TFile } from 'obsidian';
+import { refreshCardFromNote } from './actions';
 import { getCardMeta } from './card-meta';
 import {
 	applySyncPlanToCanvas,
@@ -35,8 +36,13 @@ export class QuestCanvasSyncEngine {
 		const { app } = this.plugin;
 		this.plugin.registerEvent(
 			app.vault.on('modify', (file) => {
-				if (file instanceof TFile && file.extension === 'canvas') {
+				if (!(file instanceof TFile)) {
+					return;
+				}
+				if (file.extension === 'canvas') {
 					this.scheduleSync(file);
+				} else if (file.extension === 'md') {
+					this.scheduleNoteRefresh(file);
 				}
 			}),
 		);
@@ -229,6 +235,73 @@ export class QuestCanvasSyncEngine {
 			this.snapshots.set(file.path, parsed);
 		} finally {
 			this.applying.delete(file.path);
+		}
+	}
+
+	/**
+	 * Note-side live refresh: external edits to a dialogue note re-render
+	 * its cards on every tracked quest canvas. Notes win by definition, so
+	 * this needs no diffing — just a projection refresh.
+	 */
+	private scheduleNoteRefresh(file: TFile): void {
+		const referencesNote = [...this.snapshots.values()].some((canvas) => (
+			canvas.nodes.some((node) => getCardMeta(node)?.file === file.path)
+		));
+		if (!referencesNote) {
+			return;
+		}
+
+		const timerKey = `note:${file.path}`;
+		const existing = this.debounceTimers.get(timerKey);
+		if (existing !== undefined) {
+			window.clearTimeout(existing);
+		}
+		this.debounceTimers.set(
+			timerKey,
+			window.setTimeout(() => {
+				this.debounceTimers.delete(timerKey);
+				void this.runNoteRefresh(file.path);
+			}, SYNC_DEBOUNCE_MS),
+		);
+	}
+
+	private async runNoteRefresh(notePath: string): Promise<void> {
+		const { app } = this.plugin;
+		for (const canvasPath of [...this.snapshots.keys()]) {
+			const snapshot = this.snapshots.get(canvasPath);
+			if (!snapshot || !snapshot.nodes.some((node) => getCardMeta(node)?.file === notePath)) {
+				continue;
+			}
+			const canvasFile = app.vault.getAbstractFileByPath(canvasPath);
+			if (!(canvasFile instanceof TFile) || this.applying.has(canvasPath)) {
+				continue;
+			}
+
+			this.applying.add(canvasPath);
+			try {
+				const parsed = parseCanvasData(await app.vault.read(canvasFile));
+				if (!parsed) {
+					continue;
+				}
+				const noteContents = await this.readReferencedNotes(parsed);
+				const readNote = (path: string): string | null => noteContents.get(path) ?? null;
+				const context = deriveQuestContext(parsed, readNote);
+
+				let changed = false;
+				for (const node of parsed.nodes) {
+					if (getCardMeta(node)?.file === notePath) {
+						changed = refreshCardFromNote(parsed, node.id, readNote, context) || changed;
+					}
+				}
+				if (changed) {
+					const nextJson = JSON.stringify(parsed, null, '\t');
+					this.lastWrittenHash.set(canvasPath, hashCanvasContent(nextJson));
+					await app.vault.process(canvasFile, () => nextJson);
+				}
+				this.snapshots.set(canvasPath, parsed);
+			} finally {
+				this.applying.delete(canvasPath);
+			}
 		}
 	}
 

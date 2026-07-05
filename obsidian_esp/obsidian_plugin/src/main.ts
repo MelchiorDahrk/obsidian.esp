@@ -79,9 +79,17 @@ export default class ObsidianEsp extends Plugin {
 
 		this.addCommand({
 			id: 'generate-quest-canvas',
-			name: 'Generate quest canvas',
+			name: 'Refresh quest canvas',
 			callback: () => {
-				void this.generateQuestCanvas();
+				void this.generateQuestCanvas('refresh');
+			},
+		});
+
+		this.addCommand({
+			id: 'regenerate-quest-canvas',
+			name: 'Regenerate quest canvas (full relayout)',
+			callback: () => {
+				void this.generateQuestCanvas('full');
 			},
 		});
 
@@ -96,6 +104,7 @@ export default class ObsidianEsp extends Plugin {
 		this.applyCanvasPropertyVisibility();
 		new QuestCanvasSyncEngine(this).register();
 		registerQuestInspector(this);
+		this.warnAboutEnhancedCanvas();
 
 		// Vault Context Menu Integration
 		this.registerEvent(
@@ -120,10 +129,18 @@ export default class ObsidianEsp extends Plugin {
 					if (canGenerateQuestCanvasFromFolder(file)) {
 						submenu.addItem((subItem) => {
 							subItem
-								.setTitle('Generate quest canvas')
+								.setTitle('Refresh quest canvas')
 								.setIcon('layout-dashboard')
 								.onClick(() => {
-									void this.generateQuestCanvasForSelectedFolder(file);
+									void this.generateQuestCanvasForSelectedFolder(file, 'refresh');
+								});
+						});
+						submenu.addItem((subItem) => {
+							subItem
+								.setTitle('Regenerate quest canvas (full relayout)')
+								.setIcon('layout-dashboard')
+								.onClick(() => {
+									void this.generateQuestCanvasForSelectedFolder(file, 'full');
 								});
 						});
 					}
@@ -202,6 +219,23 @@ export default class ObsidianEsp extends Plugin {
 	onunload() {
 		document.body.removeClass('esp-hide-canvas-properties');
 		void this.dbManager.unloadDatabase();
+	}
+
+	/**
+	 * One-time warning when the Enhanced Canvas community plugin is enabled:
+	 * its edge-to-property syncing writes frontmatter links into dialogue
+	 * notes and its canvas saves may race ours. Our content-hash loop guards
+	 * keep writes idempotent, so this degrades to a warning, not corruption.
+	 */
+	private warnAboutEnhancedCanvas() {
+		const pluginRegistry = (this.app as unknown as { plugins?: { enabledPlugins?: Set<string> } }).plugins;
+		if (pluginRegistry?.enabledPlugins?.has('enhanced-canvas')) {
+			new Notice(
+				'Obsidian.esp: the Enhanced Canvas plugin also writes canvas and note data. '
+				+ 'Consider excluding quest canvases from it or disabling it to avoid conflicting edits.',
+				15000,
+			);
+		}
 	}
 
 	/**
@@ -397,26 +431,26 @@ export default class ObsidianEsp extends Plugin {
 	/**
 	 * Prompts the user to select a journal folder and generates a quest canvas.
 	 */
-	async generateQuestCanvas() {
-		await generateQuestCanvasFromVaultFolder(this.app, this.canvasWriteOptions());
+	async generateQuestCanvas(mode: 'refresh' | 'full' = 'refresh') {
+		await generateQuestCanvasFromVaultFolder(this.app, this.canvasWriteOptions(mode));
 	}
 
 	/**
 	 * Generates a quest canvas for the selected journal folder.
 	 */
-	async generateQuestCanvasForSelectedFolder(folder: TFolder) {
-		await generateQuestCanvasForFolder(this.app, folder, this.canvasWriteOptions());
+	async generateQuestCanvasForSelectedFolder(folder: TFolder, mode: 'refresh' | 'full' = 'refresh') {
+		await generateQuestCanvasForFolder(this.app, folder, this.canvasWriteOptions(mode));
 	}
 
 	/**
 	 * Generates quest canvases for every quest folder in the selected Journal folder.
 	 */
 	async generateAllQuestCanvasesForSelectedFolder(folder: TFolder) {
-		await generateAllQuestCanvasesForJournalFolder(this.app, folder, this.canvasWriteOptions());
+		await generateAllQuestCanvasesForJournalFolder(this.app, folder, this.canvasWriteOptions('refresh'));
 	}
 
-	private canvasWriteOptions() {
-		return { writeBacklinks: this.settings.writeCanvasBacklinks };
+	private canvasWriteOptions(mode: 'refresh' | 'full') {
+		return { writeBacklinks: this.settings.writeCanvasBacklinks, mode };
 	}
 
 	/**

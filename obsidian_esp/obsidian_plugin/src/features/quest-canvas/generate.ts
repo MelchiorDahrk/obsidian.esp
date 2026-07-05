@@ -27,6 +27,8 @@ import {
 	stripUnrelatedAddTopicChoices,
 } from './families';
 import { applyLayeredCanvasLayout, computePhasePositions, layoutTopicFamilies, normalizeCanvasOrigin } from './layout';
+import { mergeCanvasPreservingLayout } from './refresh';
+import { parseCanvasData } from './sync-core';
 import {
 	type CanvasBuildResult,
 	type DialogueRecord,
@@ -55,6 +57,12 @@ import { uniqueNumbers } from './utils';
 export interface QuestCanvasWriteOptions {
 	/** When true, add a `canvas:` backlink to each related note (off by default). */
 	writeBacklinks?: boolean;
+	/**
+	 * 'refresh' (default) rebuilds cards and wiring from the notes but keeps
+	 * the manual layout of provenance-matched nodes; 'full' relays out the
+	 * whole canvas from scratch.
+	 */
+	mode?: 'refresh' | 'full';
 }
 
 export async function generateQuestCanvasFromVaultFolder(
@@ -209,7 +217,21 @@ export async function generateQuestCanvasForScope(
 	updateProgress(25, `Resolving dialogue for ${scope.questTitle}`);
 	const buildResult = await buildQuestCanvas(app, scope);
 	updateProgress(80, 'Writing canvas');
-	await writeCanvasPlan(app, scope.outputCanvasPath, buildResult.nodes, buildResult.edges);
+
+	const existingFile = app.vault.getAbstractFileByPath(scope.outputCanvasPath);
+	let merged = false;
+	if ((options.mode ?? 'refresh') === 'refresh' && existingFile instanceof TFile) {
+		const existing = parseCanvasData(await app.vault.read(existingFile));
+		if (existing) {
+			const mergeResult = mergeCanvasPreservingLayout(existing, buildResult);
+			await app.vault.process(existingFile, () => JSON.stringify(mergeResult.merged, null, '\t'));
+			merged = true;
+		}
+	}
+	if (!merged) {
+		await writeCanvasPlan(app, scope.outputCanvasPath, buildResult.nodes, buildResult.edges);
+	}
+
 	if (options.writeBacklinks) {
 		updateProgress(90, 'Writing backlinks');
 		await writeCanvasBacklinks(app, buildResult.relatedFiles, scope.outputCanvasPath);
