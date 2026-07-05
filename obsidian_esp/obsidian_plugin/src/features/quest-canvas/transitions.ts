@@ -58,6 +58,7 @@ export function connectPendingPhaseEntryEdges(context: CanvasLayoutContext, pend
 			continue;
 		}
 
+		// Phase-entry edges are placement heuristics, not journal conditions.
 		addEdge(
 			context,
 			`${pendingEdge.phaseNodeId}:${pendingEdge.entryId}`,
@@ -65,6 +66,8 @@ export function connectPendingPhaseEntryEdges(context: CanvasLayoutContext, pend
 			'right',
 			pendingEdge.entryId,
 			'left',
+			undefined,
+			true,
 		);
 	}
 }
@@ -333,7 +336,7 @@ export function routeJournalRangeChoiceTransitions(context: CanvasLayoutContext,
 
 			item.edge.toNode = jumpNodeId;
 			item.edge.toSide = 'left';
-			addEdge(context, `${jumpNodeId}:${targetNodeId}`, jumpNodeId, 'right', targetNodeId, 'left');
+			addEdge(context, `${jumpNodeId}:${targetNodeId}`, jumpNodeId, 'right', targetNodeId, 'left', undefined, true);
 		}
 	}
 }
@@ -381,6 +384,7 @@ export function connectAddTopicTransitions(context: CanvasLayoutContext, records
 			transition.targetNodeId,
 			'left',
 			'AddTopic',
+			true,
 		);
 	}
 }
@@ -420,6 +424,8 @@ export function connectBodyTopicLinkTransitions(context: CanvasLayoutContext, re
 					'right',
 					targetNodeId,
 					'left',
+					undefined,
+					true,
 				);
 			}
 		}
@@ -496,6 +502,8 @@ export function connectAdjacentJournalPhaseTerminalTransitions(
 					'right',
 					entryNodeId,
 					'left',
+					undefined,
+					true,
 				);
 			}
 		}
@@ -608,6 +616,6 @@ export function connectScriptedMilestones(context: CanvasLayoutContext, phaseInd
 			continue;
 		}
 
-		addEdge(context, `${fromNode}:${toNode}:scripted`, fromNode, 'right', toNode, 'left');
+		addEdge(context, `${fromNode}:${toNode}:scripted`, fromNode, 'right', toNode, 'left', undefined, true);
 	}
 }

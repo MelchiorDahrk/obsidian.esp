@@ -290,6 +290,7 @@ export function addEdge(
 	toNode: string,
 	toSide: 'left' | 'right' | 'top' | 'bottom',
 	label?: string,
+	derived = false,
 ): void {
 	const edgeId = createEdgeId(seed);
 	if (context.edgeIds.has(edgeId) || fromNode === toNode) {
@@ -303,6 +304,7 @@ export function addEdge(
 		toNode,
 		toSide,
 		...(label ? { label } : {}),
+		...(derived ? { espCard: { role: 'derived' as const, rev: 1 } } : {}),
 	});
 	context.edgeIds.add(edgeId);
 }

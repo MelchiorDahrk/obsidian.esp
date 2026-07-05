@@ -129,7 +129,7 @@ export function layoutBranchFamily(
 		context.recordEntryNodeIds.set(record.id, gateId);
 
 		if (gateId !== dialogueId) {
-			addEdge(context, `${gateId}:${dialogueId}`, gateId, 'right', dialogueId, 'left');
+			addEdge(context, `${gateId}:${dialogueId}`, gateId, 'right', dialogueId, 'left', undefined, true);
 		}
 
 		if (localResultLines.length > 0) {
@@ -144,7 +144,7 @@ export function layoutBranchFamily(
 				containsJournalLine(localResultLines) ? JOURNAL_COLOR : RESULT_COLOR,
 				{ role: 'result', file: record.file.path },
 			);
-			addEdge(context, `${dialogueId}:${resultId}`, dialogueId, 'bottom', resultId, 'top');
+			addEdge(context, `${dialogueId}:${resultId}`, dialogueId, 'bottom', resultId, 'top', undefined, true);
 		}
 
 		for (const action of record.resultActions) {

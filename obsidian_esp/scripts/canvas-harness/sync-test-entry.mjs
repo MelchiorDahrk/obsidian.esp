@@ -5,8 +5,11 @@ import assert from 'node:assert/strict';
 import {
 	applySyncPlanToCanvas,
 	deriveQuestContext,
+	describeEdgeGesture,
+	diffCanvasEdgeGestures,
 	diffCanvasTextEdits,
 	editableCardText,
+	planEdgeGestures,
 	planSyncFromEdits,
 } from '../../obsidian_plugin/src/features/quest-canvas/sync-core.ts';
 
@@ -325,6 +328,145 @@ check('sync converges: echo produces no further edits and writes reach a fixed p
 	echoEdit2.nodes[2].text = `${plan.cardUpdates.get('g1')}  `;
 	const third = runSync(echoEdit, echoEdit2, notes);
 	assert.equal(third.plan.noteUpdates.size, 0, 'second application is byte-stable');
+});
+
+// --- functional edges (Phase 4) --------------------------------------------------
+function edgeGestureRun(previous, next, notes) {
+	const readNote = (path) => notes.get(path) ?? null;
+	const context = deriveQuestContext(next, readNote);
+	const edits = diffCanvasEdgeGestures(previous, next, context);
+	return { edits, planFor: (subset) => planEdgeGestures(subset, readNote, context, next) };
+}
+
+check('edge add: dialogue -> journal writes the Journal result line', () => {
+	const previous = makeCanvas();
+	const next = clone(previous);
+	next.edges.push({ id: 'e-adv', fromNode: 'd1', fromSide: 'right', toNode: 'j10', toSide: 'left' });
+	const notes = makeNotes();
+	const { edits, planFor } = edgeGestureRun(previous, next, notes);
+	assert.equal(edits.length, 1);
+	assert.deepEqual(edits[0].gesture, {
+		type: 'journal-advance', sourceFile: BRANCH_PATH, questId: 'TestQuest', index: 10,
+	});
+	const plan = planFor(edits);
+	const updated = plan.noteUpdates.get(BRANCH_PATH);
+	// Replaces the existing Journal line for the same quest, in place.
+	assert.ok(updated.includes('  Journal "TestQuest" 10'), updated);
+	assert.ok(!updated.includes('Journal "TestQuest" 20'));
+	// Result card echoes the change.
+	assert.ok(plan.cardUpdates.get('r1').includes('Journal [[10|TestQuest 10]]'));
+});
+
+check('edge remove: dialogue -> journal deletes the Journal result line', () => {
+	const previous = makeCanvas();
+	previous.edges.push({ id: 'e-adv', fromNode: 'd1', fromSide: 'right', toNode: 'j20', toSide: 'left' });
+	const next = clone(previous);
+	next.edges = [];
+	const notes = makeNotes();
+	const { edits, planFor } = edgeGestureRun(previous, next, notes);
+	assert.equal(edits.length, 1);
+	assert.equal(edits[0].kind, 'remove');
+	assert.equal(
+		describeEdgeGesture(edits[0]),
+		`${BRANCH_PATH}: remove result line 'Journal "TestQuest" 20'`,
+	);
+	const plan = planFor(edits);
+	const updated = plan.noteUpdates.get(BRANCH_PATH);
+	assert.ok(!updated.includes('Journal "TestQuest" 20'), updated);
+	assert.ok(updated.includes('  Choice "Yes." 1 "No." 2'), 'other lines untouched');
+});
+
+check('edge add: dialogue -> choice card ensures the Choice pair', () => {
+	const previous = makeCanvas();
+	// A second dialogue node that does not yet offer choice 1.
+	previous.nodes.push({
+		id: 'd2', type: 'file', file: INLINE_PATH, x: 0, y: 600, width: 440, height: 120, color: '3',
+		espCard: meta('dialogue', INLINE_PATH),
+	});
+	const next = clone(previous);
+	next.edges.push({ id: 'e-offer', fromNode: 'd2', fromSide: 'right', toNode: 'c1', toSide: 'left' });
+	const notes = makeNotes();
+	const { edits, planFor } = edgeGestureRun(previous, next, notes);
+	assert.equal(edits.length, 1);
+	assert.deepEqual(edits[0].gesture, {
+		type: 'offer-choice', sourceFile: INLINE_PATH, choiceValue: 1, prompt: 'Yes.',
+	});
+	const plan = planFor(edits);
+	const updated = plan.noteUpdates.get(INLINE_PATH);
+	assert.ok(updated.includes('Result: |'), 'inline scalar grows into a block');
+	assert.ok(updated.includes('  Choice "Yes." 1'), updated);
+});
+
+check('edge remove: dialogue -> choice card removes only that pair', () => {
+	const previous = makeCanvas();
+	previous.edges.push({ id: 'e-offer', fromNode: 'd1', fromSide: 'right', toNode: 'c1', toSide: 'left' });
+	const next = clone(previous);
+	next.edges = [];
+	const notes = makeNotes();
+	const { edits, planFor } = edgeGestureRun(previous, next, notes);
+	const plan = planFor(edits);
+	const updated = plan.noteUpdates.get(BRANCH_PATH);
+	assert.ok(updated.includes('Choice "No." 2'), 'sibling pair kept');
+	assert.ok(!updated.includes('"Yes." 1'), updated);
+});
+
+check('edge add/remove: choice card -> gate toggles the Choice filter', () => {
+	const previous = makeCanvas();
+	previous.nodes.push({
+		id: 'g2', type: 'text', text: 'Journal TestQuest = 10', x: 0, y: 600, width: 385, height: 60, color: '4',
+		espCard: meta('gate', INLINE_PATH),
+	});
+	const next = clone(previous);
+	next.edges.push({ id: 'e-cg', fromNode: 'c1', fromSide: 'right', toNode: 'g2', toSide: 'left' });
+	const notes = makeNotes();
+	const { edits, planFor } = edgeGestureRun(previous, next, notes);
+	assert.deepEqual(edits[0].gesture, { type: 'choice-gate', targetFile: INLINE_PATH, choiceValue: 1 });
+	const plan = planFor(edits);
+	const updated = plan.noteUpdates.get(INLINE_PATH);
+	assert.ok(updated.includes('Function1: Function'), updated);
+	assert.ok(updated.includes('Variable1: Choice = 1'), updated);
+	assert.equal(plan.cardUpdates.get('g2'), 'Disposition = 0\nChoice = 1\nJournal TestQuest = 10');
+
+	// Removing the edge takes the filter back out.
+	notes.set(INLINE_PATH, updated);
+	const reverted = edgeGestureRun(next, previous, notes);
+	assert.equal(reverted.edits[0].kind, 'remove');
+	const removePlan = reverted.planFor(reverted.edits);
+	const restored = removePlan.noteUpdates.get(INLINE_PATH);
+	assert.ok(!restored.includes('Choice = 1'), restored);
+	assert.ok(restored.includes('Variable0: TestQuest = 10'), 'journal filter kept');
+});
+
+check('edge add: journal -> gate adds the availability condition', () => {
+	const previous = makeCanvas();
+	const next = clone(previous);
+	next.edges.push({ id: 'e-avail', fromNode: 'j20', fromSide: 'right', toNode: 'g1', toSide: 'left' });
+	const notes = makeNotes();
+	const { edits, planFor } = edgeGestureRun(previous, next, notes);
+	assert.deepEqual(edits[0].gesture, {
+		type: 'availability-gate', targetFile: BRANCH_PATH, questId: 'TestQuest', index: 20,
+	});
+	const plan = planFor(edits);
+	const updated = plan.noteUpdates.get(BRANCH_PATH);
+	assert.ok(updated.includes('Variable2: TestQuest = 20'), updated);
+});
+
+check('ambiguous and derived edges are ignored', () => {
+	const previous = makeCanvas();
+	const next = clone(previous);
+	next.edges.push(
+		// derived marker
+		{ id: 'e-derived', fromNode: 'd1', fromSide: 'right', toNode: 'j10', toSide: 'left', espCard: { role: 'derived', rev: 1 } },
+		// user note endpoint
+		{ id: 'e-user', fromNode: 'user-note', fromSide: 'right', toNode: 'g1', toSide: 'left' },
+		// non-whitelisted role pair (gate -> journal)
+		{ id: 'e-odd', fromNode: 'g1', fromSide: 'right', toNode: 'j10', toSide: 'left' },
+		// journal -> dialogue is not a whitelisted gesture either
+		{ id: 'e-jd', fromNode: 'j10', fromSide: 'right', toNode: 'd1', toSide: 'left' },
+	);
+	const notes = makeNotes();
+	const { edits } = edgeGestureRun(previous, next, notes);
+	assert.deepEqual(edits, []);
 });
 
 console.log(`sync-test: ${testCount} checks passed`);

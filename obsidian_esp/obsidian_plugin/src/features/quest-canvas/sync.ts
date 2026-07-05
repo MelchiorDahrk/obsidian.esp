@@ -1,13 +1,18 @@
-import { Notice, Plugin, TFile } from 'obsidian';
+import { type App, Modal, Notice, Plugin, Setting, TFile } from 'obsidian';
 import { getCardMeta } from './card-meta';
 import {
 	applySyncPlanToCanvas,
 	type CanvasData,
 	deriveQuestContext,
+	describeEdgeGesture,
+	diffCanvasEdgeGestures,
 	diffCanvasTextEdits,
+	type EdgeGestureEdit,
 	hashCanvasContent,
 	parseCanvasData,
+	planEdgeGestures,
 	planSyncFromEdits,
+	type SyncPlan,
 } from './sync-core';
 
 const SYNC_DEBOUNCE_MS = 500;
@@ -127,18 +132,29 @@ export class QuestCanvasSyncEngine {
 			return;
 		}
 
+		const noteContents = await this.readReferencedNotes(parsed);
+		const readNote = (path: string): string | null => noteContents.get(path) ?? null;
+		const context = deriveQuestContext(parsed, readNote);
+
 		const edits = diffCanvasTextEdits(snapshot, parsed);
-		if (edits.length === 0) {
+		const edgeEdits = diffCanvasEdgeGestures(snapshot, parsed, context);
+		const additions = edgeEdits.filter((edit) => edit.kind === 'add');
+		const removals = edgeEdits.filter((edit) => edit.kind === 'remove');
+		if (edits.length === 0 && additions.length === 0 && removals.length === 0) {
 			this.snapshots.set(file.path, parsed);
 			return;
 		}
 
 		this.applying.add(file.path);
 		try {
-			const noteContents = await this.readReferencedNotes(parsed);
-			const readNote = (path: string): string | null => noteContents.get(path) ?? null;
-			const context = deriveQuestContext(parsed, readNote);
-			const plan = planSyncFromEdits(edits, readNote, context);
+			const textPlan = planSyncFromEdits(edits, readNote, context);
+			const readAfterText = (path: string): string | null => textPlan.noteUpdates.get(path) ?? readNote(path);
+			const edgePlan = planEdgeGestures(additions, readAfterText, context, parsed);
+			const plan: SyncPlan = {
+				noteUpdates: new Map([...textPlan.noteUpdates, ...edgePlan.noteUpdates]),
+				cardUpdates: new Map([...textPlan.cardUpdates, ...edgePlan.cardUpdates]),
+				failures: [...textPlan.failures, ...edgePlan.failures],
+			};
 
 			for (const [path, nextContent] of plan.noteUpdates) {
 				const noteFile = app.vault.getAbstractFileByPath(path);
@@ -162,8 +178,57 @@ export class QuestCanvasSyncEngine {
 			this.applying.delete(file.path);
 		}
 
+		// Deleting an edge deletes note data, so it is gated behind an
+		// explicit confirmation naming the exact frontmatter change. On
+		// cancel the data stays; a refresh restores the edge.
+		if (removals.length > 0) {
+			this.confirmEdgeRemovals(file, removals);
+		}
+
 		if (this.rerunRequested.delete(file.path)) {
 			this.scheduleSync(file);
+		}
+	}
+
+	private confirmEdgeRemovals(file: TFile, removals: EdgeGestureEdit[]): void {
+		const descriptions = removals.map((edit) => describeEdgeGesture(edit));
+		new ConfirmEdgeRemovalModal(this.plugin.app, descriptions, () => {
+			void this.applyEdgeRemovals(file, removals);
+		}).open();
+	}
+
+	private async applyEdgeRemovals(file: TFile, removals: EdgeGestureEdit[]): Promise<void> {
+		const { app } = this.plugin;
+		const content = await app.vault.read(file);
+		const parsed = parseCanvasData(content);
+		if (!parsed) {
+			return;
+		}
+
+		this.applying.add(file.path);
+		try {
+			const noteContents = await this.readReferencedNotes(parsed);
+			const readNote = (path: string): string | null => noteContents.get(path) ?? null;
+			const context = deriveQuestContext(parsed, readNote);
+			const plan = planEdgeGestures(removals, readNote, context, parsed);
+
+			for (const [path, nextContent] of plan.noteUpdates) {
+				const noteFile = app.vault.getAbstractFileByPath(path);
+				if (noteFile instanceof TFile) {
+					await app.vault.process(noteFile, () => nextContent);
+				}
+			}
+			for (const failure of plan.failures) {
+				new Notice(`Quest canvas: ${failure.message}`, 8000);
+			}
+			if (applySyncPlanToCanvas(parsed, plan)) {
+				const nextJson = JSON.stringify(parsed, null, '\t');
+				this.lastWrittenHash.set(file.path, hashCanvasContent(nextJson));
+				await app.vault.process(file, () => nextJson);
+			}
+			this.snapshots.set(file.path, parsed);
+		} finally {
+			this.applying.delete(file.path);
 		}
 	}
 
@@ -185,5 +250,43 @@ export class QuestCanvasSyncEngine {
 			}
 		}
 		return contents;
+	}
+}
+
+/** Confirmation dialog naming the exact frontmatter changes an edge deletion performs. */
+class ConfirmEdgeRemovalModal extends Modal {
+	constructor(
+		app: App,
+		private readonly descriptions: string[],
+		private readonly onConfirm: () => void,
+	) {
+		super(app);
+	}
+
+	onOpen(): void {
+		this.titleEl.setText('Remove dialogue data?');
+		this.contentEl.createEl('p', {
+			text: 'Deleting these edges removes the following from the notes:',
+		});
+		const list = this.contentEl.createEl('ul');
+		for (const description of this.descriptions) {
+			list.createEl('li', { text: description });
+		}
+		new Setting(this.contentEl)
+			.addButton((button) => {
+				button.setButtonText('Cancel').onClick(() => {
+					this.close();
+				});
+			})
+			.addButton((button) => {
+				button.setButtonText('Remove').setWarning().onClick(() => {
+					this.close();
+					this.onConfirm();
+				});
+			});
+	}
+
+	onClose(): void {
+		this.contentEl.empty();
 	}
 }

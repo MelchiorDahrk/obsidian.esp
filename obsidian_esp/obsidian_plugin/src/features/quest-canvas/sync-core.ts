@@ -1,7 +1,9 @@
 import { getCardMeta } from './card-meta';
 import {
+	type GateLine,
 	parseConditions,
 	parseGateCardText,
+	parseGateLine,
 	parseResultCardText,
 	parseResultActions,
 	renderConditionBlock,
@@ -429,4 +431,322 @@ export function renameChoiceInResult(content: string, choiceValue: number, promp
 
 function frontmatterSection(content: string): string {
 	return content.match(/^---\n[\s\S]*?\n---(?:\n|$)/)?.[0] ?? '';
+}
+
+// ---------------------------------------------------------------------------
+// Functional edges (editing plan §7). Only the whitelisted, unambiguous
+// gestures below have semantic meaning; every other edge change is visual
+// and regeneration restores it. Edges marked espCard.role 'derived' by the
+// generator are never interpreted.
+// ---------------------------------------------------------------------------
+
+export type EdgeGesture =
+	| { type: 'journal-advance'; sourceFile: string; questId: string; index: number }
+	| { type: 'offer-choice'; sourceFile: string; choiceValue: number; prompt: string }
+	| { type: 'choice-gate'; targetFile: string; choiceValue: number }
+	| { type: 'availability-gate'; targetFile: string; questId: string; index: number };
+
+export interface EdgeGestureEdit {
+	kind: 'add' | 'remove';
+	edgeId: string;
+	gesture: EdgeGesture;
+}
+
+export function describeEdgeGesture(edit: EdgeGestureEdit): string {
+	const { gesture } = edit;
+	const verb = edit.kind === 'add' ? 'add' : 'remove';
+	switch (gesture.type) {
+		case 'journal-advance':
+			return `${gesture.sourceFile}: ${verb} result line 'Journal "${gesture.questId}" ${gesture.index}'`;
+		case 'offer-choice':
+			return `${gesture.sourceFile}: ${verb} result line 'Choice "${gesture.prompt}" ${gesture.choiceValue}'`;
+		case 'choice-gate':
+			return `${gesture.targetFile}: ${verb} filter 'Choice = ${gesture.choiceValue}'`;
+		case 'availability-gate':
+			return `${gesture.targetFile}: ${verb} filter 'Journal ${gesture.questId} = ${gesture.index}'`;
+	}
+}
+
+/**
+ * Interprets added/removed edges between provenance-tracked nodes as the
+ * whitelisted gestures. Ambiguous edges (unknown endpoints, derived edges,
+ * user wires) are ignored.
+ */
+export function diffCanvasEdgeGestures(
+	previous: CanvasData,
+	next: CanvasData,
+	context: QuestSyncContext,
+): EdgeGestureEdit[] {
+	const previousEdges = new Map(previous.edges.map((edge) => [edge.id, edge]));
+	const nextEdges = new Map(next.edges.map((edge) => [edge.id, edge]));
+	const edits: EdgeGestureEdit[] = [];
+
+	for (const edge of next.edges) {
+		if (!previousEdges.has(edge.id)) {
+			const gesture = classifyEdgeGesture(edge, next, context);
+			if (gesture) {
+				edits.push({ kind: 'add', edgeId: edge.id, gesture });
+			}
+		}
+	}
+	for (const edge of previous.edges) {
+		if (!nextEdges.has(edge.id)) {
+			const gesture = classifyEdgeGesture(edge, previous, context);
+			if (gesture) {
+				edits.push({ kind: 'remove', edgeId: edge.id, gesture });
+			}
+		}
+	}
+
+	return edits;
+}
+
+function classifyEdgeGesture(
+	edge: CanvasEdge,
+	canvas: CanvasData,
+	context: QuestSyncContext,
+): EdgeGesture | null {
+	if (edge.espCard?.role === 'derived') {
+		return null;
+	}
+
+	const nodesById = new Map(canvas.nodes.map((node) => [node.id, node]));
+	const fromNode = nodesById.get(edge.fromNode);
+	const toNode = nodesById.get(edge.toNode);
+	const fromMeta = fromNode ? getCardMeta(fromNode) : null;
+	const toMeta = toNode ? getCardMeta(toNode) : null;
+	if (!fromNode || !toNode || !fromMeta || !toMeta) {
+		return null;
+	}
+
+	if (fromMeta.role === 'dialogue' && toMeta.role === 'journal' && fromMeta.file && toMeta.file) {
+		const milestone = context.milestones.find((candidate) => candidate.file.path === toMeta.file);
+		if (!milestone) {
+			return null;
+		}
+		return { type: 'journal-advance', sourceFile: fromMeta.file, questId: milestone.questId, index: milestone.index };
+	}
+
+	if (fromMeta.role === 'dialogue' && toMeta.role === 'choice' && fromMeta.file && toMeta.choiceValue !== undefined) {
+		return {
+			type: 'offer-choice',
+			sourceFile: fromMeta.file,
+			choiceValue: toMeta.choiceValue,
+			prompt: editableCardText(toNode.text ?? '').trim(),
+		};
+	}
+
+	if (
+		fromMeta.role === 'choice'
+		&& fromMeta.choiceValue !== undefined
+		&& (toMeta.role === 'gate' || toMeta.role === 'dialogue')
+		&& toMeta.file
+	) {
+		return { type: 'choice-gate', targetFile: toMeta.file, choiceValue: fromMeta.choiceValue };
+	}
+
+	if (fromMeta.role === 'journal' && toMeta.role === 'gate' && fromMeta.file && toMeta.file) {
+		const milestone = context.milestones.find((candidate) => candidate.file.path === fromMeta.file);
+		if (!milestone) {
+			return null;
+		}
+		return { type: 'availability-gate', targetFile: toMeta.file, questId: milestone.questId, index: milestone.index };
+	}
+
+	return null;
+}
+
+/** Parses a note's full gate back into grammar lines (speaker + filters). */
+export function gateLinesFromNote(content: string, questIds: string[]): GateLine[] {
+	const frontmatter = parseStructuredFrontmatter(frontmatterSection(content));
+	const lines: GateLine[] = [];
+	for (const condition of parseConditions(frontmatter, questIds)) {
+		const parsed = parseGateLine(condition.displayText);
+		if (!('error' in parsed)) {
+			lines.push(parsed);
+		}
+	}
+	return lines;
+}
+
+/** Inserts or replaces the `Journal <questId> …` line in a Result block. */
+function upsertJournalResultLine(content: string, questId: string, index: number): string {
+	const lines = resultLinesOfContent(content);
+	const pattern = journalLinePattern(questId);
+	const newLine = `Journal "${questId}" ${index}`;
+	const existing = lines.findIndex((line) => pattern.test(line));
+	if (existing === -1) {
+		lines.push(newLine);
+	} else {
+		lines[existing] = newLine;
+	}
+	return setResultLines(content, lines);
+}
+
+function removeJournalResultLine(content: string, questId: string, index: number): string {
+	const pattern = new RegExp(`^Journal\\s+"?${escapeRegExp(questId)}"?\\s+${index}$`, 'i');
+	const lines = resultLinesOfContent(content).filter((line) => !pattern.test(line));
+	return setResultLines(content, lines);
+}
+
+function upsertChoiceResultPair(content: string, prompt: string, choiceValue: number): string {
+	const lines = resultLinesOfContent(content);
+	const hasPair = lines.some((line) => /^Choice\s/i.test(line) && choicePairValues(line).includes(choiceValue));
+	if (hasPair) {
+		return content;
+	}
+	lines.push(`Choice "${prompt}" ${choiceValue}`);
+	return setResultLines(content, lines);
+}
+
+function removeChoiceResultPair(content: string, choiceValue: number): string {
+	const lines: string[] = [];
+	for (const line of resultLinesOfContent(content)) {
+		if (!/^Choice\s/i.test(line)) {
+			lines.push(line);
+			continue;
+		}
+		const stripped = line
+			.replace(/"([^"]*)"\s+(-?\d+)\s*/g, (pair: string, _text: string, value: string) => (
+				Number.parseInt(value, 10) === choiceValue ? '' : pair.endsWith(' ') ? pair : `${pair} `
+			))
+			.trim();
+		if (!/^Choice$/i.test(stripped)) {
+			lines.push(stripped);
+		}
+	}
+	return setResultLines(content, lines);
+}
+
+function resultLinesOfContent(content: string): string[] {
+	const frontmatter = parseStructuredFrontmatter(frontmatterSection(content));
+	return (getStringValue(frontmatter, 'Result') ?? '')
+		.split('\n')
+		.map((line) => line.trim())
+		.filter((line) => line.length > 0);
+}
+
+function journalLinePattern(questId: string): RegExp {
+	return new RegExp(`^Journal\\s+"?${escapeRegExp(questId)}"?\\s+-?\\d+$`, 'i');
+}
+
+function choicePairValues(line: string): number[] {
+	const values: number[] = [];
+	const pattern = /"[^"]*"\s+(-?\d+)/g;
+	let match = pattern.exec(line);
+	while (match) {
+		values.push(Number.parseInt(match[1] ?? '0', 10));
+		match = pattern.exec(line);
+	}
+	return values;
+}
+
+function escapeRegExp(text: string): string {
+	return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Translates edge gestures into note edits plus echo card updates. The
+ * caller decides which gestures reach this point (removals go through a
+ * confirmation modal first).
+ */
+export function planEdgeGestures(
+	edits: EdgeGestureEdit[],
+	readNote: (path: string) => string | null,
+	context: QuestSyncContext,
+	canvas: CanvasData,
+): SyncPlan {
+	const workingNotes = new Map<string, string>();
+	const failures: SyncFailure[] = [];
+	const readWorking = (path: string): string | null => workingNotes.get(path) ?? readNote(path);
+	const touchedFiles = new Set<string>();
+
+	for (const edit of edits) {
+		const { gesture } = edit;
+		const path = 'sourceFile' in gesture ? gesture.sourceFile : gesture.targetFile;
+		const content = readWorking(path);
+		if (content === null) {
+			failures.push({ nodeId: edit.edgeId, message: `Note not found: ${path}`, userText: '' });
+			continue;
+		}
+
+		let next = content;
+		switch (gesture.type) {
+			case 'journal-advance':
+				next = edit.kind === 'add'
+					? upsertJournalResultLine(content, gesture.questId, gesture.index)
+					: removeJournalResultLine(content, gesture.questId, gesture.index);
+				break;
+			case 'offer-choice':
+				if (edit.kind === 'add' && gesture.prompt.length === 0) {
+					failures.push({ nodeId: edit.edgeId, message: 'Choice card has no prompt text.', userText: '' });
+					continue;
+				}
+				next = edit.kind === 'add'
+					? upsertChoiceResultPair(content, gesture.prompt, gesture.choiceValue)
+					: removeChoiceResultPair(content, gesture.choiceValue);
+				break;
+			case 'choice-gate': {
+				const lines = gateLinesFromNote(content, context.questIds);
+				const has = lines.some((line) => line.kind === 'choice' && line.choiceValue === gesture.choiceValue);
+				if (edit.kind === 'add' && !has) {
+					lines.push({ kind: 'choice', choiceValue: gesture.choiceValue });
+					next = applyGateLines(content, lines);
+				} else if (edit.kind === 'remove' && has) {
+					next = applyGateLines(
+						content,
+						lines.filter((line) => !(line.kind === 'choice' && line.choiceValue === gesture.choiceValue)),
+					);
+				}
+				break;
+			}
+			case 'availability-gate': {
+				const lines = gateLinesFromNote(content, context.questIds);
+				const matches = (line: GateLine): boolean => (
+					line.kind === 'filter'
+					&& line.filterKind === 'Journal'
+					&& new RegExp(`^${escapeRegExp(gesture.questId)}\\s*(=|==)\\s*${gesture.index}$`).test(line.variable.trim())
+				);
+				const has = lines.some(matches);
+				if (edit.kind === 'add' && !has) {
+					lines.push({ kind: 'filter', filterKind: 'Journal', variable: `${gesture.questId} = ${gesture.index}` });
+					next = applyGateLines(content, lines);
+				} else if (edit.kind === 'remove' && has) {
+					next = applyGateLines(content, lines.filter((line) => !matches(line)));
+				}
+				break;
+			}
+		}
+
+		if (next !== content) {
+			workingNotes.set(path, next);
+			touchedFiles.add(path);
+		}
+	}
+
+	const noteUpdates = new Map<string, string>();
+	for (const [path, content] of workingNotes) {
+		if (content !== readNote(path)) {
+			noteUpdates.set(path, content);
+		}
+	}
+
+	// Echo: re-render gate and result cards of every touched note.
+	const cardUpdates = new Map<string, string>();
+	for (const node of canvas.nodes) {
+		const meta = getCardMeta(node);
+		if (!meta?.file || !touchedFiles.has(meta.file) || (meta.role !== 'gate' && meta.role !== 'result')) {
+			continue;
+		}
+		const content = workingNotes.get(meta.file) ?? readNote(meta.file);
+		if (content === null) {
+			continue;
+		}
+		const rendered = renderCardFromNote(meta, content, context);
+		if (rendered !== null) {
+			cardUpdates.set(node.id, rendered);
+		}
+	}
+
+	return { noteUpdates, cardUpdates, failures };
 }
