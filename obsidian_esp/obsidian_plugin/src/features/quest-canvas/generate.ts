@@ -124,7 +124,10 @@ export async function generateAllQuestCanvasesForJournalFolder(
 		let skippedCount = 0;
 
 		for (let index = 0; index < questFolders.length; index += 1) {
-			const questFolder = questFolders[index] as TFolder;
+			const questFolder = questFolders[index];
+			if (!questFolder) {
+				continue;
+			}
 			const prefix = `${index + 1}/${questFolders.length}`;
 			try {
 				progress.update(batchProgress(index, questFolders.length, 5), `${prefix}: Checking ${questFolder.name}`);
@@ -247,7 +250,7 @@ export async function buildQuestCanvas(app: App, scope: QuestScope): Promise<Can
 	const phaseAnchoredRecords = resolveChoiceDerivedPhaseAnchors(orderedRelevantRecords);
 	const canvasRecords = stripUnrelatedAddTopicChoices(phaseAnchoredRecords);
 	const families = groupBranchFamilies(canvasRecords, scope.questIds);
-	const warnings: string[] = [];
+	const warnings = collectMissingChoiceTargetWarnings(canvasRecords);
 	const canvasContext = createCanvasLayoutContext();
 	for (const document of scope.journalDocuments) {
 		canvasContext.fileBodyTextByPath.set(document.file.path, document.body);
@@ -375,4 +378,36 @@ export async function buildQuestCanvas(app: App, scope: QuestScope): Promise<Can
 		fileNodeTargets: [...fileNodeTargets.values()].sort((left, right) => left.file.path.localeCompare(right.file.path)),
 		warnings,
 	};
+}
+
+/**
+ * Flags `Choice "…" N` results whose value no record on the same topic
+ * filters on, since that branch can never be reached in game.
+ */
+function collectMissingChoiceTargetWarnings(records: DialogueRecord[]): string[] {
+	const warnings: string[] = [];
+	const recordsByTopic = new Map<string, DialogueRecord[]>();
+	for (const record of records) {
+		const topicRecords = recordsByTopic.get(record.topic) ?? [];
+		topicRecords.push(record);
+		recordsByTopic.set(record.topic, topicRecords);
+	}
+
+	for (const record of records) {
+		if (record.suppressChoiceTransitions) {
+			continue;
+		}
+
+		const topicRecords = recordsByTopic.get(record.topic) ?? [];
+		for (const choiceValue of uniqueNumbers(record.choiceTargets)) {
+			const hasTarget = topicRecords.some(
+				(candidate) => candidate.id !== record.id && candidate.choiceValues.includes(choiceValue),
+			);
+			if (!hasTarget) {
+				warnings.push(`${record.file.basename}: Choice ${choiceValue} has no matching branch.`);
+			}
+		}
+	}
+
+	return warnings;
 }

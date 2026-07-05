@@ -70,7 +70,7 @@ export function parseConditions(frontmatter: Record<string, FrontmatterValue>, q
 			const itemCondition = parseNumericVariableCondition(rawVariable);
 			conditions.push({
 				kind: 'item',
-				displayText: `Item - ${rawVariable}`,
+				displayText: `Item ${rawVariable}`,
 				questId: itemCondition?.id,
 				operator: itemCondition?.operator,
 				value: itemCondition?.value,
@@ -78,7 +78,7 @@ export function parseConditions(frontmatter: Record<string, FrontmatterValue>, q
 			continue;
 		}
 
-		const prefix = rawFunction && rawFunction !== 'Function' ? `${rawFunction} - ` : '';
+		const prefix = rawFunction && rawFunction !== 'Function' ? `${rawFunction} ` : '';
 		const numericCondition = parseNumericVariableCondition(rawVariable);
 		if (numericCondition) {
 			conditions.push({
@@ -111,7 +111,7 @@ export function parseJournalCondition(rawFunction: string, rawVariable: string, 
 	if (!journalMatch) {
 		return {
 			kind: 'journal',
-			displayText: `Journal - ${rawVariable}`,
+			displayText: `Journal ${rawVariable}`,
 			questId: matchingQuestId,
 		};
 	}
@@ -122,7 +122,7 @@ export function parseJournalCondition(rawFunction: string, rawVariable: string, 
 
 	return {
 		kind: 'journal',
-		displayText: `Journal - ${rawVariable}`,
+		displayText: `Journal ${rawVariable}`,
 		questId: journalQuestId,
 		operator: journalOperator,
 		value: Number.parseInt(journalValue, 10),
@@ -313,6 +313,279 @@ export function renderResultAction(action: ResultAction, allMilestones: JournalM
 	const labelQuestId = action.targetQuestId ?? targetMilestone.questId;
 	const label = `${labelQuestId} ${action.targetJournalIndex}`;
 	return `Journal [[${toWikilinkTarget(targetMilestone.file.path, targetMilestone.canvasSubpath)}|${label}]]`;
+}
+
+// ---------------------------------------------------------------------------
+// Bidirectional card grammar.
+//
+// Gate cards display one condition per line using exactly the frontmatter
+// filter grammar from md_dialogue_spec.md §6, so edited card text can be
+// parsed back into note frontmatter:
+//
+//   <SpeakerField> = <value>          Class = Wise Woman
+//   Choice = <n>                      Choice = 2
+//   <FilterKind> <id> <op> <value>    Journal my_quest >= 10
+//   <variable expression>             PCLevel > 5   (Function-kind filter)
+//
+// Result cards display one MW script line per line; Journal lines may carry a
+// wikilink render but always parse back (and write) as raw script lines.
+// ---------------------------------------------------------------------------
+
+export const SPEAKER_FIELDS = [
+	'Disposition',
+	'Sex',
+	'Race',
+	'Class',
+	'Faction',
+	'Rank',
+	'PC Faction',
+	'PC Rank',
+	'Cell',
+	'ID',
+] as const;
+
+export type SpeakerField = (typeof SPEAKER_FIELDS)[number];
+
+export const FILTER_KINDS = [
+	'Function',
+	'Global',
+	'Local',
+	'Journal',
+	'Item',
+	'Dead',
+	'NotId',
+	'NotFaction',
+	'NotClass',
+	'NotRace',
+	'NotCell',
+	'NotLocal',
+] as const;
+
+export type FilterKind = (typeof FILTER_KINDS)[number];
+
+export type GateLine =
+	| { kind: 'speaker'; field: SpeakerField; value: string }
+	| { kind: 'choice'; choiceValue: number }
+	| { kind: 'filter'; filterKind: FilterKind; variable: string };
+
+export type GateCardParseResult =
+	| { ok: true; lines: GateLine[] }
+	| { ok: false; error: string };
+
+const SPEAKER_LINE_PATTERN = new RegExp(
+	`^(${SPEAKER_FIELDS.map((field) => field.replace(' ', '\\s+')).join('|')})\\s*=\\s*(.+)$`,
+);
+const CHOICE_LINE_PATTERN = /^Choice\s*=\s*(-?\d+)$/i;
+const FILTER_LINE_PATTERN = new RegExp(
+	`^(${FILTER_KINDS.filter((kind) => kind !== 'Function').join('|')})\\s+(\\S.*)$`,
+);
+
+export function parseGateLine(line: string): GateLine | { error: string } {
+	const trimmed = line.trim();
+	if (trimmed.length === 0) {
+		return { error: 'Empty condition line.' };
+	}
+
+	const speakerMatch = trimmed.match(SPEAKER_LINE_PATTERN);
+	if (speakerMatch) {
+		const field = SPEAKER_FIELDS.find(
+			(candidate) => candidate.replace(/\s+/g, ' ') === (speakerMatch[1] ?? '').replace(/\s+/g, ' '),
+		);
+		const value = (speakerMatch[2] ?? '').trim();
+		if (field && value.length > 0) {
+			return { kind: 'speaker', field, value };
+		}
+	}
+
+	const choiceMatch = trimmed.match(CHOICE_LINE_PATTERN);
+	if (choiceMatch) {
+		return { kind: 'choice', choiceValue: Number.parseInt(choiceMatch[1] ?? '0', 10) };
+	}
+
+	const filterMatch = trimmed.match(FILTER_LINE_PATTERN);
+	if (filterMatch) {
+		const filterKind = FILTER_KINDS.find((candidate) => candidate === filterMatch[1]);
+		const variable = (filterMatch[2] ?? '').trim();
+		if (filterKind && variable.length > 0) {
+			return { kind: 'filter', filterKind, variable };
+		}
+	}
+
+	if (FILTER_KINDS.some((kind) => kind.toLowerCase() === trimmed.toLowerCase())) {
+		return { error: `Filter "${trimmed}" is missing its condition (expected "${trimmed} <id> <op> <value>").` };
+	}
+
+	// Anything else is a Function-kind filter whose variable is the whole line
+	// (e.g. "PCLevel > 5" compiles as Function0: Function / Variable0: PCLevel > 5).
+	return { kind: 'filter', filterKind: 'Function', variable: trimmed };
+}
+
+export function parseGateCardText(text: string): GateCardParseResult {
+	const lines: GateLine[] = [];
+	for (const rawLine of text.split('\n')) {
+		if (rawLine.trim().length === 0) {
+			continue;
+		}
+
+		const parsed = parseGateLine(rawLine);
+		if ('error' in parsed) {
+			return { ok: false, error: parsed.error };
+		}
+		lines.push(parsed);
+	}
+	return { ok: true, lines };
+}
+
+export function renderGateLine(line: GateLine): string {
+	switch (line.kind) {
+		case 'speaker':
+			return `${line.field} = ${line.value}`;
+		case 'choice':
+			return `Choice = ${line.choiceValue}`;
+		case 'filter':
+			return line.filterKind === 'Function'
+				? normalizeVariableExpression(line.variable)
+				: `${line.filterKind} ${normalizeVariableExpression(line.variable)}`;
+	}
+}
+
+/**
+ * Canonicalizes the spacing of a `<id> <op> <value>` variable expression.
+ * Ids may contain spaces (e.g. `kashtes ilabael > 0`), so the id is matched
+ * lazily up to the operator. Non-matching expressions pass through trimmed.
+ */
+export function normalizeVariableExpression(variable: string): string {
+	const match = variable.trim().match(
+		new RegExp(`^(.*?)\\s*${NUMERIC_OPERATOR_PATTERN}\\s*(-?\\d+(?:\\.\\d+)?)$`),
+	);
+	if (!match) {
+		return variable.trim();
+	}
+
+	const id = (match[1] ?? '').trim();
+	if (id.length === 0) {
+		return variable.trim();
+	}
+	return `${id} ${match[2]} ${match[3]}`;
+}
+
+/**
+ * Maps a gate line onto the frontmatter it round-trips with: either a
+ * top-level speaker key or a `Function<n>`/`Variable<n>` slot pair.
+ */
+export function gateLineToFrontmatter(
+	line: GateLine,
+): { speakerField: SpeakerField; value: string } | { functionValue: FilterKind; variableValue: string } {
+	switch (line.kind) {
+		case 'speaker':
+			return { speakerField: line.field, value: line.value };
+		case 'choice':
+			return { functionValue: 'Function', variableValue: `Choice = ${line.choiceValue}` };
+		case 'filter':
+			return { functionValue: line.filterKind, variableValue: normalizeVariableExpression(line.variable) };
+	}
+}
+
+/** Inverse of {@link gateLineToFrontmatter} for filter slots. */
+export function filterSlotToGateLine(functionValue: string, variableValue: string): GateLine {
+	const trimmedFunction = functionValue.trim();
+	const trimmedVariable = variableValue.trim();
+	if (trimmedFunction === 'Function') {
+		const choiceMatch = trimmedVariable.match(CHOICE_LINE_PATTERN);
+		if (choiceMatch) {
+			return { kind: 'choice', choiceValue: Number.parseInt(choiceMatch[1] ?? '0', 10) };
+		}
+		return { kind: 'filter', filterKind: 'Function', variable: trimmedVariable };
+	}
+
+	const filterKind = FILTER_KINDS.find((candidate) => candidate === trimmedFunction);
+	if (filterKind) {
+		return { kind: 'filter', filterKind, variable: trimmedVariable };
+	}
+
+	// Unknown filter kinds are preserved as a Function-style raw expression so
+	// nothing is silently dropped; the writer never re-emits them from here.
+	return { kind: 'filter', filterKind: 'Function', variable: `${trimmedFunction} ${trimmedVariable}`.trim() };
+}
+
+export type ResultLine =
+	| { kind: 'journal'; questId: string; index: number }
+	| { kind: 'add-topic'; topic: string }
+	| { kind: 'choice'; text: string; choiceValue: number }
+	| { kind: 'script'; text: string };
+
+const JOURNAL_WIKILINK_LINE_PATTERN = /^Journal\s+\[\[(?:[^\]|]*\|)?([^\]|]+?)\s+(-?\d+)\]\]$/i;
+const JOURNAL_RAW_LINE_PATTERN = /^Journal\s+"?([^"\s]+)"?\s+(-?\d+)$/i;
+const CHOICE_RESULT_LINE_PATTERN = /^Choice\s+"([^"]+)"\s+(-?\d+)$/i;
+
+/**
+ * Parses one result-card line. Journal lines are accepted in both the
+ * wikilink render (`Journal [[Note|Quest 20]]`) and the raw script form
+ * (`Journal Quest 20` / `Journal "Quest" 20`). Unrecognized lines are
+ * preserved verbatim as script lines.
+ */
+export function parseResultCardLine(line: string): ResultLine {
+	const trimmed = line.trim();
+
+	const wikilinkMatch = trimmed.match(JOURNAL_WIKILINK_LINE_PATTERN);
+	if (wikilinkMatch) {
+		return {
+			kind: 'journal',
+			questId: wikilinkMatch[1] ?? '',
+			index: Number.parseInt(wikilinkMatch[2] ?? '0', 10),
+		};
+	}
+
+	const rawJournalMatch = trimmed.match(JOURNAL_RAW_LINE_PATTERN);
+	if (rawJournalMatch) {
+		return {
+			kind: 'journal',
+			questId: rawJournalMatch[1] ?? '',
+			index: Number.parseInt(rawJournalMatch[2] ?? '0', 10),
+		};
+	}
+
+	const choiceMatch = trimmed.match(CHOICE_RESULT_LINE_PATTERN);
+	if (choiceMatch) {
+		return {
+			kind: 'choice',
+			text: choiceMatch[1] ?? '',
+			choiceValue: Number.parseInt(choiceMatch[2] ?? '0', 10),
+		};
+	}
+
+	const addTopicTarget = parseAddTopicTarget(trimmed);
+	if (addTopicTarget) {
+		return { kind: 'add-topic', topic: addTopicTarget };
+	}
+
+	return { kind: 'script', text: trimmed };
+}
+
+export function parseResultCardText(text: string): ResultLine[] {
+	return text
+		.split('\n')
+		.map((line) => line.trim())
+		.filter((line) => line.length > 0)
+		.map((line) => parseResultCardLine(line));
+}
+
+/**
+ * Renders a result line in the raw MW script form written into `Result:`
+ * blocks. Quest ids are quoted to match exporter output (ids may contain
+ * characters MW script would otherwise misparse).
+ */
+export function renderResultNoteLine(line: ResultLine): string {
+	switch (line.kind) {
+		case 'journal':
+			return `Journal "${line.questId}" ${line.index}`;
+		case 'add-topic':
+			return `AddTopic "${line.topic}"`;
+		case 'choice':
+			return `Choice "${line.text}" ${line.choiceValue}`;
+		case 'script':
+			return line.text;
+	}
 }
 
 export function resolveJournalResultMilestone(
