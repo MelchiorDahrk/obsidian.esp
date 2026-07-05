@@ -219,7 +219,7 @@ export function layoutBranchFamily(
 
 /**
  * Choice cards show only the prompt string; the choice value lives in
- * espCard.choiceValue (§2 of the editing plan).
+ * espCard.choiceValue (canvas_editing_internals.md, "Card grammar").
  */
 function choicePromptText(action: ResultAction): string {
 	return action.choiceText ?? action.displayText;

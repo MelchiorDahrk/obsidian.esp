@@ -47,7 +47,8 @@ export const QUEST_INSPECTOR_VIEW_TYPE = 'esp-quest-inspector';
 // The canvas workspace events and node objects below exist at runtime but
 // are absent from obsidian.d.ts; type them locally at the call site (a
 // module augmentation of Workspace.on would perturb overload resolution for
-// every other event) and access every member defensively (editing plan §8).
+// every other event) and access every member defensively
+// (canvas_editing_internals.md, "Inspector and node actions").
 interface CanvasViewNode {
 	getData?: () => CanvasNode | undefined;
 	canvas?: { view?: { file?: TFile | null } };

@@ -27,7 +27,7 @@ import { getStringValue, measureTextHeight, stableHash } from './utils';
 // engine can be exercised headlessly (scripts/canvas-harness/sync-test.mjs).
 // The Obsidian wiring (watchers, debounce, vault writes) lives in sync.ts.
 //
-// Invariants (see canvas_editing_plan.md §5):
+// Invariants (see canvas_editing_internals.md, "Sync engine"):
 // - Notes are the source of truth; the canvas is a projection.
 // - A parse failure never writes anything; the card is re-rendered with a
 //   leading ⚠️ line and the user's text preserved below it.
@@ -434,7 +434,8 @@ function frontmatterSection(content: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Functional edges (editing plan §7). Only the whitelisted, unambiguous
+// Functional edges (canvas_editing_internals.md, "Functional edges").
+// Only the whitelisted, unambiguous
 // gestures below have semantic meaning; every other edge change is visual
 // and regeneration restores it. Edges marked espCard.role 'derived' by the
 // generator are never interpreted.

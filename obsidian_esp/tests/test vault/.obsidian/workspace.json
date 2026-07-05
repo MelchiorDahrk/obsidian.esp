@@ -11,17 +11,14 @@
             "id": "5f288b7ef1212220",
             "type": "leaf",
             "state": {
-              "type": "canvas",
+              "type": "markdown",
               "state": {
-                "file": "TES3 Plugins/OAAB_Grazelands/Quests/Waxing Pathetic Scamps.canvas",
-                "viewState": {
-                  "x": 4540,
-                  "y": -284.5,
-                  "zoom": -2.410379466400799
-                }
+                "file": "TES3 Plugins/OAAB_Grazelands/Topic/mushroom roots from Tel Vos/mushroom roots from Tel Vos ~31.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-layout-dashboard",
-              "title": "Waxing Pathetic Scamps"
+              "icon": "lucide-file",
+              "title": "mushroom roots from Tel Vos ~31"
             }
           }
         ]
@@ -81,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 422.5
+    "width": 454.5
   },
   "right": {
     "id": "3d4dc41390bb6ea2",
@@ -184,19 +181,19 @@
       "bases:Create new base": false
     }
   },
-  "active": "fe7c426b0a2d30eb",
+  "active": "5f288b7ef1212220",
   "lastOpenFiles": [
-    "TES3 Plugins/OAAB_Grazelands/Quests/Waxing Pathetic Scamps - modified.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/Root of the Problem.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/A Smidge Too Far.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/Waxing Pathetic Scamps.canvas",
+    "TES3 Plugins/OAAB_Grazelands/Quests/Waxing Pathetic Scamps - modified.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/The Final Door.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/The Eerie Lantern.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/The Domain of Living Fire.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/Smokeskin-Willer.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/Root of the Problem.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/Rats in Varo Tradehouse.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/MV_OutcastAshlanders.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests/Magical Misdeeds.canvas",
-    "TES3 Plugins/OAAB_Grazelands/Quests/Let The Ebony Flow.canvas",
     "TES3 Plugins/OAAB_Grazelands/Quests",
     "TES3 Plugins/OAAB_Grazelands/Voice/Thief/Thief.md",
     "TES3 Plugins/OAAB_Grazelands/Voice/Idle/Idle.md",

@@ -20,7 +20,7 @@ const SYNC_DEBOUNCE_MS = 500;
 
 /**
  * Watches open quest canvases and translates card edits into note edits
- * (canvas_editing_plan.md §5). The heavy lifting is in sync-core.ts; this
+ * (canvas_editing_internals.md, "Sync engine"). The heavy lifting is in sync-core.ts; this
  * class owns the vault wiring: snapshots, debounce, loop guards, and writes.
  */
 export class QuestCanvasSyncEngine {

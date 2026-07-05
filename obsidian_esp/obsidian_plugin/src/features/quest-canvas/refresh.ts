@@ -3,7 +3,8 @@ import { type CanvasEdge, type CanvasNode } from './model';
 import { type CanvasData } from './sync-core';
 
 // ---------------------------------------------------------------------------
-// Provenance-matched refresh (editing plan §9): rebuild a quest canvas from
+// Provenance-matched refresh (canvas_editing_internals.md, "Provenance-
+// matched refresh"): rebuild a quest canvas from
 // the notes while keeping the user's manual layout. Freshly generated nodes
 // are matched to existing ones by provenance (role + file + choiceValue);
 // matched nodes keep their position and size, genuinely new nodes are placed

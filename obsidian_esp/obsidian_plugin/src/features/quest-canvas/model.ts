@@ -292,7 +292,8 @@ export interface CanvasNode {
 /**
  * Marker on generated edges the sync engine must not interpret: phase-entry
  * heuristics, AddTopic/body-link routing, jump chains, structural pairings.
- * Unmarked edges between espCard nodes are live wires (editing plan §7).
+ * Unmarked edges between espCard nodes are live wires
+ * (canvas_editing_internals.md, "Functional edges").
  */
 export interface EspEdgeMeta {
 	role: 'derived';

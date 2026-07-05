@@ -1,0 +1,1706 @@
+{
+	"nodes": [
+		{
+			"id": "e270fa034b88dfb9",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_HauntedLantern/OAAB_TVos_HauntedLantern 10.md",
+			"subpath": "#^obsidian-esp-canvas-55f9ab2c9d",
+			"x": -520,
+			"y": -230,
+			"width": 440,
+			"height": 186,
+			"color": "6"
+		},
+		{
+			"id": "50ba55768736a3d6",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_HauntedLantern/OAAB_TVos_HauntedLantern 20.md",
+			"subpath": "#^obsidian-esp-canvas-ce9956c599",
+			"x": 720,
+			"y": 505,
+			"width": 440,
+			"height": 234,
+			"color": "6"
+		},
+		{
+			"id": "e8cc46cc04a7aed4",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_HauntedLantern/OAAB_TVos_HauntedLantern 22.md",
+			"subpath": "#^obsidian-esp-canvas-68023e27d1",
+			"x": 5580,
+			"y": 960,
+			"width": 440,
+			"height": 114,
+			"color": "6"
+		},
+		{
+			"id": "3194323d438ad143",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_HauntedLantern/OAAB_TVos_HauntedLantern 30.md",
+			"subpath": "#^obsidian-esp-canvas-45fc4d5eb0",
+			"x": 12328,
+			"y": 977,
+			"width": 440,
+			"height": 258,
+			"color": "6"
+		},
+		{
+			"id": "b857fdf3dc178491",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_HauntedLantern/OAAB_TVos_HauntedLantern 100.md",
+			"subpath": "#^obsidian-esp-canvas-814572ae2e",
+			"x": 12948,
+			"y": 548,
+			"width": 440,
+			"height": 186,
+			"color": "6"
+		},
+		{
+			"id": "0d3aa2748e565a04",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_HauntedLantern/OAAB_TVos_HauntedLantern 110.md",
+			"subpath": "#^obsidian-esp-canvas-2eadc4555e",
+			"x": 13568,
+			"y": 131,
+			"width": 440,
+			"height": 162,
+			"color": "6"
+		},
+		{
+			"id": "0d302ded417ca8db",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Journal/OAAB_TVos_HauntedLantern/OAAB_TVos_HauntedLantern 120.md",
+			"subpath": "#^obsidian-esp-canvas-cccb71fccf",
+			"x": 12328,
+			"y": 16,
+			"width": 440,
+			"height": 186,
+			"color": "6"
+		},
+		{
+			"id": "b8a34a110d7282d5",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 1/Greeting 1 ~1645.md",
+			"x": 720,
+			"y": -185,
+			"width": 440,
+			"height": 96,
+			"color": "3"
+		},
+		{
+			"id": "d6d0da4a77b2da02",
+			"type": "text",
+			"text": "Disposition = 0\nID = ABtv_WildAshlander\nJournal - OAAB_TVos_HauntedLantern = 10",
+			"x": 100,
+			"y": -186,
+			"width": 385,
+			"height": 98,
+			"color": "4"
+		},
+		{
+			"id": "c19d2d658e011f19",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Greeting/Greeting 1/Greeting 1 ~57.md",
+			"subpath": "#^obsidian-esp-canvas-a750a07f6f",
+			"x": 100,
+			"y": 469,
+			"width": 440,
+			"height": 210,
+			"color": "3"
+		},
+		{
+			"id": "83f69a4641ba20a6",
+			"type": "text",
+			"text": "Disposition = 0\nID = ABtv_WildAshlander",
+			"x": -520,
+			"y": 537,
+			"width": 385,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "73a670e0718b17d8",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_HauntedLantern 20#^obsidian-esp-canvas-ce9956c599|OAAB_TVos_HauntedLantern 20]]\nAddTopic \"[[Salkurnudai]]\"\nGoodbye",
+			"x": 100,
+			"y": 709,
+			"width": 440,
+			"height": 146,
+			"color": "6"
+		},
+		{
+			"id": "d21939331828d639",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~24.md",
+			"subpath": "#^obsidian-esp-canvas-723fdbf19e",
+			"x": 1800,
+			"y": -19,
+			"width": 440,
+			"height": 186,
+			"color": "3"
+		},
+		{
+			"id": "612375eed171eb02",
+			"type": "text",
+			"text": "Disposition = 0\nFaction = Ashlanders\nItem - ABtv_light_AshlLanternGhost >= 1\nJournal - OAAB_TVos_HauntedLantern = 20",
+			"x": 1340,
+			"y": 101,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "0eeb361458644664",
+			"type": "text",
+			"text": "AddTopic \"[[Ghost Lantern]]\"",
+			"x": 1800,
+			"y": 197,
+			"width": 440,
+			"height": 50,
+			"color": "5"
+		},
+		{
+			"id": "0c948eceb6cd75b8",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~25.md",
+			"subpath": "#^obsidian-esp-canvas-74bad9644c",
+			"x": 1800,
+			"y": 407,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "292289535f6de6c3",
+			"type": "text",
+			"text": "Disposition = 0\nFaction = Ashlanders\nItem - ABtv_light_AshlLanternGhost < 1\nJournal - OAAB_TVos_HauntedLantern = 20",
+			"x": 1340,
+			"y": 383,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "e7091eba0b116a92",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~18.md",
+			"subpath": "#^obsidian-esp-canvas-38dcde9ce7",
+			"x": 6660,
+			"y": 99,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "767cd02f83b9cdb1",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman Service\nFaction = Ashlanders\nItem - ABtv_light_AshlLanternGhost >= 1\nJournal - OAAB_TVos_HauntedLantern = 22",
+			"x": 6200,
+			"y": 154,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "f121d54ef4e3583c",
+			"type": "text",
+			"text": "\"[Continue]\" - Choice 1",
+			"x": 7280,
+			"y": 78,
+			"width": 320,
+			"height": 50,
+			"color": "4"
+		},
+		{
+			"id": "741d615fc59ed053",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~19.md",
+			"subpath": "#^obsidian-esp-canvas-d6006da93b",
+			"x": 6660,
+			"y": 549,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "6e7d580af7499a30",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman\nFaction = Ashlanders\nItem - ABtv_light_AshlLanternGhost >= 1\nJournal - OAAB_TVos_HauntedLantern = 22",
+			"x": 6200,
+			"y": 553,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "37823dbf61880e75",
+			"type": "text",
+			"text": "\"[Continue]\" - Choice 1",
+			"x": 7280,
+			"y": 574,
+			"width": 320,
+			"height": 50,
+			"color": "4"
+		},
+		{
+			"id": "768d290d55436f2f",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~22.md",
+			"subpath": "#^obsidian-esp-canvas-9f6c342f66",
+			"x": 1800,
+			"y": 681,
+			"width": 440,
+			"height": 186,
+			"color": "3"
+		},
+		{
+			"id": "f6075c3061dd4f44",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman Service\nFaction = Ashlanders\nJournal - OAAB_TVos_HauntedLantern = 20",
+			"x": 1340,
+			"y": 665,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "d568e780339398bc",
+			"type": "text",
+			"text": "\"[Tell her about the ashlander and the eerie lantern.]\" - Choice 1",
+			"x": 2420,
+			"y": 711,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "a1787510c8171a5e",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~23.md",
+			"subpath": "#^obsidian-esp-canvas-976cbc0a7e",
+			"x": 1800,
+			"y": 1027,
+			"width": 440,
+			"height": 186,
+			"color": "3"
+		},
+		{
+			"id": "3e75b5ad7f97fc95",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman\nFaction = Ashlanders\nJournal - OAAB_TVos_HauntedLantern = 20",
+			"x": 1340,
+			"y": 947,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "8f0f552be932d281",
+			"type": "text",
+			"text": "\"[Tell her about the ashlander and the eerie lantern.]\" - Choice 1",
+			"x": 2420,
+			"y": 1127,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "0577c3e64a18258e",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~14.md",
+			"subpath": "#^obsidian-esp-canvas-023ebf80de",
+			"x": 8548,
+			"y": 10,
+			"width": 440,
+			"height": 282,
+			"color": "3"
+		},
+		{
+			"id": "d539f8fbd5331b9d",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman Service\nFaction = Ashlanders\nChoice = 1\nItem - ABtv_light_AshlLanternGhost >= 1\nJournal - OAAB_TVos_HauntedLantern < 30\nJournal - OAAB_TVos_HauntedLantern >= 20",
+			"x": 8088,
+			"y": 61,
+			"width": 385,
+			"height": 194,
+			"color": "4"
+		},
+		{
+			"id": "3bfae715f5c50463",
+			"type": "text",
+			"text": "AddTopic \"[[Sunna Guradan]]\"",
+			"x": 8548,
+			"y": 322,
+			"width": 440,
+			"height": 50,
+			"color": "5"
+		},
+		{
+			"id": "51b851fe82c34d5a",
+			"type": "text",
+			"text": "\"[Continue.]\" - Choice 2",
+			"x": 9168,
+			"y": 150,
+			"width": 320,
+			"height": 50,
+			"color": "4"
+		},
+		{
+			"id": "0dc55aeb06f3295f",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~15.md",
+			"subpath": "#^obsidian-esp-canvas-123e443dc6",
+			"x": 8548,
+			"y": 532,
+			"width": 440,
+			"height": 282,
+			"color": "3"
+		},
+		{
+			"id": "087503766cdf95ac",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman\nFaction = Ashlanders\nChoice = 1\nItem - ABtv_light_AshlLanternGhost >= 1\nJournal - OAAB_TVos_HauntedLantern < 30\nJournal - OAAB_TVos_HauntedLantern >= 20",
+			"x": 8088,
+			"y": 577,
+			"width": 385,
+			"height": 194,
+			"color": "4"
+		},
+		{
+			"id": "2bfcf558024f8322",
+			"type": "text",
+			"text": "AddTopic \"[[Sunna Guradan]]\"",
+			"x": 8548,
+			"y": 844,
+			"width": 440,
+			"height": 50,
+			"color": "5"
+		},
+		{
+			"id": "4e221065e5d7522f",
+			"type": "text",
+			"text": "\"[Continue.]\" - Choice 2",
+			"x": 9168,
+			"y": 671,
+			"width": 320,
+			"height": 50,
+			"color": "4"
+		},
+		{
+			"id": "1912bb7c1d9c76ac",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~16.md",
+			"subpath": "#^obsidian-esp-canvas-06d341da8c",
+			"x": 3380,
+			"y": 763,
+			"width": 440,
+			"height": 162,
+			"color": "3"
+		},
+		{
+			"id": "3e49e7995636485f",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman Service\nFaction = Ashlanders\nChoice = 1\nItem - ABtv_light_AshlLanternGhost < 1\nJournal - OAAB_TVos_HauntedLantern < 30\nJournal - OAAB_TVos_HauntedLantern >= 20",
+			"x": 2920,
+			"y": 755,
+			"width": 385,
+			"height": 194,
+			"color": "4"
+		},
+		{
+			"id": "33eb5251bd7031eb",
+			"type": "text",
+			"text": "\"I did not bring it.\" - Choice 5",
+			"x": 4000,
+			"y": 799,
+			"width": 320,
+			"height": 50,
+			"color": "4"
+		},
+		{
+			"id": "42de380985effc9d",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~17.md",
+			"subpath": "#^obsidian-esp-canvas-074129ffc8",
+			"x": 3380,
+			"y": 1220,
+			"width": 440,
+			"height": 162,
+			"color": "3"
+		},
+		{
+			"id": "a086f4cc995b448e",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman\nFaction = Ashlanders\nChoice = 1\nItem - ABtv_light_AshlLanternGhost < 1\nJournal - OAAB_TVos_HauntedLantern < 30\nJournal - OAAB_TVos_HauntedLantern >= 20",
+			"x": 2920,
+			"y": 1199,
+			"width": 385,
+			"height": 194,
+			"color": "4"
+		},
+		{
+			"id": "8a0a1846592e884e",
+			"type": "text",
+			"text": "\"I did not bring it.\" - Choice 5",
+			"x": 4000,
+			"y": 1278,
+			"width": 320,
+			"height": 50,
+			"color": "4"
+		},
+		{
+			"id": "dcd677e846a1c968",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~12.md",
+			"subpath": "#^obsidian-esp-canvas-330f6c3eac",
+			"x": 10128,
+			"y": 55,
+			"width": 440,
+			"height": 282,
+			"color": "3"
+		},
+		{
+			"id": "7448a2f5d1757aeb",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman Service\nFaction = Ashlanders\nChoice = 2\nJournal - OAAB_TVos_HauntedLantern < 30\nJournal - OAAB_TVos_HauntedLantern >= 20",
+			"x": 9668,
+			"y": 102,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "7babefcfaa50d3ed",
+			"type": "text",
+			"text": "\"It would be an honor, Wise Woman.\" - Choice 3",
+			"x": 10748,
+			"y": 603,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "c7807b05b1a9ce47",
+			"type": "text",
+			"text": "\"I'm afraid I cannot accept this responsibility.\" - Choice 4",
+			"x": 10748,
+			"y": -49,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "06c7453ab5bb75e8",
+			"type": "text",
+			"text": "\"Here, take the lantern. I want no part of this!\" - Choice 4",
+			"x": 10748,
+			"y": 49,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "71eac7259a29e169",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~13.md",
+			"subpath": "#^obsidian-esp-canvas-75f82223fe",
+			"x": 10128,
+			"y": 548,
+			"width": 440,
+			"height": 282,
+			"color": "3"
+		},
+		{
+			"id": "644ab138701a1a6a",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman\nFaction = Ashlanders\nChoice = 2\nJournal - OAAB_TVos_HauntedLantern < 30\nJournal - OAAB_TVos_HauntedLantern >= 20",
+			"x": 9668,
+			"y": 623,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "8949bb580cf04d48",
+			"type": "text",
+			"text": "\"It would be an honor, Wise Woman.\" - Choice 3",
+			"x": 10748,
+			"y": 1102,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "c241b65a9860e6c2",
+			"type": "text",
+			"text": "\"I'm afraid I cannot accept this responsibility.\" - Choice 4",
+			"x": 10748,
+			"y": 407,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "d5e3d93904cff30d",
+			"type": "text",
+			"text": "\"Here, take the lantern. I want no part of this!\" - Choice 4",
+			"x": 10748,
+			"y": 505,
+			"width": 320,
+			"height": 74,
+			"color": "4"
+		},
+		{
+			"id": "17117ecb9f36fd11",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~6.md",
+			"subpath": "#^obsidian-esp-canvas-6e06d51d5f",
+			"x": 4960,
+			"y": 630,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "40abb1b45a406616",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman Service\nFaction = Ashlanders\nChoice = 5\nJournal - OAAB_TVos_HauntedLantern = 20",
+			"x": 4500,
+			"y": 748,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "3f3d31a6ab033af0",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_HauntedLantern 22#^obsidian-esp-canvas-68023e27d1|OAAB_TVos_HauntedLantern 22]]\nGoodbye",
+			"x": 4960,
+			"y": 774,
+			"width": 440,
+			"height": 122,
+			"color": "6"
+		},
+		{
+			"id": "0ec3e7c6aa35b390",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~7.md",
+			"subpath": "#^obsidian-esp-canvas-5e08e3606c",
+			"x": 4960,
+			"y": 1176,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "0839228195f350c7",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman\nFaction = Ashlanders\nChoice = 5\nJournal - OAAB_TVos_HauntedLantern = 20",
+			"x": 4500,
+			"y": 1231,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "478ac8ab0c5e9b71",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_HauntedLantern 22#^obsidian-esp-canvas-68023e27d1|OAAB_TVos_HauntedLantern 22]]\nGoodbye",
+			"x": 4960,
+			"y": 1320,
+			"width": 440,
+			"height": 122,
+			"color": "6"
+		},
+		{
+			"id": "fbc044fd0241d03f",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~8.md",
+			"subpath": "#^obsidian-esp-canvas-fcb1b46bf4",
+			"x": 11708,
+			"y": 763,
+			"width": 440,
+			"height": 306,
+			"color": "3"
+		},
+		{
+			"id": "2e8af302b59cab28",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman Service\nFaction = Ashlanders\nChoice = 3\nJournal - OAAB_TVos_HauntedLantern < 30\nJournal - OAAB_TVos_HauntedLantern >= 20",
+			"x": 11248,
+			"y": 745,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "a8e38aa0b5a5fb4e",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_HauntedLantern 30#^obsidian-esp-canvas-45fc4d5eb0|OAAB_TVos_HauntedLantern 30]]\nPlayer->Equip \"ABtv_light_AshlLanternGhost\"\nAddTopic \"[[Molaguradan]]\"",
+			"x": 11708,
+			"y": 1099,
+			"width": 440,
+			"height": 146,
+			"color": "6"
+		},
+		{
+			"id": "ebc25340b4d873ee",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~9.md",
+			"subpath": "#^obsidian-esp-canvas-f4641d667e",
+			"x": 11708,
+			"y": 1405,
+			"width": 440,
+			"height": 306,
+			"color": "3"
+		},
+		{
+			"id": "fb9f9a670924c329",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman\nFaction = Ashlanders\nChoice = 3\nJournal - OAAB_TVos_HauntedLantern < 30\nJournal - OAAB_TVos_HauntedLantern >= 20",
+			"x": 11248,
+			"y": 1325,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "b667135d7280ff1f",
+			"type": "text",
+			"text": "Journal [[OAAB_TVos_HauntedLantern 30#^obsidian-esp-canvas-45fc4d5eb0|OAAB_TVos_HauntedLantern 30]]\nPlayer->Equip \"ABtv_light_AshlLanternGhost\"\nAddTopic \"[[Molaguradan]]\"",
+			"x": 11708,
+			"y": 1741,
+			"width": 440,
+			"height": 146,
+			"color": "6"
+		},
+		{
+			"id": "a5db7bcfe2138aed",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~20.md",
+			"subpath": "#^obsidian-esp-canvas-e37786ed67",
+			"x": 6660,
+			"y": 1301,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "f4e6e6cad3816b46",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman Service\nFaction = Ashlanders\nItem - ABtv_light_AshlLanternGhost < 1\nJournal - OAAB_TVos_HauntedLantern = 22",
+			"x": 6200,
+			"y": 1309,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "3023f62064fd2400",
+			"type": "text",
+			"text": "Goodbye",
+			"x": 6660,
+			"y": 1445,
+			"width": 440,
+			"height": 50,
+			"color": "5"
+		},
+		{
+			"id": "9ddd96aa6becbc7c",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~21.md",
+			"subpath": "#^obsidian-esp-canvas-9b092d702c",
+			"x": 6660,
+			"y": 1655,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "fa6a62efb78e18f7",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman\nFaction = Ashlanders\nItem - ABtv_light_AshlLanternGhost < 1\nJournal - OAAB_TVos_HauntedLantern = 22",
+			"x": 6200,
+			"y": 1615,
+			"width": 385,
+			"height": 146,
+			"color": "4"
+		},
+		{
+			"id": "3da77eddb8853c01",
+			"type": "text",
+			"text": "Goodbye",
+			"x": 6660,
+			"y": 1799,
+			"width": 440,
+			"height": 50,
+			"color": "5"
+		},
+		{
+			"id": "bd0805692d478e33",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~4.md",
+			"subpath": "#^obsidian-esp-canvas-6309badf03",
+			"x": 13568,
+			"y": 1017,
+			"width": 440,
+			"height": 162,
+			"color": "3"
+		},
+		{
+			"id": "92b38b7eac9c9e14",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman Service\nFaction = Ashlanders\nJournal - OAAB_TVos_HauntedLantern = 30",
+			"x": 12948,
+			"y": 993,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "225edf5cdb4b3e72",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~5.md",
+			"subpath": "#^obsidian-esp-canvas-d5f5783aaf",
+			"x": 13568,
+			"y": 1339,
+			"width": 440,
+			"height": 162,
+			"color": "3"
+		},
+		{
+			"id": "d321d863948c74e5",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman\nFaction = Ashlanders\nJournal - OAAB_TVos_HauntedLantern = 30",
+			"x": 12948,
+			"y": 1275,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "857f0ee789715005",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~2.md",
+			"subpath": "#^obsidian-esp-canvas-77ba5fa1b7",
+			"x": 14188,
+			"y": 483,
+			"width": 440,
+			"height": 138,
+			"color": "3"
+		},
+		{
+			"id": "61e2dec07a0c4c52",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman Service\nFaction = Ashlanders\nJournal - OAAB_TVos_HauntedLantern = 100",
+			"x": 13568,
+			"y": 453,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "b86a6782671cc6b4",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~3.md",
+			"subpath": "#^obsidian-esp-canvas-3f4c1f54a8",
+			"x": 14188,
+			"y": 781,
+			"width": 440,
+			"height": 138,
+			"color": "3"
+		},
+		{
+			"id": "71e0d07dcc089c13",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman\nFaction = Ashlanders\nJournal - OAAB_TVos_HauntedLantern = 100",
+			"x": 13568,
+			"y": 735,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "3bc49e2220d6fb6a",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~10.md",
+			"subpath": "#^obsidian-esp-canvas-e381fb74e0",
+			"x": 11708,
+			"y": -185,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "3f2fc5d7e96d0069",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman Service\nFaction = Ashlanders\nChoice = 4\nJournal - OAAB_TVos_HauntedLantern < 30\nJournal - OAAB_TVos_HauntedLantern >= 20",
+			"x": 11248,
+			"y": -101,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "92a28639e18b1f97",
+			"type": "text",
+			"text": "ModDisposition -15\nJournal [[OAAB_TVos_HauntedLantern 120#^obsidian-esp-canvas-cccb71fccf|OAAB_TVos_HauntedLantern 120]]\nPlayer->RemoveItem \"ABtv_light_AshlLanternGhost\" 1",
+			"x": 11708,
+			"y": -41,
+			"width": 440,
+			"height": 170,
+			"color": "6"
+		},
+		{
+			"id": "7ead540782325beb",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~11.md",
+			"subpath": "#^obsidian-esp-canvas-a896964141",
+			"x": 11708,
+			"y": 289,
+			"width": 440,
+			"height": 114,
+			"color": "3"
+		},
+		{
+			"id": "3731e0b295e4e868",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman\nFaction = Ashlanders\nChoice = 4\nJournal - OAAB_TVos_HauntedLantern < 30\nJournal - OAAB_TVos_HauntedLantern >= 20",
+			"x": 11248,
+			"y": 361,
+			"width": 385,
+			"height": 170,
+			"color": "4"
+		},
+		{
+			"id": "683acbec69d888e6",
+			"type": "text",
+			"text": "ModDisposition -15\nJournal [[OAAB_TVos_HauntedLantern 120#^obsidian-esp-canvas-cccb71fccf|OAAB_TVos_HauntedLantern 120]]\nPlayer->RemoveItem \"ABtv_light_AshlLanternGhost\" 1",
+			"x": 11708,
+			"y": 433,
+			"width": 440,
+			"height": 170,
+			"color": "6"
+		},
+		{
+			"id": "ee8efd8591b8bd67",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~0.md",
+			"subpath": "#^obsidian-esp-canvas-cf47dd03ef",
+			"x": 14703,
+			"y": -173,
+			"width": 440,
+			"height": 162,
+			"color": "3"
+		},
+		{
+			"id": "6675ce1aae7046f0",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman Service\nFaction = Ashlanders\nJournal - OAAB_TVos_HauntedLantern = 110",
+			"x": 14188,
+			"y": -81,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "14217ca856d35a16",
+			"type": "text",
+			"text": "ModDisposition -30\nGoodbye",
+			"x": 14703,
+			"y": 19,
+			"width": 440,
+			"height": 74,
+			"color": "5"
+		},
+		{
+			"id": "e3a69fc8bb7f5836",
+			"type": "file",
+			"file": "TES3 Plugins/OAAB_Grazelands/Topic/Salkurnudai/Salkurnudai ~1.md",
+			"subpath": "#^obsidian-esp-canvas-0233359ece",
+			"x": 14703,
+			"y": 253,
+			"width": 440,
+			"height": 162,
+			"color": "3"
+		},
+		{
+			"id": "66e3b63f0fcba771",
+			"type": "text",
+			"text": "Disposition = 0\nClass = Wise Woman\nFaction = Ashlanders\nJournal - OAAB_TVos_HauntedLantern = 110",
+			"x": 14188,
+			"y": 201,
+			"width": 385,
+			"height": 122,
+			"color": "4"
+		},
+		{
+			"id": "a935cbe5928644c7",
+			"type": "text",
+			"text": "ModDisposition -30\nGoodbye",
+			"x": 14703,
+			"y": 445,
+			"width": 440,
+			"height": 74,
+			"color": "5"
+		},
+		{
+			"id": "b16205915d23d95d",
+			"type": "text",
+			"text": "Jump #1",
+			"x": 7780,
+			"y": 58,
+			"width": 128,
+			"height": 50,
+			"color": "2"
+		},
+		{
+			"id": "993edcbd82cafcf1",
+			"type": "text",
+			"text": "Jump #2",
+			"x": 7780,
+			"y": 571,
+			"width": 128,
+			"height": 50,
+			"color": "2"
+		}
+	],
+	"edges": [
+		{
+			"id": "40f03ee06b4fea2e",
+			"fromNode": "d6d0da4a77b2da02",
+			"fromSide": "right",
+			"toNode": "b8a34a110d7282d5",
+			"toSide": "left"
+		},
+		{
+			"id": "8bcf666d9b19e8b3",
+			"fromNode": "83f69a4641ba20a6",
+			"fromSide": "right",
+			"toNode": "c19d2d658e011f19",
+			"toSide": "left"
+		},
+		{
+			"id": "e4ae0f5c4838b196",
+			"fromNode": "c19d2d658e011f19",
+			"fromSide": "bottom",
+			"toNode": "73a670e0718b17d8",
+			"toSide": "top"
+		},
+		{
+			"id": "90d965f85a243820",
+			"fromNode": "c19d2d658e011f19",
+			"fromSide": "right",
+			"toNode": "50ba55768736a3d6",
+			"toSide": "left"
+		},
+		{
+			"id": "351484057a833239",
+			"fromNode": "612375eed171eb02",
+			"fromSide": "right",
+			"toNode": "d21939331828d639",
+			"toSide": "left"
+		},
+		{
+			"id": "385d010e9feb7d76",
+			"fromNode": "d21939331828d639",
+			"fromSide": "bottom",
+			"toNode": "0eeb361458644664",
+			"toSide": "top"
+		},
+		{
+			"id": "0d13e610fc3613bc",
+			"fromNode": "292289535f6de6c3",
+			"fromSide": "right",
+			"toNode": "0c948eceb6cd75b8",
+			"toSide": "left"
+		},
+		{
+			"id": "ca6110a97e66259b",
+			"fromNode": "767cd02f83b9cdb1",
+			"fromSide": "right",
+			"toNode": "e7091eba0b116a92",
+			"toSide": "left"
+		},
+		{
+			"id": "1785516bb926b3fb",
+			"fromNode": "e7091eba0b116a92",
+			"fromSide": "right",
+			"toNode": "f121d54ef4e3583c",
+			"toSide": "left"
+		},
+		{
+			"id": "30934f15faf335d5",
+			"fromNode": "6e7d580af7499a30",
+			"fromSide": "right",
+			"toNode": "741d615fc59ed053",
+			"toSide": "left"
+		},
+		{
+			"id": "f05d16533edbf2a3",
+			"fromNode": "741d615fc59ed053",
+			"fromSide": "right",
+			"toNode": "37823dbf61880e75",
+			"toSide": "left"
+		},
+		{
+			"id": "ca5c2914e7f7114e",
+			"fromNode": "f6075c3061dd4f44",
+			"fromSide": "right",
+			"toNode": "768d290d55436f2f",
+			"toSide": "left"
+		},
+		{
+			"id": "f4cc3f84a0929496",
+			"fromNode": "768d290d55436f2f",
+			"fromSide": "right",
+			"toNode": "d568e780339398bc",
+			"toSide": "left"
+		},
+		{
+			"id": "63223e135b9cff49",
+			"fromNode": "3e75b5ad7f97fc95",
+			"fromSide": "right",
+			"toNode": "a1787510c8171a5e",
+			"toSide": "left"
+		},
+		{
+			"id": "89f1ee258581a73b",
+			"fromNode": "a1787510c8171a5e",
+			"fromSide": "right",
+			"toNode": "8f0f552be932d281",
+			"toSide": "left"
+		},
+		{
+			"id": "24ddf0cee5a8dfba",
+			"fromNode": "d539f8fbd5331b9d",
+			"fromSide": "right",
+			"toNode": "0577c3e64a18258e",
+			"toSide": "left"
+		},
+		{
+			"id": "29cb6b18ad89b288",
+			"fromNode": "0577c3e64a18258e",
+			"fromSide": "bottom",
+			"toNode": "3bfae715f5c50463",
+			"toSide": "top"
+		},
+		{
+			"id": "d02f9025e5f3894f",
+			"fromNode": "0577c3e64a18258e",
+			"fromSide": "right",
+			"toNode": "51b851fe82c34d5a",
+			"toSide": "left"
+		},
+		{
+			"id": "2593fc3705b22fcf",
+			"fromNode": "087503766cdf95ac",
+			"fromSide": "right",
+			"toNode": "0dc55aeb06f3295f",
+			"toSide": "left"
+		},
+		{
+			"id": "5b99651851b010c2",
+			"fromNode": "0dc55aeb06f3295f",
+			"fromSide": "bottom",
+			"toNode": "2bfcf558024f8322",
+			"toSide": "top"
+		},
+		{
+			"id": "d5ae3a3d99d117dd",
+			"fromNode": "0dc55aeb06f3295f",
+			"fromSide": "right",
+			"toNode": "4e221065e5d7522f",
+			"toSide": "left"
+		},
+		{
+			"id": "6ef691938cee3a5f",
+			"fromNode": "3e49e7995636485f",
+			"fromSide": "right",
+			"toNode": "1912bb7c1d9c76ac",
+			"toSide": "left"
+		},
+		{
+			"id": "cb1991ff5878802f",
+			"fromNode": "1912bb7c1d9c76ac",
+			"fromSide": "right",
+			"toNode": "33eb5251bd7031eb",
+			"toSide": "left"
+		},
+		{
+			"id": "63e6c16070940d88",
+			"fromNode": "a086f4cc995b448e",
+			"fromSide": "right",
+			"toNode": "42de380985effc9d",
+			"toSide": "left"
+		},
+		{
+			"id": "54a408cab51a28de",
+			"fromNode": "42de380985effc9d",
+			"fromSide": "right",
+			"toNode": "8a0a1846592e884e",
+			"toSide": "left"
+		},
+		{
+			"id": "7935371d786c951f",
+			"fromNode": "7448a2f5d1757aeb",
+			"fromSide": "right",
+			"toNode": "dcd677e846a1c968",
+			"toSide": "left"
+		},
+		{
+			"id": "056695fd11cdc1a9",
+			"fromNode": "dcd677e846a1c968",
+			"fromSide": "right",
+			"toNode": "7babefcfaa50d3ed",
+			"toSide": "left"
+		},
+		{
+			"id": "f3d5ed289bbeff78",
+			"fromNode": "dcd677e846a1c968",
+			"fromSide": "right",
+			"toNode": "c7807b05b1a9ce47",
+			"toSide": "left"
+		},
+		{
+			"id": "d942707916e83e47",
+			"fromNode": "dcd677e846a1c968",
+			"fromSide": "right",
+			"toNode": "06c7453ab5bb75e8",
+			"toSide": "left"
+		},
+		{
+			"id": "7c04b55280f3977a",
+			"fromNode": "644ab138701a1a6a",
+			"fromSide": "right",
+			"toNode": "71eac7259a29e169",
+			"toSide": "left"
+		},
+		{
+			"id": "c151335d682f5dc5",
+			"fromNode": "71eac7259a29e169",
+			"fromSide": "right",
+			"toNode": "8949bb580cf04d48",
+			"toSide": "left"
+		},
+		{
+			"id": "0b37ce667d04ea60",
+			"fromNode": "71eac7259a29e169",
+			"fromSide": "right",
+			"toNode": "c241b65a9860e6c2",
+			"toSide": "left"
+		},
+		{
+			"id": "c4fb32957965c845",
+			"fromNode": "71eac7259a29e169",
+			"fromSide": "right",
+			"toNode": "d5e3d93904cff30d",
+			"toSide": "left"
+		},
+		{
+			"id": "b3dfbe46e3e78310",
+			"fromNode": "40abb1b45a406616",
+			"fromSide": "right",
+			"toNode": "17117ecb9f36fd11",
+			"toSide": "left"
+		},
+		{
+			"id": "7740567a3d035022",
+			"fromNode": "17117ecb9f36fd11",
+			"fromSide": "bottom",
+			"toNode": "3f3d31a6ab033af0",
+			"toSide": "top"
+		},
+		{
+			"id": "5f1ced787834655e",
+			"fromNode": "17117ecb9f36fd11",
+			"fromSide": "right",
+			"toNode": "e8cc46cc04a7aed4",
+			"toSide": "left"
+		},
+		{
+			"id": "74028e5b28f89f53",
+			"fromNode": "0839228195f350c7",
+			"fromSide": "right",
+			"toNode": "0ec3e7c6aa35b390",
+			"toSide": "left"
+		},
+		{
+			"id": "8362e2760c885688",
+			"fromNode": "0ec3e7c6aa35b390",
+			"fromSide": "bottom",
+			"toNode": "478ac8ab0c5e9b71",
+			"toSide": "top"
+		},
+		{
+			"id": "3acea1118b1ff5af",
+			"fromNode": "0ec3e7c6aa35b390",
+			"fromSide": "right",
+			"toNode": "e8cc46cc04a7aed4",
+			"toSide": "left"
+		},
+		{
+			"id": "2f6c5054d83dcfb6",
+			"fromNode": "2e8af302b59cab28",
+			"fromSide": "right",
+			"toNode": "fbc044fd0241d03f",
+			"toSide": "left"
+		},
+		{
+			"id": "6a5db804bf72714a",
+			"fromNode": "fbc044fd0241d03f",
+			"fromSide": "bottom",
+			"toNode": "a8e38aa0b5a5fb4e",
+			"toSide": "top"
+		},
+		{
+			"id": "7356bf3933b0958f",
+			"fromNode": "fbc044fd0241d03f",
+			"fromSide": "right",
+			"toNode": "3194323d438ad143",
+			"toSide": "left"
+		},
+		{
+			"id": "37f7fdd43f971768",
+			"fromNode": "fb9f9a670924c329",
+			"fromSide": "right",
+			"toNode": "ebc25340b4d873ee",
+			"toSide": "left"
+		},
+		{
+			"id": "6ba3cfec460906e6",
+			"fromNode": "ebc25340b4d873ee",
+			"fromSide": "bottom",
+			"toNode": "b667135d7280ff1f",
+			"toSide": "top"
+		},
+		{
+			"id": "bb1d6b88862cc30e",
+			"fromNode": "ebc25340b4d873ee",
+			"fromSide": "right",
+			"toNode": "3194323d438ad143",
+			"toSide": "left"
+		},
+		{
+			"id": "50442a0fb9b3db03",
+			"fromNode": "f4e6e6cad3816b46",
+			"fromSide": "right",
+			"toNode": "a5db7bcfe2138aed",
+			"toSide": "left"
+		},
+		{
+			"id": "faae58b329fa4391",
+			"fromNode": "a5db7bcfe2138aed",
+			"fromSide": "bottom",
+			"toNode": "3023f62064fd2400",
+			"toSide": "top"
+		},
+		{
+			"id": "4b1d461e68efd19e",
+			"fromNode": "fa6a62efb78e18f7",
+			"fromSide": "right",
+			"toNode": "9ddd96aa6becbc7c",
+			"toSide": "left"
+		},
+		{
+			"id": "7a8c9a6cd53a7cdc",
+			"fromNode": "9ddd96aa6becbc7c",
+			"fromSide": "bottom",
+			"toNode": "3da77eddb8853c01",
+			"toSide": "top"
+		},
+		{
+			"id": "e9c7e775934c189f",
+			"fromNode": "92b38b7eac9c9e14",
+			"fromSide": "right",
+			"toNode": "bd0805692d478e33",
+			"toSide": "left"
+		},
+		{
+			"id": "f11685a37689681b",
+			"fromNode": "d321d863948c74e5",
+			"fromSide": "right",
+			"toNode": "225edf5cdb4b3e72",
+			"toSide": "left"
+		},
+		{
+			"id": "dbef50e7570accc7",
+			"fromNode": "61e2dec07a0c4c52",
+			"fromSide": "right",
+			"toNode": "857f0ee789715005",
+			"toSide": "left"
+		},
+		{
+			"id": "604d64ca33de9366",
+			"fromNode": "71e0d07dcc089c13",
+			"fromSide": "right",
+			"toNode": "b86a6782671cc6b4",
+			"toSide": "left"
+		},
+		{
+			"id": "1d5959aa11288934",
+			"fromNode": "3f2fc5d7e96d0069",
+			"fromSide": "right",
+			"toNode": "3bc49e2220d6fb6a",
+			"toSide": "left"
+		},
+		{
+			"id": "add1f1f257a336f6",
+			"fromNode": "3bc49e2220d6fb6a",
+			"fromSide": "bottom",
+			"toNode": "92a28639e18b1f97",
+			"toSide": "top"
+		},
+		{
+			"id": "c713b362d15f970a",
+			"fromNode": "3bc49e2220d6fb6a",
+			"fromSide": "right",
+			"toNode": "0d302ded417ca8db",
+			"toSide": "left"
+		},
+		{
+			"id": "4f1f9e1b7f10eb1b",
+			"fromNode": "3731e0b295e4e868",
+			"fromSide": "right",
+			"toNode": "7ead540782325beb",
+			"toSide": "left"
+		},
+		{
+			"id": "16c481bf08a67711",
+			"fromNode": "7ead540782325beb",
+			"fromSide": "bottom",
+			"toNode": "683acbec69d888e6",
+			"toSide": "top"
+		},
+		{
+			"id": "4e50a5ab5b531c8d",
+			"fromNode": "7ead540782325beb",
+			"fromSide": "right",
+			"toNode": "0d302ded417ca8db",
+			"toSide": "left"
+		},
+		{
+			"id": "51de30609158fbe0",
+			"fromNode": "6675ce1aae7046f0",
+			"fromSide": "right",
+			"toNode": "ee8efd8591b8bd67",
+			"toSide": "left"
+		},
+		{
+			"id": "9604fddf84ab4477",
+			"fromNode": "ee8efd8591b8bd67",
+			"fromSide": "bottom",
+			"toNode": "14217ca856d35a16",
+			"toSide": "top"
+		},
+		{
+			"id": "992a53e0967e0030",
+			"fromNode": "66e3b63f0fcba771",
+			"fromSide": "right",
+			"toNode": "e3a69fc8bb7f5836",
+			"toSide": "left"
+		},
+		{
+			"id": "7dbbe22ced0df98a",
+			"fromNode": "e3a69fc8bb7f5836",
+			"fromSide": "bottom",
+			"toNode": "a935cbe5928644c7",
+			"toSide": "top"
+		},
+		{
+			"id": "c8e47c98fe51af94",
+			"fromNode": "f121d54ef4e3583c",
+			"fromSide": "right",
+			"toNode": "b16205915d23d95d",
+			"toSide": "left"
+		},
+		{
+			"id": "8b7e1fa5065fd137",
+			"fromNode": "37823dbf61880e75",
+			"fromSide": "right",
+			"toNode": "993edcbd82cafcf1",
+			"toSide": "left"
+		},
+		{
+			"id": "259045ec2a46617a",
+			"fromNode": "d568e780339398bc",
+			"fromSide": "right",
+			"toNode": "d539f8fbd5331b9d",
+			"toSide": "left"
+		},
+		{
+			"id": "f53d855613156a5c",
+			"fromNode": "d568e780339398bc",
+			"fromSide": "right",
+			"toNode": "3e49e7995636485f",
+			"toSide": "left"
+		},
+		{
+			"id": "5bf11616de7431c0",
+			"fromNode": "8f0f552be932d281",
+			"fromSide": "right",
+			"toNode": "087503766cdf95ac",
+			"toSide": "left"
+		},
+		{
+			"id": "9fff082065957706",
+			"fromNode": "8f0f552be932d281",
+			"fromSide": "right",
+			"toNode": "a086f4cc995b448e",
+			"toSide": "left"
+		},
+		{
+			"id": "293051fae2449642",
+			"fromNode": "51b851fe82c34d5a",
+			"fromSide": "right",
+			"toNode": "7448a2f5d1757aeb",
+			"toSide": "left"
+		},
+		{
+			"id": "6ba23cd4206cbed8",
+			"fromNode": "4e221065e5d7522f",
+			"fromSide": "right",
+			"toNode": "644ab138701a1a6a",
+			"toSide": "left"
+		},
+		{
+			"id": "451f72729f7914e6",
+			"fromNode": "33eb5251bd7031eb",
+			"fromSide": "right",
+			"toNode": "40abb1b45a406616",
+			"toSide": "left"
+		},
+		{
+			"id": "84d7af7d7558cef1",
+			"fromNode": "8a0a1846592e884e",
+			"fromSide": "right",
+			"toNode": "0839228195f350c7",
+			"toSide": "left"
+		},
+		{
+			"id": "223b37a13aaa4b27",
+			"fromNode": "7babefcfaa50d3ed",
+			"fromSide": "right",
+			"toNode": "2e8af302b59cab28",
+			"toSide": "left"
+		},
+		{
+			"id": "d77bbacdb555cc05",
+			"fromNode": "c7807b05b1a9ce47",
+			"fromSide": "right",
+			"toNode": "3f2fc5d7e96d0069",
+			"toSide": "left"
+		},
+		{
+			"id": "9c4d48360eba8ede",
+			"fromNode": "06c7453ab5bb75e8",
+			"fromSide": "right",
+			"toNode": "3f2fc5d7e96d0069",
+			"toSide": "left"
+		},
+		{
+			"id": "8797f42d2417efe7",
+			"fromNode": "8949bb580cf04d48",
+			"fromSide": "right",
+			"toNode": "fb9f9a670924c329",
+			"toSide": "left"
+		},
+		{
+			"id": "019e3dca83e82136",
+			"fromNode": "c241b65a9860e6c2",
+			"fromSide": "right",
+			"toNode": "3731e0b295e4e868",
+			"toSide": "left"
+		},
+		{
+			"id": "5c33661b2214f5d7",
+			"fromNode": "d5e3d93904cff30d",
+			"fromSide": "right",
+			"toNode": "3731e0b295e4e868",
+			"toSide": "left"
+		},
+		{
+			"id": "2d3dfd4a7d2e2268",
+			"fromNode": "b16205915d23d95d",
+			"fromSide": "right",
+			"toNode": "d539f8fbd5331b9d",
+			"toSide": "left"
+		},
+		{
+			"id": "3a5265bca8dd8f50",
+			"fromNode": "993edcbd82cafcf1",
+			"fromSide": "right",
+			"toNode": "087503766cdf95ac",
+			"toSide": "left"
+		},
+		{
+			"id": "3216e04843784138",
+			"fromNode": "c19d2d658e011f19",
+			"fromSide": "right",
+			"toNode": "612375eed171eb02",
+			"toSide": "left",
+			"label": "AddTopic"
+		},
+		{
+			"id": "46a91844998a1404",
+			"fromNode": "c19d2d658e011f19",
+			"fromSide": "right",
+			"toNode": "292289535f6de6c3",
+			"toSide": "left",
+			"label": "AddTopic"
+		},
+		{
+			"id": "e1bf86535727ad01",
+			"fromNode": "c19d2d658e011f19",
+			"fromSide": "right",
+			"toNode": "f6075c3061dd4f44",
+			"toSide": "left",
+			"label": "AddTopic"
+		},
+		{
+			"id": "c90d33de93f0135a",
+			"fromNode": "c19d2d658e011f19",
+			"fromSide": "right",
+			"toNode": "3e75b5ad7f97fc95",
+			"toSide": "left",
+			"label": "AddTopic"
+		},
+		{
+			"id": "fa966d365ab12e46",
+			"fromNode": "e270fa034b88dfb9",
+			"fromSide": "right",
+			"toNode": "d6d0da4a77b2da02",
+			"toSide": "left"
+		},
+		{
+			"id": "9efc02f585dca173",
+			"fromNode": "50ba55768736a3d6",
+			"fromSide": "right",
+			"toNode": "292289535f6de6c3",
+			"toSide": "left"
+		},
+		{
+			"id": "5149de7f9ec7c46d",
+			"fromNode": "50ba55768736a3d6",
+			"fromSide": "right",
+			"toNode": "3e75b5ad7f97fc95",
+			"toSide": "left"
+		},
+		{
+			"id": "a5a7b7c1750a29ef",
+			"fromNode": "50ba55768736a3d6",
+			"fromSide": "right",
+			"toNode": "612375eed171eb02",
+			"toSide": "left"
+		},
+		{
+			"id": "b9b58b82e4582dbe",
+			"fromNode": "50ba55768736a3d6",
+			"fromSide": "right",
+			"toNode": "f6075c3061dd4f44",
+			"toSide": "left"
+		},
+		{
+			"id": "8d96b211201d8b2d",
+			"fromNode": "e8cc46cc04a7aed4",
+			"fromSide": "right",
+			"toNode": "f4e6e6cad3816b46",
+			"toSide": "left"
+		},
+		{
+			"id": "3193253e5407bf72",
+			"fromNode": "e8cc46cc04a7aed4",
+			"fromSide": "right",
+			"toNode": "fa6a62efb78e18f7",
+			"toSide": "left"
+		},
+		{
+			"id": "2939b27c354f514e",
+			"fromNode": "3194323d438ad143",
+			"fromSide": "right",
+			"toNode": "92b38b7eac9c9e14",
+			"toSide": "left"
+		},
+		{
+			"id": "8075f793aa2a8525",
+			"fromNode": "3194323d438ad143",
+			"fromSide": "right",
+			"toNode": "d321d863948c74e5",
+			"toSide": "left"
+		},
+		{
+			"id": "76e65a693f37ba91",
+			"fromNode": "b857fdf3dc178491",
+			"fromSide": "right",
+			"toNode": "61e2dec07a0c4c52",
+			"toSide": "left"
+		},
+		{
+			"id": "49410670b708e8b6",
+			"fromNode": "b857fdf3dc178491",
+			"fromSide": "right",
+			"toNode": "71e0d07dcc089c13",
+			"toSide": "left"
+		},
+		{
+			"id": "fb3902e16b2fbebb",
+			"fromNode": "0d3aa2748e565a04",
+			"fromSide": "right",
+			"toNode": "6675ce1aae7046f0",
+			"toSide": "left"
+		},
+		{
+			"id": "2a15040071e26454",
+			"fromNode": "0d3aa2748e565a04",
+			"fromSide": "right",
+			"toNode": "66e3b63f0fcba771",
+			"toSide": "left"
+		},
+		{
+			"id": "7d97ed3c705f50d8",
+			"fromNode": "e8cc46cc04a7aed4",
+			"fromSide": "right",
+			"toNode": "2e8af302b59cab28",
+			"toSide": "left"
+		},
+		{
+			"id": "d1418aef97f10ae3",
+			"fromNode": "e8cc46cc04a7aed4",
+			"fromSide": "right",
+			"toNode": "fb9f9a670924c329",
+			"toSide": "left"
+		},
+		{
+			"id": "e920c62ee92442e8",
+			"fromNode": "e8cc46cc04a7aed4",
+			"fromSide": "right",
+			"toNode": "767cd02f83b9cdb1",
+			"toSide": "left"
+		},
+		{
+			"id": "6a4f8e9af0f275ce",
+			"fromNode": "e8cc46cc04a7aed4",
+			"fromSide": "right",
+			"toNode": "6e7d580af7499a30",
+			"toSide": "left"
+		},
+		{
+			"id": "468ccb4ff07176f7",
+			"fromNode": "3194323d438ad143",
+			"fromSide": "right",
+			"toNode": "b857fdf3dc178491",
+			"toSide": "left"
+		},
+		{
+			"id": "e8b36f764486889a",
+			"fromNode": "b857fdf3dc178491",
+			"fromSide": "right",
+			"toNode": "0d3aa2748e565a04",
+			"toSide": "left"
+		}
+	],
+	"metadata": {
+		"version": "1.0-1.0",
+		"frontmatter": {}
+	}
+}

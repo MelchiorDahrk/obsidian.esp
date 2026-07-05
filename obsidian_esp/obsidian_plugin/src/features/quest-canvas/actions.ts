@@ -21,7 +21,8 @@ import { type CanvasData, type QuestSyncContext, renderCardFromNote } from './sy
 import { createEdgeId, createNodeId, getStringValue, measureTextHeight } from './utils';
 
 // ---------------------------------------------------------------------------
-// Generative canvas actions (editing plan §8). Each planner is pure: it maps
+// Generative canvas actions (canvas_editing_internals.md, "Inspector and
+// node actions"). Each planner is pure: it maps
 // current note/canvas state to the note writes, note creations, and canvas
 // insertions the action performs. The Obsidian wiring (inspector.ts) applies
 // plans through the vault. Node ids reuse the generator's seeds so a later
@@ -398,7 +399,7 @@ export function planLinkJournalMilestone(args: {
 /**
  * Renumbers a choice value: rewrites the `"…" n` pair in the parent's
  * Choice line and every `Choice = n` filter on notes of the same topic.
- * Multi-file by nature, so it is inspector-only (editing plan §6).
+ * Multi-file by nature, so it is inspector-only.
  */
 export function planRenumberChoice(args: {
 	parentPath: string;
