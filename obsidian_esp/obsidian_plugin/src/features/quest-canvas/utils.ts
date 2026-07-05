@@ -1,7 +1,5 @@
 import {
 	APPROX_TEXT_CHAR_WIDTH,
-	CANVAS_BODY_BLOCK_PREFIX,
-	CANVAS_BODY_BLOCK_TYPES,
 	type Condition,
 	DIALOGUE_TYPES,
 	type DialogueType,
@@ -82,81 +80,6 @@ export function firstNonEmptyLine(text: string): string | null {
 
 export function stripBlockId(text: string): string {
 	return text.replace(/\s+\^[A-Za-z0-9_-]+$/, '').trim();
-}
-
-export function resolveCanvasBodySubpath(
-	filePath: string,
-	frontmatter: Record<string, FrontmatterValue>,
-	body: string,
-): string | null {
-	if (body.length === 0) {
-		return null;
-	}
-
-	const type = getStringValue(frontmatter, 'Type');
-	if (!type || !CANVAS_BODY_BLOCK_TYPES.has(type)) {
-		return null;
-	}
-
-	const existingBlockId = trailingBodyBlockId(body);
-	return `#^${existingBlockId ?? createCanvasBodyBlockId(filePath)}`;
-}
-
-export function createCanvasBodyBlockId(filePath: string): string {
-	return `${CANVAS_BODY_BLOCK_PREFIX}-${stableHash(filePath).slice(0, 10)}`;
-}
-
-export function blockIdFromSubpath(subpath: string): string | null {
-	const match = subpath.match(/^#\^([A-Za-z0-9_-]+)$/);
-	return match?.[1] ?? null;
-}
-
-export function ensureTrailingBodyBlockId(body: string, blockId: string): string {
-	if (body.length === 0) {
-		return body;
-	}
-
-	const lines = body.split('\n');
-	let lastContentLine = -1;
-	for (let index = lines.length - 1; index >= 0; index -= 1) {
-		if ((lines[index] ?? '').trim().length > 0) {
-			lastContentLine = index;
-			break;
-		}
-	}
-
-	if (lastContentLine === -1) {
-		return body;
-	}
-
-	const currentBlockId = trailingBlockId(lines[lastContentLine] ?? '');
-	if (currentBlockId) {
-		return body;
-	}
-
-	lines[lastContentLine] = `${(lines[lastContentLine] ?? '').trimEnd()} ^${blockId}`;
-	return lines.join('\n');
-}
-
-export function trailingBodyBlockId(body: string): string | null {
-	const line = firstNonEmptyLineFromEnd(body);
-	if (!line) {
-		return null;
-	}
-
-	return trailingBlockId(line);
-}
-
-export function firstNonEmptyLineFromEnd(text: string): string | null {
-	const lines = text.split('\n');
-	for (let index = lines.length - 1; index >= 0; index -= 1) {
-		const trimmed = (lines[index] ?? '').trim();
-		if (trimmed.length > 0) {
-			return trimmed;
-		}
-	}
-
-	return null;
 }
 
 export function trailingBlockId(text: string): string | null {

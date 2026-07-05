@@ -1,21 +1,20 @@
 import { App, TFile, TFolder } from 'obsidian';
 import { splitFrontmatter } from '../../utils/obsidian-utils';
+import { getCardMeta, setCardMeta } from './card-meta';
 import {
 	type CanvasEdge,
 	type CanvasLayoutContext,
 	type CanvasNode,
+	type EspCardMeta,
 	FILE_NODE_MIN_HEIGHT,
-	type FileNodeTarget,
 	JOURNAL_COLOR,
 	JOURNAL_FOLDER_NAME,
 	JOURNAL_WIDTH,
 	type JournalMilestone,
 } from './model';
 import {
-	blockIdFromSubpath,
 	createEdgeId,
 	createNodeId,
-	ensureTrailingBodyBlockId,
 	measureCanvasBodyHeight,
 	measureTextHeight,
 } from './utils';
@@ -49,17 +48,18 @@ export function addPhaseMilestone(
 	const nodeId = createNodeId(`journal:${milestone.file.path}`);
 	if (!context.nodeIds.has(nodeId)) {
 		const height = measureFileNodeHeight(context, milestone.file.path, JOURNAL_WIDTH);
-		context.nodes.push({
+		const node: CanvasNode = {
 			id: nodeId,
 			type: 'file',
 			file: milestone.file.path,
-			subpath: milestone.canvasSubpath ?? undefined,
 			x: phaseX,
 			y: 0,
 			width: JOURNAL_WIDTH,
 			height,
 			color: JOURNAL_COLOR,
-		});
+		};
+		setCardMeta(node, { role: 'journal', file: milestone.file.path, questId: milestone.questId });
+		context.nodes.push(node);
 		context.nodeIds.add(nodeId);
 	}
 
@@ -103,7 +103,7 @@ export function edgeEndpoint(
 }
 
 export function isChoiceNode(node: CanvasNode): boolean {
-	return node.type === 'text' && /^".*"\s+-\s+Choice\s+-?\d+/.test(node.text ?? '');
+	return getCardMeta(node)?.role === 'choice';
 }
 
 export function isGateNode(node: CanvasNode): boolean {
@@ -149,40 +149,24 @@ export async function writeCanvasPlan(
 	await app.vault.create(outputPath, canvasJson);
 }
 
-export async function updateCanvasLinksAndBodyBlocks(
+/**
+ * Optionally adds a `canvas:` backlink to each related note. This is the
+ * only note write generation performs, and it is off by default — see the
+ * "Write canvas backlinks" plugin setting.
+ */
+export async function writeCanvasBacklinks(
 	app: App,
 	files: TFile[],
-	fileNodeTargets: FileNodeTarget[],
 	outputCanvasPath: string,
 ): Promise<void> {
 	const canvasFileName = outputCanvasPath.split('/').pop();
 	if (!canvasFileName) {
 		return;
 	}
-	const targetsByPath = new Map(fileNodeTargets.map((target) => [target.file.path, target.subpath]));
 
 	for (const file of files) {
-		await app.vault.process(file, (content) => {
-			const subpath = targetsByPath.get(file.path);
-			const nextContent = subpath ? ensureCanvasBodyBlockLink(content, subpath) : content;
-			return ensureCanvasFrontmatterLink(nextContent, canvasFileName);
-		});
+		await app.vault.process(file, (content) => ensureCanvasFrontmatterLink(content, canvasFileName));
 	}
-}
-
-export function ensureCanvasBodyBlockLink(content: string, subpath: string): string {
-	const blockId = blockIdFromSubpath(subpath);
-	if (!blockId) {
-		return content;
-	}
-
-	const { frontmatter, body } = splitFrontmatter(content);
-	const nextBody = ensureTrailingBodyBlockId(body, blockId);
-	if (nextBody === body) {
-		return content;
-	}
-
-	return `${frontmatter}${nextBody}`;
 }
 
 export function ensureCanvasFrontmatterLink(content: string, canvasFileName: string): string {
@@ -238,28 +222,24 @@ export function addFileNode(
 	width: number,
 	height: number,
 	color: string,
-	subpath?: string | null,
+	espCard: Omit<EspCardMeta, 'rev'>,
 ): string {
 	const nodeId = createNodeId(seed);
 	if (!context.nodeIds.has(nodeId)) {
 		const measuredHeight = measureFileNodeHeight(context, filePath, width);
-		context.nodes.push({
+		const node: CanvasNode = {
 			id: nodeId,
 			type: 'file',
 			file: filePath,
-			subpath: subpath ?? undefined,
 			x,
 			y,
 			width,
 			height: measuredHeight,
 			color,
-		});
+		};
+		setCardMeta(node, espCard);
+		context.nodes.push(node);
 		context.nodeIds.add(nodeId);
-	} else if (subpath) {
-		const node = context.nodes.find((candidate) => candidate.id === nodeId);
-		if (node?.type === 'file' && !node.subpath) {
-			node.subpath = subpath;
-		}
 	}
 	return nodeId;
 }
@@ -281,10 +261,11 @@ export function addTextNode(
 	y: number,
 	width: number,
 	color: string,
+	espCard: Omit<EspCardMeta, 'rev'>,
 ): string {
 	const nodeId = createNodeId(seed);
 	if (!context.nodeIds.has(nodeId)) {
-		context.nodes.push({
+		const node: CanvasNode = {
 			id: nodeId,
 			type: 'text',
 			text,
@@ -293,7 +274,9 @@ export function addTextNode(
 			width,
 			height: measureTextHeight(text, width),
 			color,
-		});
+		};
+		setCardMeta(node, espCard);
+		context.nodes.push(node);
 		context.nodeIds.add(nodeId);
 	}
 	return nodeId;

@@ -327,6 +327,7 @@ export function routeJournalRangeChoiceTransitions(context: CanvasLayoutContext,
 				Math.round(edgeEndpoint(sourceNode, 'right').y - measureTextHeight(jumpText, JUMP_WIDTH) / 2),
 				JUMP_WIDTH,
 				JUMP_COLOR,
+				{ role: 'jump' },
 			);
 			jumpIndex += 1;
 

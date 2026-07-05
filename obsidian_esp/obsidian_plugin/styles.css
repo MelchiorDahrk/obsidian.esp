@@ -211,3 +211,17 @@
 	max-width: max-content;
 }
 
+
+/* -----------------------------------------------------------------------
+ * Quest canvas — hide note properties inside canvas file embeds
+ *
+ * Gate cards already show the filter data, so the frontmatter table is
+ * pure noise on quest canvases. The selector necessarily affects every
+ * canvas, which is why it is gated behind a body class toggled by the
+ * "Hide properties in canvas cards" setting (default on).
+ * ----------------------------------------------------------------------- */
+
+body.esp-hide-canvas-properties .canvas-node .markdown-embed .metadata-container,
+body.esp-hide-canvas-properties .canvas-node .markdown-source-view .metadata-container {
+	display: none;
+}

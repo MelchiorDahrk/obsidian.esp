@@ -2,8 +2,6 @@ import { TFile, TFolder } from 'obsidian';
 
 export const DIALOGUE_TYPES = ['Greeting', 'Topic', 'Persuasion', 'Voice'] as const;
 
-export const CANVAS_BODY_BLOCK_TYPES = new Set(['Journal', 'Greeting', 'Topic']);
-
 export const CANVAS_BODY_BLOCK_PREFIX = 'obsidian-esp-canvas';
 
 export const QUEST_NAME_FIELD = 'Quest Name';
@@ -86,7 +84,6 @@ export interface MarkdownDocument {
 	file: TFile;
 	frontmatter: Record<string, FrontmatterValue>;
 	body: string;
-	canvasBodySubpath: string | null;
 }
 
 export interface QuestScope {
@@ -110,7 +107,6 @@ export interface JournalMilestone {
 	finished: boolean;
 	file: TFile;
 	summary: string;
-	canvasSubpath: string | null;
 }
 
 export interface Condition {
@@ -136,6 +132,8 @@ export interface ResultAction {
 	targetQuestId?: string;
 	targetJournalIndex?: number;
 	choiceValue?: number;
+	/** choice-set only: the bare prompt string (canvas choice-card text). */
+	choiceText?: string;
 	targetTopic?: string;
 }
 
@@ -144,7 +142,6 @@ export interface DialogueRecord {
 	type: DialogueType;
 	topic: string;
 	file: TFile;
-	canvasSubpath: string | null;
 	diagId: string;
 	prevId: string;
 	bodyText: string;
@@ -247,6 +244,26 @@ export interface PendingPhaseEntryEdge {
 	families: BranchFamily[];
 }
 
+/**
+ * Provenance metadata stored on every generated canvas node so the sync
+ * engine can map a card back to the note (and line) it projects. Obsidian
+ * preserves unknown node keys on save; accessors in card-meta.ts are the
+ * only readers/writers so the storage backend can be swapped if that ever
+ * breaks (sidecar file fallback).
+ */
+export interface EspCardMeta {
+	/** What the card projects. Nodes without meta are ignored by the sync engine. */
+	role: 'gate' | 'dialogue' | 'result' | 'choice' | 'journal' | 'jump' | 'header' | 'derived';
+	/** Vault path of the note this card belongs to (absent for jump/header). */
+	file?: string;
+	/** Choice cards only: the n in the parent record's `Choice "…" n`. */
+	choiceValue?: number;
+	/** Journal nodes only. */
+	questId?: string;
+	/** Schema version for migrations. */
+	rev: number;
+}
+
 export interface CanvasNode {
 	id: string;
 	type: 'file' | 'text';
@@ -258,6 +275,7 @@ export interface CanvasNode {
 	width: number;
 	height: number;
 	color?: string;
+	espCard?: EspCardMeta;
 }
 
 export interface CanvasEdge {
@@ -273,7 +291,6 @@ export interface CanvasBuildResult {
 	nodes: CanvasNode[];
 	edges: CanvasEdge[];
 	relatedFiles: TFile[];
-	fileNodeTargets: FileNodeTarget[];
 	warnings: string[];
 }
 
@@ -281,11 +298,6 @@ export interface QuestCanvasGenerationResult {
 	questTitle: string;
 	outputCanvasPath: string;
 	warnings: string[];
-}
-
-export interface FileNodeTarget {
-	file: TFile;
-	subpath: string;
 }
 
 export interface CanvasLayoutContext {

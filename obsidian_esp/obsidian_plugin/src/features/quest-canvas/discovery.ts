@@ -28,7 +28,6 @@ import {
 	getStringValue,
 	isDialogueType,
 	normalizeQuestNameKey,
-	resolveCanvasBodySubpath,
 	sanitizeFileName,
 	stripBlockId,
 	stripWikilinkSyntax,
@@ -146,7 +145,6 @@ export async function readMarkdownDocument(app: App, file: TFile): Promise<Markd
 		file,
 		frontmatter: parsedFrontmatter,
 		body: trimmedBody,
-		canvasBodySubpath: resolveCanvasBodySubpath(file.path, parsedFrontmatter, trimmedBody),
 	};
 }
 
@@ -222,7 +220,6 @@ export function toJournalMilestone(document: MarkdownDocument): JournalMilestone
 		finished: getBooleanValue(document.frontmatter, 'Finished'),
 		file: document.file,
 		summary: firstSentence(document.body),
-		canvasSubpath: document.canvasBodySubpath,
 	};
 }
 
@@ -259,7 +256,6 @@ export function toDialogueRecord(
 		type,
 		topic,
 		file: document.file,
-		canvasSubpath: document.canvasBodySubpath,
 		diagId: getStringValue(document.frontmatter, 'DiagID') ?? '',
 		prevId: getStringValue(document.frontmatter, 'PrevID') ?? '',
 		bodyText,

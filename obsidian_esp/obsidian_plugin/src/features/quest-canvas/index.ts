@@ -10,12 +10,15 @@ export {
 	generateQuestCanvasFromVaultFolder,
 } from './generate';
 export { discoverQuestScope } from './discovery';
+export { cleanCanvasBlockIds, stripCanvasSubpaths } from './migration';
+export { getCardMeta, setCardMeta } from './card-meta';
 export type {
 	CanvasBuildResult,
 	CanvasEdge,
 	CanvasNode,
 	Condition,
 	DialogueRecord,
+	EspCardMeta,
 	JournalMilestone,
 	QuestScope,
 	ResultAction,

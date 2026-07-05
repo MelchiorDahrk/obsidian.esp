@@ -15,7 +15,7 @@ import {
 	centerPhaseMilestone,
 	contextPhaseNodeId,
 	createCanvasLayoutContext,
-	updateCanvasLinksAndBodyBlocks,
+	writeCanvasBacklinks,
 	writeCanvasPlan,
 } from './emit';
 import {
@@ -30,7 +30,6 @@ import { applyLayeredCanvasLayout, computePhasePositions, layoutTopicFamilies, n
 import {
 	type CanvasBuildResult,
 	type DialogueRecord,
-	type FileNodeTarget,
 	GATE_GAP_X,
 	JOURNAL_FOLDER_NAME,
 	type JournalMilestone,
@@ -52,13 +51,22 @@ import {
 } from './transitions';
 import { uniqueNumbers } from './utils';
 
-export async function generateQuestCanvasFromVaultFolder(app: App): Promise<void> {
+/** Options controlling the only note write generation can perform. */
+export interface QuestCanvasWriteOptions {
+	/** When true, add a `canvas:` backlink to each related note (off by default). */
+	writeBacklinks?: boolean;
+}
+
+export async function generateQuestCanvasFromVaultFolder(
+	app: App,
+	options: QuestCanvasWriteOptions = {},
+): Promise<void> {
 	const folder = await selectVaultFolder(app);
 	if (!folder) {
 		return;
 	}
 
-	await generateQuestCanvasForFolder(app, folder);
+	await generateQuestCanvasForFolder(app, folder, options);
 }
 
 export function canGenerateQuestCanvasFromFolder(folder: TFolder): boolean {
@@ -76,6 +84,7 @@ export function canGenerateAllQuestCanvasesFromFolder(folder: TFolder): boolean 
 export async function generateQuestCanvasForFolder(
 	app: App,
 	folder: TFolder,
+	options: QuestCanvasWriteOptions = {},
 ): Promise<void> {
 	const progress = new ProgressBar('Generating quest canvas');
 	try {
@@ -83,6 +92,7 @@ export async function generateQuestCanvasForFolder(
 			app,
 			folder,
 			(percent, message) => progress.update(percent, message),
+			options,
 		);
 		const warningSuffix = result.warnings.length > 0 ? ` ${result.warnings[0]}` : '';
 		new Notice(`Generated ${result.questTitle}.canvas.${warningSuffix}`);
@@ -102,6 +112,7 @@ export async function generateQuestCanvasForFolder(
 export async function generateAllQuestCanvasesForJournalFolder(
 	app: App,
 	folder: TFolder,
+	options: QuestCanvasWriteOptions = {},
 ): Promise<void> {
 	const progress = new ProgressBar('Generating all quest canvases');
 	try {
@@ -144,6 +155,7 @@ export async function generateAllQuestCanvasesForJournalFolder(
 					(percent, message) => {
 						progress.update(batchProgress(index, questFolders.length, percent), `${prefix}: ${message}`);
 					},
+					options,
 				);
 				generatedCanvasPaths.add(result.outputCanvasPath);
 				generatedCount += 1;
@@ -181,27 +193,27 @@ export async function generateQuestCanvasForFolderWithProgress(
 	app: App,
 	folder: TFolder,
 	updateProgress: (percent: number, message: string) => void,
+	options: QuestCanvasWriteOptions = {},
 ): Promise<QuestCanvasGenerationResult> {
 	updateProgress(5, 'Checking the selected folder');
 	const scope = await discoverQuestScope(app, folder);
-	return generateQuestCanvasForScope(app, scope, updateProgress);
+	return generateQuestCanvasForScope(app, scope, updateProgress, options);
 }
 
 export async function generateQuestCanvasForScope(
 	app: App,
 	scope: QuestScope,
 	updateProgress: (percent: number, message: string) => void,
+	options: QuestCanvasWriteOptions = {},
 ): Promise<QuestCanvasGenerationResult> {
 	updateProgress(25, `Resolving dialogue for ${scope.questTitle}`);
 	const buildResult = await buildQuestCanvas(app, scope);
-	updateProgress(80, 'Writing canvas and backlinks');
+	updateProgress(80, 'Writing canvas');
 	await writeCanvasPlan(app, scope.outputCanvasPath, buildResult.nodes, buildResult.edges);
-	await updateCanvasLinksAndBodyBlocks(
-		app,
-		buildResult.relatedFiles,
-		buildResult.fileNodeTargets,
-		scope.outputCanvasPath,
-	);
+	if (options.writeBacklinks) {
+		updateProgress(90, 'Writing backlinks');
+		await writeCanvasBacklinks(app, buildResult.relatedFiles, scope.outputCanvasPath);
+	}
 
 	return {
 		questTitle: scope.questTitle,
@@ -343,39 +355,17 @@ export async function buildQuestCanvas(app: App, scope: QuestScope): Promise<Can
 	normalizeCanvasOrigin(canvasContext);
 
 	const relatedFiles = new Map<string, TFile>();
-	const fileNodeTargets = new Map<string, FileNodeTarget>();
 	for (const milestone of scope.journalDocuments) {
 		relatedFiles.set(milestone.file.path, milestone.file);
 	}
 	for (const record of canvasRecords) {
 		relatedFiles.set(record.file.path, record.file);
 	}
-	for (const milestone of scope.journalMilestones) {
-		if (!milestone.canvasSubpath) {
-			continue;
-		}
-
-		fileNodeTargets.set(milestone.file.path, {
-			file: milestone.file,
-			subpath: milestone.canvasSubpath,
-		});
-	}
-	for (const record of canvasRecords) {
-		if (!record.canvasSubpath) {
-			continue;
-		}
-
-		fileNodeTargets.set(record.file.path, {
-			file: record.file,
-			subpath: record.canvasSubpath,
-		});
-	}
 
 	return {
 		nodes: canvasContext.nodes,
 		edges: canvasContext.edges,
 		relatedFiles: [...relatedFiles.values()].sort((left, right) => left.path.localeCompare(right.path)),
-		fileNodeTargets: [...fileNodeTargets.values()].sort((left, right) => left.file.path.localeCompare(right.file.path)),
 		warnings,
 	};
 }

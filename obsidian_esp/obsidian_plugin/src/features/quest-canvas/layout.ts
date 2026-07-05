@@ -52,6 +52,7 @@ import {
 	type PhaseTopicSegment,
 	RESULT_COLOR,
 	RESULT_GAP_Y,
+	type ResultAction,
 	SPACER_UNIT_GAP_Y,
 	SPACER_UNIT_SIZE,
 	TOPIC_SEGMENT_GAP_X,
@@ -90,7 +91,7 @@ export function layoutBranchFamily(
 			.map((action) => renderResultAction(action, allMilestones));
 		const localResultHeight = localResultLines.length > 0 ? measureTextHeight(localResultLines.join('\n'), DIALOGUE_WIDTH) + RESULT_GAP_Y : 0;
 		const choiceActions = familyChoiceActions.filter((action) => action.choiceValue !== undefined);
-		const choiceHeights = choiceActions.map((action) => measureTextHeight(action.displayText, CHOICE_WIDTH));
+		const choiceHeights = choiceActions.map((action) => measureTextHeight(choicePromptText(action), CHOICE_WIDTH));
 		const choiceStackHeight = choiceHeights.reduce((total, height, index) => {
 			const spacing = index === 0 ? 0 : 24;
 			return total + spacing + height;
@@ -106,7 +107,7 @@ export function layoutBranchFamily(
 			DIALOGUE_WIDTH,
 			dialogueHeight,
 			DIALOGUE_COLOR,
-			record.canvasSubpath,
+			{ role: 'dialogue', file: record.file.path },
 		);
 		const gateY = Math.round(recordY + Math.max(0, (dialogueHeight - gateHeight) / 2));
 		const gateId = gateText.length > 0
@@ -118,6 +119,7 @@ export function layoutBranchFamily(
 				gateY,
 				GATE_WIDTH,
 				GATE_COLOR,
+				{ role: 'gate', file: record.file.path },
 			)
 			: dialogueId;
 		context.relatedFiles.set(record.file.path, record.file);
@@ -140,6 +142,7 @@ export function layoutBranchFamily(
 				recordY + dialogueHeight + RESULT_GAP_Y,
 				DIALOGUE_WIDTH,
 				containsJournalLine(localResultLines) ? JOURNAL_COLOR : RESULT_COLOR,
+				{ role: 'result', file: record.file.path },
 			);
 			addEdge(context, `${dialogueId}:${resultId}`, dialogueId, 'bottom', resultId, 'top');
 		}
@@ -178,11 +181,12 @@ export function layoutBranchFamily(
 				choiceNodeId = addTextNode(
 					context,
 					`choice:${record.file.path}:${choiceAction.choiceValue}:${choiceAction.displayText}`,
-					choiceAction.displayText,
+					choicePromptText(choiceAction),
 					choiceX,
 					choiceCursorY,
 					CHOICE_WIDTH,
 					GATE_COLOR,
+					{ role: 'choice', file: record.file.path, choiceValue: choiceAction.choiceValue },
 				);
 				recordChoiceNodeIds.set(choiceNodeKey, choiceNodeId);
 				choiceAnchors.push({
@@ -211,6 +215,14 @@ export function layoutBranchFamily(
 		nextY: currentY,
 		choiceAnchors,
 	};
+}
+
+/**
+ * Choice cards show only the prompt string; the choice value lives in
+ * espCard.choiceValue (§2 of the editing plan).
+ */
+function choicePromptText(action: ResultAction): string {
+	return action.choiceText ?? action.displayText;
 }
 
 export function layoutTopicFamilies(

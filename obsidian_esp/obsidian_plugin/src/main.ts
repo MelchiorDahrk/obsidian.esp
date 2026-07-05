@@ -7,6 +7,7 @@ import {
 import {
 	canGenerateAllQuestCanvasesFromFolder,
 	canGenerateQuestCanvasFromFolder,
+	cleanCanvasBlockIds,
 	generateAllQuestCanvasesForJournalFolder,
 	generateQuestCanvasForFolder,
 	generateQuestCanvasFromVaultFolder,
@@ -81,6 +82,16 @@ export default class ObsidianEsp extends Plugin {
 				void this.generateQuestCanvas();
 			},
 		});
+
+		this.addCommand({
+			id: 'clean-canvas-block-ids',
+			name: 'Clean canvas block ID markers',
+			callback: () => {
+				void this.cleanCanvasBlockIds();
+			},
+		});
+
+		this.applyCanvasPropertyVisibility();
 
 		// Vault Context Menu Integration
 		this.registerEvent(
@@ -185,7 +196,39 @@ export default class ObsidianEsp extends Plugin {
 	 * Cleans up resources when the plugin is disabled.
 	 */
 	onunload() {
+		document.body.removeClass('esp-hide-canvas-properties');
 		void this.dbManager.unloadDatabase();
+	}
+
+	/**
+	 * Toggles the body class that hides note properties inside canvas cards.
+	 */
+	applyCanvasPropertyVisibility() {
+		document.body.toggleClass(
+			'esp-hide-canvas-properties',
+			this.settings.hideCanvasProperties,
+		);
+	}
+
+	/**
+	 * Strips legacy quest-canvas block IDs from notes, prunes dead canvas
+	 * backlinks, and removes stale subpaths from canvas files.
+	 */
+	async cleanCanvasBlockIds() {
+		const notice = new Notice('Cleaning canvas block ID markers…', 0);
+		try {
+			const summary = await cleanCanvasBlockIds(this.app);
+			notice.hide();
+			new Notice(
+				`Cleaned ${summary.notesChanged} note${summary.notesChanged === 1 ? '' : 's'}, `
+				+ `${summary.canvasesChanged} canvas${summary.canvasesChanged === 1 ? '' : 'es'}, `
+				+ `pruned ${summary.backlinksPruned} dead backlink${summary.backlinksPruned === 1 ? '' : 's'}.`,
+			);
+		} catch (error) {
+			notice.hide();
+			const message = error instanceof Error ? error.message : String(error);
+			new Notice(`Failed to clean canvas block IDs: ${message}`, 10000);
+		}
 	}
 
 	/**
@@ -351,21 +394,25 @@ export default class ObsidianEsp extends Plugin {
 	 * Prompts the user to select a journal folder and generates a quest canvas.
 	 */
 	async generateQuestCanvas() {
-		await generateQuestCanvasFromVaultFolder(this.app);
+		await generateQuestCanvasFromVaultFolder(this.app, this.canvasWriteOptions());
 	}
 
 	/**
 	 * Generates a quest canvas for the selected journal folder.
 	 */
 	async generateQuestCanvasForSelectedFolder(folder: TFolder) {
-		await generateQuestCanvasForFolder(this.app, folder);
+		await generateQuestCanvasForFolder(this.app, folder, this.canvasWriteOptions());
 	}
 
 	/**
 	 * Generates quest canvases for every quest folder in the selected Journal folder.
 	 */
 	async generateAllQuestCanvasesForSelectedFolder(folder: TFolder) {
-		await generateAllQuestCanvasesForJournalFolder(this.app, folder);
+		await generateAllQuestCanvasesForJournalFolder(this.app, folder, this.canvasWriteOptions());
+	}
+
+	private canvasWriteOptions() {
+		return { writeBacklinks: this.settings.writeCanvasBacklinks };
 	}
 
 	/**

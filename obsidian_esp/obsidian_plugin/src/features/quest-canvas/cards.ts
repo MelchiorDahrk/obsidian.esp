@@ -250,6 +250,7 @@ export function parseChoiceResults(line: string): ResultAction[] {
 			kind: 'choice-set',
 			displayText: `"${choiceLabel}" - Choice ${choiceValue}`,
 			choiceValue: Number.parseInt(choiceValue, 10),
+			choiceText: choiceLabel,
 		});
 		match = choicePattern.exec(line);
 	}
@@ -312,7 +313,7 @@ export function renderResultAction(action: ResultAction, allMilestones: JournalM
 
 	const labelQuestId = action.targetQuestId ?? targetMilestone.questId;
 	const label = `${labelQuestId} ${action.targetJournalIndex}`;
-	return `Journal [[${toWikilinkTarget(targetMilestone.file.path, targetMilestone.canvasSubpath)}|${label}]]`;
+	return `Journal [[${toWikilinkTarget(targetMilestone.file.path)}|${label}]]`;
 }
 
 // ---------------------------------------------------------------------------
