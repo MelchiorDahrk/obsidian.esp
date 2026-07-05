@@ -9,7 +9,7 @@ import { TFile, TFolder, normalizePath } from 'obsidian';
 import {
 	discoverQuestScope,
 	buildQuestCanvas,
-} from '../../obsidian_plugin/src/features/generate-quest-canvas.ts';
+} from '../../obsidian_plugin/src/features/quest-canvas/index.ts';
 
 class FakeVault {
 	constructor(rootDir) {

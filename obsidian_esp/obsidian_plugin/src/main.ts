@@ -10,7 +10,7 @@ import {
 	generateAllQuestCanvasesForJournalFolder,
 	generateQuestCanvasForFolder,
 	generateQuestCanvasFromVaultFolder,
-} from './features/generate-quest-canvas';
+} from './features/quest-canvas';
 import { generatePropertyFilesForFolder } from './features/generate-properties';
 import {
 	DEFAULT_SETTINGS,
