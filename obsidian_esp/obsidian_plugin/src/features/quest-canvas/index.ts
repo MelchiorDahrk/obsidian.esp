@@ -12,6 +12,28 @@ export {
 export { discoverQuestScope } from './discovery';
 export { cleanCanvasBlockIds, stripCanvasSubpaths } from './migration';
 export { getCardMeta, setCardMeta } from './card-meta';
+export { QuestCanvasSyncEngine } from './sync';
+export {
+	applyResultCardLines,
+	applySyncPlanToCanvas,
+	deriveQuestContext,
+	diffCanvasTextEdits,
+	editableCardText,
+	hashCanvasContent,
+	parseCanvasData,
+	planSyncFromEdits,
+	renameChoiceInResult,
+	renderCardFromNote,
+} from './sync-core';
+export type { CanvasData, CardTextEdit, SyncPlan } from './sync-core';
+export {
+	applyGateLines,
+	clearFilterSlot,
+	removeFrontmatterKey,
+	setFilterSlot,
+	setFrontmatterKey,
+	setResultLines,
+} from './frontmatter-surgeon';
 export type {
 	CanvasBuildResult,
 	CanvasEdge,

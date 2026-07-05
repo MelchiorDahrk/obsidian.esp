@@ -1,7 +1,7 @@
 import {
 	type Condition,
 	type FrontmatterValue,
-	type JournalMilestone,
+	type MilestoneLink,
 	NUMERIC_OPERATOR_PATTERN,
 	type NumericOperator,
 	type ResultAction,
@@ -301,7 +301,7 @@ export function containsJournalLine(lines: string[]): boolean {
 	return lines.some((line) => line.startsWith('Journal [['));
 }
 
-export function renderResultAction(action: ResultAction, allMilestones: JournalMilestone[]): string {
+export function renderResultAction(action: ResultAction, allMilestones: MilestoneLink[]): string {
 	if (action.kind !== 'journal-set' || action.targetJournalIndex === undefined) {
 		return action.displayText;
 	}
@@ -589,10 +589,10 @@ export function renderResultNoteLine(line: ResultLine): string {
 	}
 }
 
-export function resolveJournalResultMilestone(
+export function resolveJournalResultMilestone<T extends MilestoneLink>(
 	action: ResultAction,
-	allMilestones: JournalMilestone[],
-): JournalMilestone | null {
+	allMilestones: T[],
+): T | null {
 	if (action.kind !== 'journal-set' || action.targetJournalIndex === undefined) {
 		return null;
 	}

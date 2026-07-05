@@ -11,6 +11,7 @@ import {
 	generateAllQuestCanvasesForJournalFolder,
 	generateQuestCanvasForFolder,
 	generateQuestCanvasFromVaultFolder,
+	QuestCanvasSyncEngine,
 } from './features/quest-canvas';
 import { generatePropertyFilesForFolder } from './features/generate-properties';
 import {
@@ -92,6 +93,7 @@ export default class ObsidianEsp extends Plugin {
 		});
 
 		this.applyCanvasPropertyVisibility();
+		new QuestCanvasSyncEngine(this).register();
 
 		// Vault Context Menu Integration
 		this.registerEvent(

@@ -109,6 +109,17 @@ export interface JournalMilestone {
 	summary: string;
 }
 
+/**
+ * The subset of {@link JournalMilestone} needed to render `Journal` result
+ * lines as wikilinks. The sync engine reconstructs these from canvas
+ * provenance metadata, where no TFile is available.
+ */
+export interface MilestoneLink {
+	questId: string;
+	index: number;
+	file: { path: string };
+}
+
 export interface Condition {
 	kind: 'speaker' | 'journal' | 'item' | 'variable' | 'choice' | 'other';
 	displayText: string;
