@@ -1,3 +1,20 @@
+//! Resolution: merges a compiled plugin with its master files and diffs the
+//! result.
+//!
+//! Merging masters and plugin into one dataset has a side effect: inserting a
+//! response into an existing topic rewrites the prev/next link pointers of
+//! neighboring *master* records. Shipping those as edits would bloat the
+//! plugin and create false conflicts, so this module snapshots every master
+//! info before the merge (`create_link_snapshots`) and afterwards classifies
+//! each change as **semantic** (content differs) or **link-only** (only the
+//! pointers moved). Two entry points share that machinery:
+//!
+//! - [`resolve`] — native path: prunes everything unmodified and returns a
+//!   minimal `PluginData` ready to save as an `.esp`.
+//! - [`resolve_full_database`] — WASM path: keeps the entire merged database
+//!   in memory (for the Obsidian plugin's `GameDatabase`) and returns the
+//!   link-only change list alongside it.
+
 use anyhow::Result;
 use merge_to_master::traits::MergeInto;
 use merge_to_master::{DialogueGroup, Exterior, Interior, PluginData, merge_load_order};
@@ -6,6 +23,11 @@ use std::collections::HashSet;
 use std::path::PathBuf;
 use tes3::esp::{DialogueData, DialogueType2, Filter, ObjectFlags, ObjectInfo, QuestState};
 
+/// A value snapshot of every *semantic* field of a `DialogueInfo` — i.e.
+/// everything except the `prev_id`/`next_id` link pointers and record ID.
+///
+/// Comparing snapshots taken before and after a merge tells us whether a
+/// record's content actually changed or only its position in the linked list.
 #[derive(Clone, PartialEq)]
 struct InfoSnapshot {
     flags: ObjectFlags,
@@ -43,6 +65,8 @@ impl From<&tes3::esp::DialogueInfo> for InfoSnapshot {
     }
 }
 
+/// Per-topic map of info ID -> `(prev_id, next_id, content snapshot)` captured
+/// before merging. Outer key is the dialogue (topic) ID.
 type LinkSnapshots = HashMap<String, HashMap<String, (String, String, InfoSnapshot)>>;
 
 /// Captures the current link pointers (prev/next) and a semantic content snapshot for all

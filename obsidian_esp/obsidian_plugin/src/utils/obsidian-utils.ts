@@ -1,7 +1,25 @@
+/**
+ * @file Frontmatter access helpers shared across features.
+ *
+ * The central concern here is *opaque string preservation*: dialogue IDs
+ * (`DiagID`/`PrevID`) are numeric strings up to 20 digits, which exceeds
+ * `Number.MAX_SAFE_INTEGER`. Obsidian's metadata cache parses unquoted YAML
+ * numbers as JS numbers, silently corrupting the low digits. Whenever the
+ * cache hands back a number for one of those keys, we re-read the raw
+ * frontmatter text and restore the exact string.
+ */
 import { App, TFile } from 'obsidian';
 
+/**
+ * Frontmatter keys whose values must be treated as opaque strings, never
+ * numbers, because they can exceed JS float precision.
+ */
 const OPAQUE_STRING_FRONTMATTER_KEYS = ['DiagID', 'PrevID'] as const;
 
+/**
+ * Pulls a single key's raw (unparsed) text value out of a frontmatter block,
+ * bypassing YAML number coercion entirely.
+ */
 function extractRawFrontmatterValue(
 	frontmatter: string,
 	keyToFind: string,
@@ -28,12 +46,20 @@ function extractRawFrontmatterValue(
 	return undefined;
 }
 
+/**
+ * Detects whether the metadata cache coerced any opaque-string key into a
+ * number (the precision-corruption case described in the file header).
+ */
 function frontmatterHasCoercedOpaqueValue(frontmatter: Record<string, any>): boolean {
 	return OPAQUE_STRING_FRONTMATTER_KEYS.some(
 		(key) => typeof frontmatter[key] === 'number',
 	);
 }
 
+/**
+ * Returns a copy of the cached frontmatter with every number-coerced opaque
+ * key replaced by its exact raw string from the file text.
+ */
 function preserveOpaqueStringValues(
 	frontmatter: Record<string, any>,
 	rawFrontmatter: string,

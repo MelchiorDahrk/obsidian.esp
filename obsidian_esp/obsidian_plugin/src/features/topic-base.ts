@@ -1,7 +1,21 @@
+/**
+ * @file The shared Obsidian Bases definition for topic tables.
+ *
+ * Every project root gets one `base.base` file; each topic's index note
+ * embeds a named view from it (`![[.../base.base#Topic View]]`) to show that
+ * topic's responses as a sortable table. The file is plugin-owned: its
+ * content is overwritten on every topic-link update, so user edits to it do
+ * not survive. The Rust exporter's `is_generated_topic_index_file` recognizes
+ * these embeds — keep the view names here in sync with that list.
+ */
 import { App, TFile, TFolder, normalizePath } from 'obsidian';
 
 export const BASE_FILE_NAME = 'base.base';
 
+/**
+ * Canonical `base.base` content: shows sibling notes of the embedding index
+ * file, with one identically-shaped table view per dialogue type.
+ */
 export const BASE_FILE_CONTENT = `filters:
   and:
     - file.inFolder(this.file.folder)
@@ -110,6 +124,10 @@ views:
       - Variable5
 `;
 
+/**
+ * Creates `base.base` in the folder, or rewrites it if its content has
+ * drifted from the canonical definition above.
+ */
 export async function ensureBaseFileInFolder(
 	app: App,
 	folder: TFolder,

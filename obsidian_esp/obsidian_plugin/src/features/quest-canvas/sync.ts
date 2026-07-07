@@ -1,3 +1,11 @@
+/**
+ * @file Obsidian wiring for the canvas<->note sync engine.
+ *
+ * Owns the vault event handlers, debouncing, loop guards, and writes; the
+ * pure translation logic is in sync-core.ts. Watches open quest canvases:
+ * card edits flow to note edits, and note edits flow back to re-rendered
+ * cards. See canvas_editing_internals.md, "Sync engine".
+ */
 import { type App, Modal, Notice, Plugin, Setting, TFile } from 'obsidian';
 import { refreshCardFromNote } from './actions';
 import { getCardMeta } from './card-meta';

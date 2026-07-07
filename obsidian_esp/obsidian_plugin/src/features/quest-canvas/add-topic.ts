@@ -1,11 +1,28 @@
+/**
+ * @file Target selection for AddTopic edges.
+ *
+ * When a result card runs `AddTopic "x"`, the canvas draws an edge to where
+ * topic "x" is laid out — but a topic can be rendered in several places.
+ * This module picks which rendered instances should receive the edge.
+ */
+
+/** A candidate edge target with its canvas position and relevance score. */
 export interface PositionedAddTopicTarget<T> {
 	target: T;
 	nodeId: string;
+	/** Canvas coordinates of the candidate node. */
 	x: number;
 	y: number;
+	/** Higher = more relevant to the quest (0 when unscored). */
 	score?: number;
 }
 
+/**
+ * Picks the AddTopic edge targets from the topic's first (leftmost) layout
+ * column, i.e. where the reader enters the topic's tree. Within that column,
+ * only the best-scoring candidates are kept when any scores are present;
+ * ties keep all tied candidates (stable order: top-to-bottom, then node ID).
+ */
 export function selectFirstQuestTreeAddTopicTargets<T>(
 	positionedTargets: Array<PositionedAddTopicTarget<T>>,
 ): T[] {

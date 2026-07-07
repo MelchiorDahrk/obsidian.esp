@@ -1,5 +1,22 @@
+/**
+ * @file Web Worker that hosts a WASM instance of the Rust crate.
+ *
+ * Two roles, selected by the incoming RPC method:
+ *
+ * - **Parse worker** (`parseMaster`): initializes WASM, parses one master file
+ *   into a record array, and returns it. Spawned in a pool by
+ *   `parallel-loader.ts` so large masters parse concurrently.
+ * - **Merge worker** (`init` + `loadDatabase` + queries): owns the long-lived
+ *   `GameDatabase` for the session and answers the queries proxied by
+ *   `game-database.ts`.
+ *
+ * The protocol is a minimal request/response pair matched by `id`; errors are
+ * caught and returned as `{ok: false, error}` so the main thread can reject
+ * the corresponding promise.
+ */
 import * as obsidianEsp from '../../pkg/obsidian_esp.js';
 
+/** RPC request shape (mirror of `WorkerRequest` in game-database.ts). */
 interface WorkerRequest {
 	id: number;
 	method: string;
@@ -16,6 +33,12 @@ type WorkerResult = {
 	error: string;
 };
 
+/**
+ * Hand-written typings for the wasm-bindgen exports this worker uses.
+ * The generated `obsidian_esp.js` module is untyped in the worker bundle, so
+ * the shapes of `PluginBytes`/`GameDatabase` are declared here — keep them in
+ * sync with the `#[wasm_bindgen]` items in `src/lib.rs`.
+ */
 type WasmExports = typeof obsidianEsp & {
 	PluginBytes: new (bytes: Uint8Array) => {
 		free(): void;
@@ -35,8 +58,11 @@ type WasmExports = typeof obsidianEsp & {
 };
 
 const wasm = obsidianEsp as WasmExports;
+
+/** The worker's single long-lived WASM `GameDatabase` handle (merge role). */
 let database: any = null;
 
+/** Frees the current database's WASM memory, if any. Safe to call twice. */
 function freeDatabase(): void {
 	if (!database) {
 		return;
@@ -46,6 +72,12 @@ function freeDatabase(): void {
 	database = null;
 }
 
+/**
+ * Builds the session database, choosing the cheapest available path:
+ * pre-parsed master records when the parallel loader supplied them, raw
+ * master buffers otherwise, or a plain single-plugin load with no masters.
+ * Replaces (and frees) any previously loaded database.
+ */
 function handleLoadDatabase(params: {
 	fileName: string;
 	pluginBytes: ArrayBuffer;
@@ -92,6 +124,7 @@ function handleLoadDatabase(params: {
 	}
 }
 
+/** Returns the loaded database or throws a descriptive error for the caller. */
 function requireDatabase(): any {
 	if (!database) {
 		throw new Error('No database is currently loaded.');
@@ -100,6 +133,7 @@ function requireDatabase(): any {
 	return database;
 }
 
+/** Dispatches one RPC request to its implementation. */
 function handleRequest(request: WorkerRequest): unknown {
 	switch (request.method) {
 		case 'init':

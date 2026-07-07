@@ -1,19 +1,37 @@
+//! Reference validation: checks an authored project against its master
+//! plugins before compilation.
+//!
+//! Validation never fails the build — it produces a human-readable warning log
+//! (shown in the Obsidian plugin's compile output) flagging references that
+//! don't resolve: unknown NPC/faction/class/race/cell IDs, missing journal
+//! topics, and local script variables that don't exist on the speaker's
+//! attached script.
+
 use crate::parse::{ParsedFilter, ParsedInfo, ParsedPlugin};
 use anyhow::Result;
 use std::collections::{HashMap, HashSet};
 use tes3::esp::{DialogueType2, FilterType, Plugin, TES3Object};
 
+/// Lookup tables built from the master plugins. All keys are stored
+/// lowercased; lookups must lowercase their needle to match.
 #[derive(Default)]
 struct ValidationDatabase {
+    /// NPC and creature record IDs.
     actor_ids: HashSet<String>,
     class_ids: HashSet<String>,
     faction_ids: HashSet<String>,
     global_ids: HashSet<String>,
+    /// Journal topic IDs from masters *plus* journal topics defined by the
+    /// project being validated (so new quests can reference themselves).
     journal_topics: HashSet<String>,
+    /// Every identifiable record ID of any type (for `Item` filters).
     object_ids: HashSet<String>,
     race_ids: HashSet<String>,
+    /// Interior/exterior cell display names.
     cell_names: HashSet<String>,
+    /// Actor ID -> ID of the script attached to that actor.
     actor_scripts: HashMap<String, String>,
+    /// Script ID -> names of the local variables it declares.
     script_variables: HashMap<String, HashSet<String>>,
 }
 
@@ -238,6 +256,9 @@ fn validate_info(info: &ParsedInfo, database: &ValidationDatabase, warnings: &mu
     }
 }
 
+/// Validates a single dialogue filter's referenced ID against the appropriate
+/// lookup table for its filter type. `Local`/`NotLocal` filters get deeper
+/// treatment: the variable must exist on the script attached to the speaker.
 fn validate_filter(
     info: &ParsedInfo,
     filter: &ParsedFilter,
@@ -381,6 +402,7 @@ fn warn_if_missing(
     warnings.push(message);
 }
 
+/// Formats collected warnings into the final compile-log text shown to users.
 fn render_log(warnings: &[String]) -> String {
     let mut output = String::from("obsidian_esp compile log\n");
 

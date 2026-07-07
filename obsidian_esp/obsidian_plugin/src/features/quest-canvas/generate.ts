@@ -1,3 +1,16 @@
+/**
+ * @file Quest canvas generation: the top-level orchestrator.
+ *
+ * {@link buildQuestCanvas} runs the whole pipeline for one quest — discover
+ * scope, read and analyze dialogue, resolve relevance and phase anchors,
+ * group families, lay out each phase, wire cross-topic transitions, then run
+ * the global layered layout. The `generate*` wrappers add UI (folder pick,
+ * progress bar, notices), batch generation over all quests, and refresh-mode
+ * merging that preserves manual layout (see refresh.ts / sync-core.ts).
+ *
+ * The pipeline stages live in sibling modules: discovery.ts, families.ts,
+ * layout.ts, transitions.ts, emit.ts — see each for detail.
+ */
 import { App, normalizePath, Notice, TFile, TFolder } from 'obsidian';
 import { selectVaultFolder } from '../../ui/folder-suggest-modal';
 import { ProgressBar } from '../../ui/progress-bar';
@@ -65,6 +78,7 @@ export interface QuestCanvasWriteOptions {
 	mode?: 'refresh' | 'full';
 }
 
+/** Command entry point: prompts for a folder, then generates its canvas. */
 export async function generateQuestCanvasFromVaultFolder(
 	app: App,
 	options: QuestCanvasWriteOptions = {},
@@ -77,10 +91,12 @@ export async function generateQuestCanvasFromVaultFolder(
 	await generateQuestCanvasForFolder(app, folder, options);
 }
 
+/** Whether the folder is a `Journal/<QuestId>` folder (gates the menu item). */
 export function canGenerateQuestCanvasFromFolder(folder: TFolder): boolean {
 	return folder.parent?.name === JOURNAL_FOLDER_NAME;
 }
 
+/** Whether the folder is the project's top-level `Journal` folder. */
 export function canGenerateAllQuestCanvasesFromFolder(folder: TFolder): boolean {
 	const projectRoot = PathManager.findPluginRoot(folder);
 	if (!projectRoot) {
@@ -89,6 +105,7 @@ export function canGenerateAllQuestCanvasesFromFolder(folder: TFolder): boolean 
 	return folder.path === normalizePath(`${projectRoot.path}/${JOURNAL_FOLDER_NAME}`);
 }
 
+/** Generates one quest canvas with a progress bar and success/error notices. */
 export async function generateQuestCanvasForFolder(
 	app: App,
 	folder: TFolder,
@@ -117,6 +134,12 @@ export async function generateQuestCanvasForFolder(
 	}
 }
 
+/**
+ * Generates a canvas for every quest folder under `Journal/`. Linked
+ * multi-topic quests share one canvas, so folders resolving to an
+ * already-generated output are skipped; per-quest failures are collected and
+ * reported without aborting the batch.
+ */
 export async function generateAllQuestCanvasesForJournalFolder(
 	app: App,
 	folder: TFolder,
@@ -197,6 +220,7 @@ export async function generateAllQuestCanvasesForJournalFolder(
 	}
 }
 
+/** Discovers scope for a folder and generates its canvas, reporting progress. */
 export async function generateQuestCanvasForFolderWithProgress(
 	app: App,
 	folder: TFolder,
@@ -208,6 +232,12 @@ export async function generateQuestCanvasForFolderWithProgress(
 	return generateQuestCanvasForScope(app, scope, updateProgress, options);
 }
 
+/**
+ * Builds the canvas for an already-discovered scope and writes it. In refresh
+ * mode an existing canvas is merged so manual node moves survive
+ * ({@link mergeCanvasPreservingLayout}); in full mode it is overwritten.
+ * Optionally writes `canvas:` backlinks into the related notes.
+ */
 export async function generateQuestCanvasForScope(
 	app: App,
 	scope: QuestScope,
@@ -244,10 +274,20 @@ export async function generateQuestCanvasForScope(
 	};
 }
 
+/** Maps a per-folder percentage onto the overall batch progress bar. */
 export function batchProgress(folderIndex: number, folderCount: number, folderPercent: number): number {
 	return ((folderIndex + folderPercent / 100) / folderCount) * 100;
 }
 
+/**
+ * The full generation pipeline for one quest, producing the canvas nodes and
+ * edges without writing anything. In order: read dialogue notes and analyze
+ * each into a record; resolve which records are quest-relevant (transitively,
+ * through choices and AddTopic); assign phase anchors and info order; group
+ * into families; place one journal node per phase; lay out each phase's
+ * topics; wire every cross-topic transition; then run the global layered
+ * layout and normalize the origin. Also collects unreachable-choice warnings.
+ */
 export async function buildQuestCanvas(app: App, scope: QuestScope): Promise<CanvasBuildResult> {
 	const dialogueDocuments = await readDialogueDocuments(app, scope.projectRoot);
 	const allRecords = dialogueDocuments

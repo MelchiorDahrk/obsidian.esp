@@ -1,3 +1,15 @@
+//! Compilation: lowers a [`ParsedPlugin`] into native TES3 records.
+//!
+//! The main entry point is [`compile`], which builds the plugin header,
+//! converts every parsed dialogue info into a [`DialogueInfo`] record grouped
+//! by topic, and repairs the prev/next linked-list pointers that the engine
+//! uses to order responses. Submodules handle the surrounding passes:
+//!
+//! - [`validate`] — checks authored references (IDs, factions, cells, script
+//!   variables, ...) against master plugins and produces a warning log.
+//! - [`resolve`] — merges the compiled plugin with its masters and diffs the
+//!   result so only genuinely modified records ship in the final `.esp`.
+
 use crate::parse::{FilterValue, ParsedInfo, ParsedPlugin};
 use anyhow::{Result, ensure};
 use merge_to_master::{DialogueGroup, PluginData};
@@ -12,6 +24,8 @@ pub mod validate;
 
 use std::collections::{HashMap, HashSet};
 
+/// The engine's fixed set of greeting topics; `Greeting`-type files must live
+/// under one of these topic names.
 const VALID_GREETING_TOPICS: &[&str] = &[
     "Greeting 0",
     "Greeting 1",
@@ -25,6 +39,7 @@ const VALID_GREETING_TOPICS: &[&str] = &[
     "Greeting 9",
 ];
 
+/// The engine's fixed set of persuasion-outcome topics.
 const VALID_PERSUASION_TOPICS: &[&str] = &[
     "Admire Fail",
     "Admire Success",
@@ -38,6 +53,7 @@ const VALID_PERSUASION_TOPICS: &[&str] = &[
     "Taunt Success",
 ];
 
+/// The engine's fixed set of voice-line topics.
 const VALID_VOICE_TOPICS: &[&str] = &[
     "Alarm", "Attack", "Flee", "Hello", "Hit", "Idle", "Intruder", "Thief",
 ];
@@ -60,6 +76,9 @@ fn generate_info_id(existing_ids: &HashSet<String>) -> String {
     }
 }
 
+/// Generates `parse_filter_function_name`, a case-insensitive string ->
+/// [`FilterFunction`] lookup covering every variant listed in the invocation
+/// below. Keeping the list in a macro avoids hand-writing ~80 match arms.
 macro_rules! parse_filter_functions {
     ($($name:ident),+ $(,)?) => {
         fn parse_filter_function_name(name: &str) -> Option<FilterFunction> {

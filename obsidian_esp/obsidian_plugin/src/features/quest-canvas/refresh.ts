@@ -1,17 +1,19 @@
+/**
+ * @file Provenance-matched refresh (canvas_editing_internals.md,
+ * "Provenance-matched refresh").
+ *
+ * Rebuilds a quest canvas from the notes while keeping the user's manual
+ * layout. Freshly generated nodes are matched to existing ones by provenance
+ * (role + file + choiceValue); matched nodes keep their position and size,
+ * genuinely new nodes are placed relative to a matched neighbor, and orphaned
+ * generated nodes disappear. User-created nodes (no espCard) and user-drawn
+ * edges always survive.
+ */
 import { getCardMeta } from './card-meta';
 import { type CanvasEdge, type CanvasNode } from './model';
 import { type CanvasData } from './sync-core';
 
-// ---------------------------------------------------------------------------
-// Provenance-matched refresh (canvas_editing_internals.md, "Provenance-
-// matched refresh"): rebuild a quest canvas from
-// the notes while keeping the user's manual layout. Freshly generated nodes
-// are matched to existing ones by provenance (role + file + choiceValue);
-// matched nodes keep their position and size, genuinely new nodes are placed
-// relative to a matched neighbor, and orphaned generated nodes disappear.
-// User-created nodes (no espCard) and user-drawn edges always survive.
-// ---------------------------------------------------------------------------
-
+/** Tallies of what a refresh merge did, for the completion notice. */
 export interface RefreshStats {
 	matched: number;
 	added: number;
@@ -20,6 +22,11 @@ export interface RefreshStats {
 	userEdgesKept: number;
 }
 
+/**
+ * Provenance identity of a generated node (`role:file:choiceValue`), or
+ * `null` for user-created nodes. Two nodes with the same key across a
+ * regeneration are "the same card" and share geometry.
+ */
 function provenanceKey(node: CanvasNode): string | null {
 	const meta = getCardMeta(node);
 	if (!meta) {

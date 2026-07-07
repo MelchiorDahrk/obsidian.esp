@@ -1,3 +1,11 @@
+//! Target-aware `tracing` setup.
+//!
+//! Provides a single [`init_logger`] entry point with two implementations
+//! selected at compile time: native builds log to stdout, WASM builds log to
+//! the browser's JS console. The macros (`info!`, `warn!`, ...) are re-exported
+//! so callers can `use obsidian_esp::logging::*` without depending on
+//! `tracing` directly.
+
 use tracing::Level;
 use tracing_appender::non_blocking::WorkerGuard;
 

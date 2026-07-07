@@ -1,11 +1,21 @@
+/**
+ * @file High-level database loading workflow with progress reporting.
+ *
+ * Sits between the UI (`DatabaseManager`) and the lower layers: reads the
+ * picked file, sniffs its master list from the raw header, locates the
+ * masters on disk via the OpenMW configuration, and drives
+ * {@link GameDatabase.load} while updating a {@link ProgressBar}.
+ */
 import { App } from 'obsidian';
 import { GameDatabase } from './game-database';
 import { loadValidationMasters } from '../features/master-files';
 import { ProgressBar } from '../ui/progress-bar';
 import { extractMasterNamesFromPluginBytes } from './header-parser';
 
+/** Outcome of a load: the database handle plus user-facing status messages. */
 export interface LoadResult {
     db: GameDatabase;
+    /** Warnings collected along the way (missing masters, ingress anomalies). */
     messages: string[];
 }
 

@@ -1,6 +1,14 @@
+/**
+ * @file Notice-based progress bar.
+ */
 import { Notice } from 'obsidian';
 import { ProgressReporter } from '../utils/progress-reporter';
 
+/**
+ * A {@link ProgressReporter} rendered inside a persistent Obsidian Notice:
+ * bold title, accent-colored fill bar, and a status label. The notice stays
+ * open until {@link hide} is called.
+ */
 export class ProgressBar implements ProgressReporter {
 	private notice: Notice;
 	private barInner: HTMLElement;
@@ -29,16 +37,19 @@ export class ProgressBar implements ProgressReporter {
 		this.label.style.color = 'var(--text-muted)';
 	}
 
+	/** Sets the bar fill (clamped to 0-100) and the status message. */
 	update(percent: number, message: string) {
 		const clampedPercent = Math.min(100, Math.max(0, percent));
 		this.barInner.style.width = `${clampedPercent}%`;
 		this.label.setText(message);
 	}
 
+	/** Replaces the bold title above the bar. */
 	setTitle(title: string) {
 		this.titleEl.setText(title);
 	}
 
+	/** Dismisses the notice. Call when the operation finishes or fails. */
 	hide() {
 		this.notice.hide();
 	}

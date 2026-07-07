@@ -1,3 +1,18 @@
+/**
+ * @file Condition compatibility logic.
+ *
+ * Pure predicates that decide whether two dialogue conditions can be
+ * satisfied simultaneously — used when grouping records into families and
+ * when deciding which records a transition can legally flow to. Kept free of
+ * Obsidian imports so it can be unit-tested and used by the harness.
+ */
+
+/**
+ * Whether a speaker condition value on a candidate record is compatible with
+ * the same-labelled value on a source record. Values match by
+ * case-insensitive equality, except `Disposition` which is a threshold: a
+ * source meeting a higher disposition also meets any lower requirement.
+ */
 export function speakerConditionValuesAreCompatible(
 	label: string,
 	sourceValue: string,
@@ -16,19 +31,27 @@ export function speakerConditionValuesAreCompatible(
 
 export type NumericOperator = '<=' | '>=' | '<' | '>' | '=' | '==' | '!=';
 
+/** An `operator value` comparison (e.g. `>= 30`); both parts optional. */
 export interface NumericConditionRangeInput {
 	operator?: NumericOperator;
 	value?: number;
 }
 
+/** A numeric comparison expressed as an interval with exclusions. */
 interface NumericConditionRange {
 	min: number;
 	minInclusive: boolean;
 	max: number;
 	maxInclusive: boolean;
+	/** Values carved out of the interval (from `!=`). */
 	excludedValues: number[];
 }
 
+/**
+ * Whether two numeric conditions can hold at once, by converting each to an
+ * interval and testing that the intersection is non-empty. Conditions with
+ * no value are treated as unconstrained (always compatible).
+ */
 export function numericConditionRangesAreCompatible(
 	left: NumericConditionRangeInput,
 	right: NumericConditionRangeInput,
@@ -59,11 +82,13 @@ export function numericConditionRangesAreCompatible(
 	return true;
 }
 
+/** Minimal condition shape needed to check for a quest's journal filter. */
 export interface QuestJournalFilterInput {
 	kind: string;
 	questId?: string;
 }
 
+/** Whether any condition is a journal filter on one of the given quest IDs. */
 export function hasSelectedQuestJournalFilter(
 	conditions: QuestJournalFilterInput[],
 	questIds: string[],
@@ -73,6 +98,7 @@ export function hasSelectedQuestJournalFilter(
 		&& questIds.includes(condition.questId));
 }
 
+/** Converts an operator+value comparison into its interval representation. */
 function numericConditionRange(condition: NumericConditionRangeInput): NumericConditionRange {
 	const value = condition.value ?? 0;
 	switch (condition.operator) {
@@ -129,6 +155,10 @@ function numericConditionRange(condition: NumericConditionRangeInput): NumericCo
 	}
 }
 
+/**
+ * Whether `range` includes the candidate intersection minimum `min` — true
+ * when the range's own bound is looser than `min` or inclusive at it.
+ */
 function numericRangeUsesInclusiveMin(range: NumericConditionRange, min: number): boolean {
 	if (range.min === Number.NEGATIVE_INFINITY || range.min < min) {
 		return true;
@@ -136,6 +166,7 @@ function numericRangeUsesInclusiveMin(range: NumericConditionRange, min: number)
 	return range.minInclusive;
 }
 
+/** Counterpart of {@link numericRangeUsesInclusiveMin} for the maximum. */
 function numericRangeUsesInclusiveMax(range: NumericConditionRange, max: number): boolean {
 	if (range.max === Number.POSITIVE_INFINITY || range.max > max) {
 		return true;
@@ -143,6 +174,7 @@ function numericRangeUsesInclusiveMax(range: NumericConditionRange, max: number)
 	return range.maxInclusive;
 }
 
+/** Strict integer parse; returns `null` for anything but an integer string. */
 function parseIntegerValue(value: string): number | null {
 	const trimmedValue = value.trim();
 	if (!/^-?\d+$/.test(trimmedValue)) {

@@ -1,3 +1,16 @@
+/**
+ * @file Cross-topic edge wiring, run after every topic has been laid out.
+ *
+ * Layout places nodes and intra-topic edges; the passes here add the edges
+ * that connect the graph *across* topics and phases: phase-entry edges from
+ * journal nodes, `Choice n` transitions, `AddTopic` and body-wikilink
+ * introductions, implied progression between adjacent journal phases, and
+ * jump nodes that reroute long back-edges. All passes are reachability-aware
+ * (`nodeCanReach`) so they never introduce a cycle or duplicate an existing
+ * path. Edges that are placement heuristics rather than real game semantics
+ * are marked derived (the trailing `true` on `addEdge`) so the sync engine
+ * ignores them.
+ */
 import { addEdge, addTextNode, edgeEndpoint, findCanvasNode, isChoiceNode, nodeCanReach } from './emit';
 import {
 	conditionsCanFollowJournalPhase,
@@ -28,6 +41,10 @@ import {
 } from './model';
 import { createNodeId, extractBodyTopicLinks, measureTextHeight, normalizeTopicKey, uniqueNumbers } from './utils';
 
+/**
+ * Whether a topic entry point may be wired from a phase's journal node —
+ * true when at least one record behind the entry can run at that phase.
+ */
 export function entryCanFollowPhaseMilestone(
 	entryId: string,
 	families: BranchFamily[],
@@ -45,6 +62,12 @@ export function entryCanFollowPhaseMilestone(
 	return entryRecords.some((record) => recordCanRunAtPhase(record, phaseValue, questIds));
 }
 
+/**
+ * Draws the deferred journal-node -> topic-entry edges collected during
+ * layout, skipping any that are already reachable through other paths.
+ * Choice-gated entries are processed last so direct entries claim
+ * reachability first.
+ */
 export function connectPendingPhaseEntryEdges(context: CanvasLayoutContext, pendingEdges: PendingPhaseEntryEdge[]): void {
 	const orderedEdges = [...pendingEdges].sort(
 		(left, right) => Number(pendingPhaseEntryHasChoiceCondition(left, context))
@@ -72,6 +95,7 @@ export function connectPendingPhaseEntryEdges(context: CanvasLayoutContext, pend
 	}
 }
 
+/** Whether the pending edge's entry records are gated behind a Choice. */
 export function pendingPhaseEntryHasChoiceCondition(
 	pendingEdge: PendingPhaseEntryEdge,
 	context: CanvasLayoutContext,
@@ -84,6 +108,12 @@ export function pendingPhaseEntryHasChoiceCondition(
 		));
 }
 
+/**
+ * Wires each journal-conditioned record from the milestone node(s) its
+ * conditions reference. Candidate edges are then thinned: an edge is dropped
+ * when another record at the same phase already flows into the same entry
+ * (the milestone connects to the head of a chain, not every link).
+ */
 export function connectJournalConditionMilestones(
 	context: CanvasLayoutContext,
 	records: DialogueRecord[],
@@ -148,6 +178,11 @@ export function connectJournalConditionMilestones(
 	pruneRedundantJournalConditionMilestoneEdges(context, candidateEdges);
 }
 
+/**
+ * Whether another candidate at the same phase already reaches this entry
+ * one-directionally (i.e. it has an upstream sibling, so a direct milestone
+ * edge would be redundant).
+ */
 export function hasReachableMilestoneParent(
 	context: CanvasLayoutContext,
 	candidateEdge: { phaseValue: number; entryNodeId: string },
@@ -172,6 +207,10 @@ export function hasReachableMilestoneParent(
 	return false;
 }
 
+/**
+ * Second thinning pass after all milestone edges exist: removes edges whose
+ * targets became reachable through a same-phase sibling during wiring.
+ */
 export function pruneRedundantJournalConditionMilestoneEdges(
 	context: CanvasLayoutContext,
 	candidateEdges: Array<{ phaseValue: number; phaseNodeId: string; entryNodeId: string }>,
@@ -218,6 +257,12 @@ export function pruneRedundantJournalConditionMilestoneEdges(
 	}
 }
 
+/**
+ * Draws the live `Choice n` edges: from each rendered choice card to the
+ * entry of every record that the choice can flow to (per engine evaluation
+ * order and condition compatibility). These edges carry game semantics and
+ * are NOT marked derived — the sync engine reads them.
+ */
 export function connectChoiceTransitions(context: CanvasLayoutContext, records: DialogueRecord[]): void {
 	const orderedRecordsByTopic = new Map<string, DialogueRecord[]>();
 	for (const [topic, topicRecords] of groupRecordsByTopic(records)) {
@@ -259,6 +304,12 @@ export function connectChoiceTransitions(context: CanvasLayoutContext, records: 
 	}
 }
 
+/**
+ * Readability pass for records reachable across a journal range from
+ * multiple phases: the earliest-phase choice keeps its direct edge, while
+ * later-phase choices are rerouted through small "Jump #N" placeholder
+ * nodes so long back-edges don't sweep across the whole canvas.
+ */
 export function routeJournalRangeChoiceTransitions(context: CanvasLayoutContext, records: DialogueRecord[]): void {
 	const recordByEntryNodeId = new Map<string, DialogueRecord>();
 	for (const record of records) {
@@ -341,6 +392,11 @@ export function routeJournalRangeChoiceTransitions(context: CanvasLayoutContext,
 	}
 }
 
+/**
+ * Draws labelled "AddTopic" edges from each dialogue card whose results add
+ * a topic to that topic's entry nodes (unless already reachable). Marked
+ * derived: the authoritative AddTopic lives in the note's Result script.
+ */
 export function connectAddTopicTransitions(context: CanvasLayoutContext, records: DialogueRecord[], questIds: string[]): void {
 	const orderedRecordsByTopic = groupRecordsByNormalizedTopic(records);
 	const transitions: AddTopicTransition[] = [];
@@ -389,6 +445,11 @@ export function connectAddTopicTransitions(context: CanvasLayoutContext, records
 	}
 }
 
+/**
+ * Draws derived edges for topics introduced by being *spoken* — a wikilinked
+ * topic name in a dialogue body unlocks that topic in-game just like an
+ * AddTopic result does.
+ */
 export function connectBodyTopicLinkTransitions(context: CanvasLayoutContext, records: DialogueRecord[]): void {
 	const orderedRecordsByTopic = groupRecordsByNormalizedTopic(records);
 
@@ -432,6 +493,12 @@ export function connectBodyTopicLinkTransitions(context: CanvasLayoutContext, re
 	}
 }
 
+/**
+ * Bridges adjacent journal phases that lack an explicit progression result:
+ * derived edges from the earlier phase's terminal records (dead ends) to the
+ * next phase's compatible entry records, expressing "the quest continues
+ * here" even though the stage change happens in a script elsewhere.
+ */
 export function connectAdjacentJournalPhaseTerminalTransitions(
 	context: CanvasLayoutContext,
 	records: DialogueRecord[],
@@ -510,6 +577,7 @@ export function connectAdjacentJournalPhaseTerminalTransitions(
 	}
 }
 
+/** Reverse lookup: the phase value a journal node ID represents, if any. */
 export function phaseNodeIdValue(context: CanvasLayoutContext, nodeId: string): number | null {
 	for (const [phaseValue, phaseNodeId] of context.phaseNodeIds) {
 		if (phaseNodeId === nodeId) {
@@ -519,6 +587,11 @@ export function phaseNodeIdValue(context: CanvasLayoutContext, nodeId: string): 
 	return null;
 }
 
+/**
+ * Walks incoming edges up from a target node to find the branch's real entry
+ * point: the highest ancestor whose record can still run at the target
+ * phase. Phase-bridge edges should land there rather than mid-chain.
+ */
 export function rootEntryNodeForExistingBranch(
 	context: CanvasLayoutContext,
 	targetNodeId: string,
@@ -572,6 +645,7 @@ export function rootEntryNodeForExistingBranch(
 		?? targetNodeId;
 }
 
+/** Visual-order comparator (left-to-right, then top-to-bottom, then ID). */
 export function compareCanvasNodePosition(context: CanvasLayoutContext, leftNodeId: string, rightNodeId: string): number {
 	const leftNode = findCanvasNode(context, leftNodeId);
 	const rightNode = findCanvasNode(context, rightNodeId);
@@ -584,6 +658,11 @@ export function compareCanvasNodePosition(context: CanvasLayoutContext, leftNode
 		|| leftNodeId.localeCompare(rightNodeId);
 }
 
+/**
+ * A record is terminal when its results go nowhere (no journal/choice/topic
+ * effects) and its card has no outgoing lateral edges — a conversational
+ * dead end suitable as the source of a phase-bridge edge.
+ */
 export function isTerminalCanvasRecord(context: CanvasLayoutContext, record: DialogueRecord): boolean {
 	if (record.resultActions.some((action) => action.kind === 'journal-set' || action.kind === 'choice-set' || action.kind === 'add-topic')) {
 		return false;
@@ -596,6 +675,11 @@ export function isTerminalCanvasRecord(context: CanvasLayoutContext, record: Dia
 	);
 }
 
+/**
+ * Final fallback: chains consecutive journal nodes that ended up with no
+ * dialogue edges at all (stages set purely by world scripts), so every
+ * milestone is visually connected to the quest's spine.
+ */
 export function connectScriptedMilestones(context: CanvasLayoutContext, phaseIndices: number[]): void {
 	for (let index = 1; index < phaseIndices.length; index += 1) {
 		const previousPhase = phaseIndices[index - 1];

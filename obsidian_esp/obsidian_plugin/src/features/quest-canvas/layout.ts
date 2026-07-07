@@ -1,3 +1,15 @@
+/**
+ * @file Canvas geometry: places every node of a quest canvas.
+ *
+ * Layout happens in two stages. First the *semantic* stage
+ * ({@link layoutBranchFamily}/{@link layoutTopicFamilies}) renders each
+ * family as a gate + dialogue + result + choice cluster and arranges choice
+ * groups recursively (follow-up groups anchored beside the choice card that
+ * leads to them). Then, once transitions.ts has wired all cross-topic edges,
+ * the *global* stage ({@link applyLayeredCanvasLayout}) re-derives every
+ * position from the finished graph with a Sugiyama-style layered layout.
+ * All gap/width tuning constants live in model.ts.
+ */
 import { containsJournalLine, renderConditionBlock, renderResultAction, resolveJournalResultMilestone } from './cards';
 import {
 	addEdge,
@@ -60,6 +72,13 @@ import {
 } from './model';
 import { incrementPhaseCount, measureCanvasBodyHeight, measureTextHeight, uniqueValues } from './utils';
 
+/**
+ * Renders one family as a vertical stack of record clusters: gate card
+ * (conditions) -> dialogue file card -> result card hanging below it, with
+ * the family's choice cards stacked to the right of the first record.
+ * Returns the entry node ID (gate if present, else dialogue), the Y below
+ * the stack, and the choice anchors for wiring follow-up groups.
+ */
 export function layoutBranchFamily(
 	context: CanvasLayoutContext,
 	family: BranchFamily,
@@ -225,6 +244,13 @@ function choicePromptText(action: ResultAction): string {
 	return action.choiceText ?? action.displayText;
 }
 
+/**
+ * Lays out one topic within a phase: root choice groups stack vertically at
+ * the topic's base X; each emitted choice recursively renders its follow-up
+ * group to the right, anchored beside the choice card that opens it (with
+ * memoization and cycle guards, since choice graphs can loop). Groups whose
+ * choice value is never emitted locally fall back below the tree.
+ */
 export function layoutTopicFamilies(
 	context: CanvasLayoutContext,
 	families: BranchFamily[],
@@ -400,6 +426,7 @@ export function layoutTopicFamilies(
 	};
 }
 
+/** Shifts overlapping sibling layouts downward until `gapY` separates them. */
 export function pushDownOverlappingLayouts(
 	context: CanvasLayoutContext,
 	layouts: TopicLayoutResult[],
@@ -422,6 +449,11 @@ export function pushDownOverlappingLayouts(
 	}
 }
 
+/**
+ * Positions follow-up group layouts so each sits as close as possible to its
+ * anchor (the choice card leading into it) without overlapping its siblings
+ * — an isotonic-regression placement via {@link compactIncreasingOffsets}.
+ */
 export function arrangeAnchoredChildLayouts(
 	context: CanvasLayoutContext,
 	anchoredLayouts: AnchoredTopicLayout[],
@@ -460,6 +492,12 @@ export function arrangeAnchoredChildLayouts(
 	}
 }
 
+/**
+ * Pool-adjacent-violators: returns the non-decreasing sequence closest (in
+ * least squares) to the desired offsets, by merging out-of-order neighbors
+ * into average-valued blocks. Keeps stacked layouts ordered while staying
+ * near their anchors.
+ */
 export function compactIncreasingOffsets(desiredOffsets: number[]): number[] {
 	const blocks: Array<{ start: number; end: number; weight: number; total: number }> = [];
 	for (let index = 0; index < desiredOffsets.length; index += 1) {
@@ -496,6 +534,7 @@ export function compactIncreasingOffsets(desiredOffsets: number[]): number[] {
 	return offsets;
 }
 
+/** Moves a layout's nodes and its recorded bounds vertically by `deltaY`. */
 export function shiftTopicLayout(
 	context: CanvasLayoutContext,
 	layout: TopicLayoutResult,
@@ -517,6 +556,7 @@ export function shiftTopicLayout(
 	layout.mainLaneCenterY += deltaY;
 }
 
+/** Start Ys that stack the groups (with lane gaps) centered on y = 0. */
 export function buildCenteredGroupStartYs(groups: ChoiceGroup[]): number[] {
 	if (groups.length === 0) {
 		return [];
@@ -538,12 +578,17 @@ export function buildCenteredGroupStartYs(groups: ChoiceGroup[]): number[] {
 	return startYs;
 }
 
+/**
+ * Whether a root group is a plain variant list (4+ families, no choices) —
+ * such groups pack with the tighter dense gap.
+ */
 export function choiceGroupUsesDenseVariantLayout(group: ChoiceGroup): boolean {
 	return group.choiceValue === null
 		&& group.families.length >= 4
 		&& group.families.every((family) => !family.results.some((action) => action.kind === 'choice-set'));
 }
 
+/** X position of each phase column, spaced by estimated content width. */
 export function computePhasePositions(
 	phaseIndices: number[],
 	segmentsByPhase: Map<number, PhaseTopicSegment[]>,
@@ -565,6 +610,7 @@ export function computePhasePositions(
 	return positions;
 }
 
+/** Estimated pixel width of a phase from its topics' choice-chain depths. */
 export function estimatePhaseWidth(segments: PhaseTopicSegment[]): number {
 	if (segments.length === 0) {
 		return JOURNAL_WIDTH;
@@ -586,6 +632,7 @@ export function estimatePhaseWidth(segments: PhaseTopicSegment[]): number {
 	return furthestRight;
 }
 
+/** Estimated stacked height of a group's families (pre-layout). */
 export function estimateChoiceGroupHeight(group: ChoiceGroup): number {
 	if (group.families.length === 0) {
 		return FILE_NODE_MIN_HEIGHT + CLUSTER_GAP_Y;
@@ -595,6 +642,7 @@ export function estimateChoiceGroupHeight(group: ChoiceGroup): number {
 	return group.families.reduce((total, family) => total + estimateFamilyHeight(family, clusterGapY), 0);
 }
 
+/** Estimated height of one family's record clusters (pre-layout). */
 export function estimateFamilyHeight(family: BranchFamily, clusterGapY = CLUSTER_GAP_Y): number {
 	let total = 0;
 	for (const record of family.records) {
@@ -609,6 +657,11 @@ export function estimateFamilyHeight(family: BranchFamily, clusterGapY = CLUSTER
 	return Math.max(total, FILE_NODE_MIN_HEIGHT + clusterGapY);
 }
 
+/**
+ * Longest choice chain (in groups) from any root of the topic's choice
+ * graph, memoized and cycle-safe. Determines the horizontal room the topic
+ * needs.
+ */
 export function estimateTopicDepth(families: BranchFamily[]): number {
 	const choiceGroups = groupFamiliesByPrimaryChoice(families);
 	if (choiceGroups.length === 0) {
@@ -658,6 +711,10 @@ export function estimateTopicDepth(families: BranchFamily[]): number {
 	return Math.max(...roots.map((group) => depthForGroup(group)), 1);
 }
 
+/**
+ * Merges the rendered cards for each choice value into one anchor group
+ * (rightmost X, average Y) so a follow-up group renders once per value.
+ */
 export function collapseChoiceAnchors(anchors: ChoiceAnchor[]): ChoiceAnchorGroup[] {
 	const grouped = new Map<number, ChoiceAnchor[]>();
 	for (const anchor of anchors) {
@@ -682,10 +739,16 @@ export function collapseChoiceAnchors(anchors: ChoiceAnchor[]): ChoiceAnchorGrou
 		});
 }
 
+/** Horizontal step from one choice-chain column to the next. */
 export function sourceGroupStepX(): number {
 	return (CHOICE_GAP_X - GATE_GAP_X) + FOLLOWUP_GROUP_GAP_X;
 }
 
+/**
+ * A node plus the result cards attached below it, treated as one rigid block
+ * by the layered layout. Virtual units are invisible spacers inserted along
+ * layer-skipping edges (`chain*` fields) to keep those edges clear.
+ */
 export interface LayoutUnit {
 	id: string;
 	root: CanvasNode;
@@ -736,6 +799,11 @@ export function applyLayeredCanvasLayout(context: CanvasLayoutContext): void {
 	nudgeUnitsOffEdges(context, units, unitIdByNodeId, layerXPositions);
 }
 
+/**
+ * Writes each unit's computed layer X and top Y onto its nodes, stacking the
+ * attached result cards directly below the root. Virtual spacer units are
+ * skipped (they only reserve vertical room).
+ */
 export function applyUnitPositions(units: LayoutUnit[], layerXPositions: Map<number, number>): void {
 	for (const unit of units) {
 		if (unit.virtual) {
@@ -754,6 +822,11 @@ export function applyUnitPositions(units: LayoutUnit[], layerXPositions: Map<num
 	}
 }
 
+/**
+ * Groups the finished nodes into layout units: each non-attached node
+ * becomes a unit root, absorbing the chain of result cards linked to it by
+ * bottom->top edges as its attachments.
+ */
 export function buildLayoutUnits(context: CanvasLayoutContext): LayoutUnit[] {
 	const nodeById = new Map(context.nodes.map((node) => [node.id, node]));
 	const attachmentChildIds = new Map<string, string[]>();
@@ -820,6 +893,11 @@ export function buildLayoutUnits(context: CanvasLayoutContext): LayoutUnit[] {
 	return units;
 }
 
+/**
+ * Builds the unit-level predecessor/successor graph from the canvas edges,
+ * dropping any edge that would close a cycle (via a DFS colouring) so the
+ * downstream layering sees a DAG. Attachment edges are ignored here.
+ */
 export function linkAcyclicUnitGraph(
 	context: CanvasLayoutContext,
 	units: LayoutUnit[],
@@ -879,6 +957,11 @@ export function linkAcyclicUnitGraph(
 	}
 }
 
+/**
+ * Longest-path layering (Kahn's algorithm): each unit's layer is one past
+ * its deepest predecessor, so edges always point rightward. Source-only
+ * units are then pulled right to sit next to their earliest consumer.
+ */
 export function assignUnitLayers(units: LayoutUnit[], unitById: Map<string, LayoutUnit>): void {
 	const remainingIncoming = new Map<string, number>();
 	const ready: LayoutUnit[] = [];
@@ -928,6 +1011,11 @@ export function assignUnitLayers(units: LayoutUnit[], unitById: Map<string, Layo
 	}
 }
 
+/**
+ * Assigns each unit a component order via union-find over the edges, so
+ * disconnected subgraphs (independent conversation trees) keep their nodes
+ * grouped together vertically rather than interleaving.
+ */
 export function assignUnitComponentOrder(units: LayoutUnit[], unitById: Map<string, LayoutUnit>): void {
 	const componentRoots = new Map<string, string>();
 	const findRoot = (unitId: string): string => {
@@ -1073,6 +1161,11 @@ export function nudgeUnitsOffEdges(
 	}
 }
 
+/**
+ * The vertical span a line segment covers within the horizontal `[left,
+ * right]` window, or `null` when the segment doesn't overlap it. Used to
+ * detect which units a straight edge would pass over.
+ */
 export function segmentYRangeOverSpan(
 	p1: { x: number; y: number },
 	p2: { x: number; y: number },
@@ -1173,6 +1266,11 @@ export function insertSpacerUnits(
 	}
 }
 
+/**
+ * Computes the X coordinate of each layer, spacing layers by their widest
+ * unit plus a gap. Gate->dialogue-only boundaries use the tight gap so a
+ * gate hugs its dialogue card; all other boundaries use the normal gap.
+ */
 export function computeLayerXPositions(
 	context: CanvasLayoutContext,
 	units: LayoutUnit[],
@@ -1221,6 +1319,13 @@ export function computeLayerXPositions(
 	return xPositions;
 }
 
+/**
+ * Assigns vertical (top) positions within each layer. Starts with a simple
+ * stack, then runs several barycentric relaxation sweeps (alternating
+ * predecessor- and successor-aligned) so each unit drifts toward the average
+ * center of its neighbors, keeping edges short and roughly horizontal.
+ * Overlaps are resolved with the same isotonic packing as elsewhere.
+ */
 export function assignUnitTops(units: LayoutUnit[], unitById: Map<string, LayoutUnit>): void {
 	const unitsByLayer = new Map<number, LayoutUnit[]>();
 	for (const unit of units) {
@@ -1336,6 +1441,11 @@ export function assignUnitTops(units: LayoutUnit[], unitById: Map<string, Layout
 	}
 }
 
+/**
+ * Vertical gap between two stacked units: the small spacer gap when either is
+ * a virtual spacer, the tight choice-stack gap between two choice cards, and
+ * the normal gap otherwise.
+ */
 export function verticalUnitGap(upper: LayoutUnit, lower: LayoutUnit): number {
 	if (upper.virtual || lower.virtual) {
 		return SPACER_UNIT_GAP_Y;
@@ -1347,6 +1457,11 @@ export function verticalUnitGap(upper: LayoutUnit, lower: LayoutUnit): number {
 	return LAYER_UNIT_GAP_Y;
 }
 
+/**
+ * Translates the whole canvas so its leftmost node sits at a fixed origin —
+ * `0` normally, or a negative offset when AddTopic introducer cards are
+ * present so those cards have room to the left of the first phase.
+ */
 export function normalizeCanvasOrigin(context: CanvasLayoutContext): void {
 	if (context.nodes.length === 0) {
 		return;

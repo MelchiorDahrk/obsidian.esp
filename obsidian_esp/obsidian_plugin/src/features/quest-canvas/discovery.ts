@@ -1,3 +1,16 @@
+/**
+ * @file Quest discovery: the first stage of canvas generation.
+ *
+ * Resolves what the user selected into a {@link QuestScope} (quest title,
+ * IDs, journal milestones, output path), reads dialogue notes into
+ * {@link DialogueRecord}s, and decides which records belong on the canvas.
+ * Relevance is transitive: a record is included if it references the quest
+ * directly, or if it leads to / is led to by a relevant record through
+ * Choice chains and AddTopic results (`resolvePropagatedRelevantRecords`).
+ *
+ * A "quest" may span multiple journal topics — sibling `Journal/<Id>` folders
+ * whose quest-name entries normalize to the same key are treated as one quest.
+ */
 import { App, normalizePath, TFile, TFolder } from 'obsidian';
 import { splitFrontmatter } from '../../utils/obsidian-utils';
 import { PathManager } from '../path-manager';
@@ -34,6 +47,15 @@ import {
 	uniqueValues,
 } from './utils';
 
+/**
+ * Builds the {@link QuestScope} for a selected folder.
+ *
+ * Walks up to the `Journal/<QuestId>` folder, reads its journal entries,
+ * pulls the quest title from the quest-name entry, then scans sibling
+ * journal folders for entries with the same normalized title so multi-topic
+ * quests are merged. Throws with a user-facing message when the selection is
+ * not inside a project's Journal tree or has no indexed milestones.
+ */
 export async function discoverQuestScope(app: App, folder: TFolder): Promise<QuestScope> {
 	const projectRoot = PathManager.findPluginRoot(folder);
 	if (!projectRoot) {
@@ -100,6 +122,7 @@ export async function discoverQuestScope(app: App, folder: TFolder): Promise<Que
 	};
 }
 
+/** Reads every note under the project's dialogue type folders. */
 export async function readDialogueDocuments(app: App, projectRoot: TFolder): Promise<MarkdownDocument[]> {
 	const documents: MarkdownDocument[] = [];
 	for (const dialogueType of DIALOGUE_TYPES) {
@@ -115,12 +138,14 @@ export async function readDialogueDocuments(app: App, projectRoot: TFolder): Pro
 	return documents;
 }
 
+/** Reads a folder's Markdown notes recursively, in stable path order. */
 export async function readFolderMarkdownDocuments(app: App, folder: TFolder): Promise<MarkdownDocument[]> {
 	const files = collectMarkdownFiles(folder);
 	files.sort((left, right) => left.path.localeCompare(right.path));
 	return Promise.all(files.map((file) => readMarkdownDocument(app, file)));
 }
 
+/** Collects `.md` files recursively (depth-first, vault order). */
 export function collectMarkdownFiles(folder: TFolder): TFile[] {
 	const files: TFile[] = [];
 	for (const child of folder.children) {
@@ -136,6 +161,11 @@ export function collectMarkdownFiles(folder: TFolder): TFile[] {
 	return files;
 }
 
+/**
+ * Reads one note into a {@link MarkdownDocument}. Frontmatter is parsed with
+ * the structure-preserving parser (not Obsidian's cache) so opaque values
+ * like DiagID keep their exact text.
+ */
 export async function readMarkdownDocument(app: App, file: TFile): Promise<MarkdownDocument> {
 	const content = await app.vault.read(file);
 	const { frontmatter, body } = splitFrontmatter(content);
@@ -148,6 +178,11 @@ export async function readMarkdownDocument(app: App, file: TFile): Promise<Markd
 	};
 }
 
+/**
+ * Resolves the selection to its `Journal/<QuestId>` folder: the folder
+ * itself when directly under `Journal/`, or the nearest such ancestor.
+ * Returns `null` for selections outside the Journal tree.
+ */
 export function resolveJournalQuestFolder(folder: TFolder, projectRoot: TFolder): TFolder | null {
 	if (folder.parent?.path === normalizePath(`${projectRoot.path}/${JOURNAL_FOLDER_NAME}`)) {
 		return folder;
@@ -164,6 +199,7 @@ export function resolveJournalQuestFolder(folder: TFolder, projectRoot: TFolder)
 	return null;
 }
 
+/** Subfolders of `root/childFolderName` (e.g. every quest under Journal/). */
 export function getImmediateChildFolders(root: TFolder, childFolderName: string): TFolder[] {
 	const target = root.children.find(
 		(child): child is TFolder => child instanceof TFolder && child.name === childFolderName,
@@ -175,6 +211,10 @@ export function getImmediateChildFolders(root: TFolder, childFolderName: string)
 	return target.children.filter((child): child is TFolder => child instanceof TFolder);
 }
 
+/**
+ * The quest's display title: the first line of the quest-name journal entry
+ * (`Quest Name: true`), with wikilink syntax and block IDs stripped.
+ */
 export function extractQuestTitle(documents: MarkdownDocument[]): string | null {
 	const questNameDocument = documents.find((document) => isQuestNameNote(document));
 	if (!questNameDocument) {
@@ -189,6 +229,7 @@ export function extractQuestTitle(documents: MarkdownDocument[]): string | null 
 	return stripWikilinkSyntax(stripBlockId(firstLine));
 }
 
+/** Whether a journal entry is the quest-name record (`Quest Name: true`). */
 export function isQuestNameNote(document: MarkdownDocument): boolean {
 	return (
 		getStringValue(document.frontmatter, 'Type') === 'Journal'
@@ -196,6 +237,11 @@ export function isQuestNameNote(document: MarkdownDocument): boolean {
 	);
 }
 
+/**
+ * Converts a journal entry into a {@link JournalMilestone}. Returns `null`
+ * for non-journal notes and entries without a numeric `Index` (such as the
+ * quest-name record).
+ */
 export function toJournalMilestone(document: MarkdownDocument): JournalMilestone | null {
 	if (getStringValue(document.frontmatter, 'Type') !== 'Journal') {
 		return null;
@@ -223,6 +269,12 @@ export function toJournalMilestone(document: MarkdownDocument): JournalMilestone
 	};
 }
 
+/**
+ * Analyzes one dialogue note into a {@link DialogueRecord}: parses its
+ * conditions and result script, derives quest references from both, decides
+ * direct relevance, and assigns the initial phase anchor. Returns `null` for
+ * notes that are not canvas-relevant dialogue types.
+ */
 export function toDialogueRecord(
 	document: MarkdownDocument,
 	questIds: string[],
@@ -282,6 +334,13 @@ export function toDialogueRecord(
 	};
 }
 
+/**
+ * Expands the directly relevant record set to a fixed point: a record joins
+ * when a relevant record reaches it (via choice targets or AddTopic results)
+ * or when it leads into an already-relevant record. Records whose only
+ * journal effects belong to *other* quests are excluded so shared topics
+ * don't drag foreign quest lines onto the canvas.
+ */
 export function resolvePropagatedRelevantRecords(
 	allRecords: DialogueRecord[],
 	directRelevant: Set<string>,
@@ -337,6 +396,7 @@ export function resolvePropagatedRelevantRecords(
 	return relevant;
 }
 
+/** Whether any of the record's choice/AddTopic targets is already relevant. */
 export function recordLeadsToRelevantRecord(
 	record: DialogueRecord,
 	topicRecords: DialogueRecord[],
@@ -348,6 +408,11 @@ export function recordLeadsToRelevantRecord(
 		|| resolveAddTopicTargetRecords(record, recordsByNormalizedTopic, questIds).some((candidate) => relevant.has(candidate.id));
 }
 
+/**
+ * Records in the same topic that a `Choice n` result of `sourceRecord` can
+ * flow to: they must be gated on that choice value and have conditions
+ * compatible with the source's (see `conditionsCanFollowChoice`).
+ */
 export function resolveChoiceTargetRecords(
 	sourceRecord: DialogueRecord,
 	topicRecords: DialogueRecord[],
@@ -371,6 +436,7 @@ export function resolveChoiceTargetRecords(
 	return targetRecords;
 }
 
+/** Distinct records that the source's `AddTopic` results can lead into. */
 export function resolveAddTopicTargetRecords(
 	sourceRecord: DialogueRecord,
 	recordsByNormalizedTopic: Map<string, DialogueRecord[]>,
@@ -392,6 +458,12 @@ export function resolveAddTopicTargetRecords(
 	return targetRecords;
 }
 
+/**
+ * Computes which quest(s) each record effectively serves, propagating
+ * ownership *up* choice chains: a choice prompt with no quest references of
+ * its own inherits them from the records its choices lead to. Result-based
+ * ownership wins over condition-based ownership when both exist.
+ */
 export function resolveEffectiveQuestOwnership(allRecords: DialogueRecord[]): Map<string, string[]> {
 	const ancestorsByRecordId = buildAncestorRecordMap(allRecords);
 	const resultOwnership = new Map<string, Set<string>>();
@@ -437,6 +509,10 @@ export function resolveEffectiveQuestOwnership(allRecords: DialogueRecord[]): Ma
 	return effectiveOwnership;
 }
 
+/**
+ * Maps each record ID to the records whose choices can lead to it (its
+ * "ancestors" in the same topic's choice graph).
+ */
 export function buildAncestorRecordMap(allRecords: DialogueRecord[]): Map<string, string[]> {
 	const ancestorsByRecordId = new Map<string, Set<string>>();
 	const recordsByTopic = groupRecordsByTopic(allRecords);
@@ -473,6 +549,7 @@ export function buildAncestorRecordMap(allRecords: DialogueRecord[]): Map<string
 	);
 }
 
+/** Adds `source`'s quest IDs to `target`; returns whether anything changed. */
 export function mergeQuestReferences(target: Set<string>, source: Set<string>): boolean {
 	let changed = false;
 	for (const questId of source) {
@@ -486,6 +563,11 @@ export function mergeQuestReferences(target: Set<string>, source: Set<string>): 
 	return changed;
 }
 
+/**
+ * Whether every journal update the record makes targets a *different* quest —
+ * the signal that it belongs to another quest line and should not be pulled
+ * onto this canvas by relevance propagation.
+ */
 export function hasOnlyJournalResultsForOtherQuests(record: DialogueRecord, questIds: string[]): boolean {
 	const journalResults = record.resultActions.filter(
 		(action) => action.kind === 'journal-set' && Boolean(action.targetQuestId),

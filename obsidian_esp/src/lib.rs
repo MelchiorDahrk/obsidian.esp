@@ -1,3 +1,38 @@
+//! # obsidian_esp
+//!
+//! Core crate for authoring The Elder Scrolls III: Morrowind dialogue and quests
+//! in Markdown and compiling them into native TES3 plugin files (`.esp`/`.esm`).
+//!
+//! The crate is consumed in two ways:
+//!
+//! - **Natively** — by the integration tests and the scratch binary in `main.rs`,
+//!   where projects are read from disk and resolved against the user's OpenMW
+//!   load order.
+//! - **As WebAssembly** — inside the companion Obsidian plugin
+//!   (`obsidian_plugin/`). Every `#[wasm_bindgen]` item in this file is part of
+//!   the JS-facing API surface.
+//!
+//! ## Pipeline overview
+//!
+//! ```text
+//! Markdown files --parse--> ParsedPlugin --compile--> PluginData --resolve--> .esp bytes
+//!                                                          ^
+//!                                        master plugins ---+ (merge + diff)
+//! ```
+//!
+//! - [`parse`] turns Markdown/YAML project files into the intermediate
+//!   [`parse::ParsedPlugin`] representation.
+//! - [`compile`] lowers that representation into native TES3 records
+//!   ([`merge_to_master::PluginData`]), validates references against master
+//!   plugins, and resolves diffs against the load order.
+//! - [`export`] performs the reverse trip: unpacking a compiled plugin back
+//!   into Markdown project files.
+//! - [`logging`] wires `tracing` up for both native and WASM targets.
+//!
+//! The WASM API also exposes [`GameDatabase`], an in-memory merged view of a
+//! plugin plus its masters that the Obsidian plugin queries for topic lists,
+//! lazy topic unpacking, and incidental-edit detection.
+
 #![allow(unused)]
 
 pub mod logging;
@@ -90,12 +125,21 @@ use js_sys::{Object, Reflect};
 use serde_wasm_bindgen::{from_value, to_value};
 use wasm_bindgen::prelude::*;
 
+/// Counts how many times raw plugin bytes have crossed the JS -> WASM boundary.
+///
+/// Large master files are expensive to copy into WASM memory, so the plugin's
+/// test suite uses this counter (via [`get_byte_ingress_counter`]) to assert
+/// that loading paths do not copy payloads more often than intended.
 static BYTE_INGRESS_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
+/// Increments [`BYTE_INGRESS_COUNTER`]. Call this at every point where raw
+/// plugin bytes are copied from JS into WASM memory.
 fn record_byte_ingress() {
     BYTE_INGRESS_COUNTER.fetch_add(1, Ordering::Relaxed);
 }
 
+/// Parses a [`Plugin`] from a raw byte slice handed over from JS,
+/// recording the boundary crossing for ingress accounting.
 fn load_plugin_from_slice(bytes: &[u8]) -> Result<Plugin, JsValue> {
     record_byte_ingress();
     let mut plugin = Plugin::new();
@@ -105,6 +149,10 @@ fn load_plugin_from_slice(bytes: &[u8]) -> Result<Plugin, JsValue> {
     Ok(plugin)
 }
 
+/// Parses a [`Plugin`] from a buffer that already lives in WASM memory.
+///
+/// Unlike [`load_plugin_from_slice`] this does not count as a new byte
+/// ingress: the copy was already recorded when the [`PluginBytes`] was built.
 fn load_plugin_from_buffer(bytes: &PluginBytes) -> Result<Plugin, JsValue> {
     let mut plugin = Plugin::new();
     plugin
@@ -124,6 +172,7 @@ pub struct PluginBytes {
 
 #[wasm_bindgen]
 impl PluginBytes {
+    /// Copies the given JS byte array into WASM memory (counted as one ingress).
     #[wasm_bindgen(constructor)]
     pub fn new(bytes: &[u8]) -> PluginBytes {
         record_byte_ingress();
@@ -132,6 +181,7 @@ impl PluginBytes {
         }
     }
 
+    /// The size of the owned buffer in bytes.
     #[wasm_bindgen(getter)]
     pub fn len(&self) -> usize {
         self.bytes.len()
@@ -139,36 +189,49 @@ impl PluginBytes {
 }
 
 impl PluginBytes {
+    /// Borrows the owned buffer for parsing without another copy.
     fn as_slice(&self) -> &[u8] {
         &self.bytes
     }
 }
 
+/// Resets the byte-ingress counter to zero. Used by tests to measure a single
+/// loading operation in isolation.
 #[wasm_bindgen(js_name = "resetByteIngressCounter")]
 pub fn reset_byte_ingress_counter() {
     BYTE_INGRESS_COUNTER.store(0, Ordering::Relaxed);
 }
 
+/// Returns how many times raw plugin bytes were copied from JS into WASM
+/// memory since the last reset. See the `BYTE_INGRESS_COUNTER` static.
 #[wasm_bindgen(js_name = "getByteIngressCounter")]
 pub fn get_byte_ingress_counter() -> usize {
     BYTE_INGRESS_COUNTER.load(Ordering::Relaxed)
 }
 
+/// Flags controlling which record types [`extract_property_values`] scans.
+///
+/// Deserialized from a plain JS object; any missing flag defaults to `false`.
 #[derive(Default, Deserialize)]
 #[serde(default)]
 struct PropertyExtractionOptions {
     include_factions: bool,
     include_races: bool,
     include_classes: bool,
+    /// NPC and creature record IDs (used for the `ID` frontmatter field).
     include_ids: bool,
     include_cells: bool,
 }
 
+/// Unique record IDs/names harvested from a plugin, grouped by category.
+///
+/// Serialized back to JS to power autocomplete in the Obsidian plugin.
 #[derive(Default, Serialize)]
 struct PropertyValueSet {
     factions: Vec<String>,
     races: Vec<String>,
     classes: Vec<String>,
+    /// NPC and creature IDs.
     ids: Vec<String>,
     cells: Vec<String>,
 }
@@ -395,8 +458,14 @@ pub fn extract_master_names(bytes: &[u8]) -> Result<JsValue, JsValue> {
 /// Constructed from raw ESP/ESM bytes; kept alive as long as the JS handle exists.
 #[wasm_bindgen]
 pub struct GameDatabase {
+    /// The merged record set (plugin content layered over its masters).
     data: PluginData,
+    /// `true` when the database was built together with master files, meaning
+    /// `modified` flags reliably distinguish plugin content from master content.
     merged: bool,
+    /// `(topic_key, info_id)` pairs whose only difference from the masters is
+    /// their prev/next link pointers. These are treated as non-edits when
+    /// exporting or scanning for incidental changes.
     link_only_changes: Vec<(String, String)>,
 }
 
@@ -702,6 +771,15 @@ impl GameDatabase {
         Ok(result.into())
     }
 
+    /// Core of [`Self::find_incidental_edits`]: returns the paths of files whose
+    /// content is functionally identical to the merged master database.
+    ///
+    /// Files are grouped by their parent (topic) folder. A dialogue file is
+    /// incidental when it came from a master (`Source: master`), its record is
+    /// unmodified (or only link pointers changed), and its parsed content still
+    /// matches the database record. A topic's generated index file is only
+    /// considered incidental when every dialogue file in that folder is — so a
+    /// partially edited topic keeps its index.
     fn collect_incidental_edit_paths(&self, files: &[(String, String)]) -> Vec<String> {
         if !self.merged {
             return Vec::new();
@@ -753,6 +831,12 @@ impl GameDatabase {
         result
     }
 
+    /// Checks a single dialogue file against the database record it claims to
+    /// represent (matched by topic + DiagID, case-insensitively).
+    ///
+    /// Returns `true` only when the record is unmodified (or listed in
+    /// `link_only_changes`) *and* the file's parsed frontmatter/body still
+    /// matches the database content field-for-field.
     fn is_dialogue_file_incidental(
         &self,
         path: &str,
@@ -796,9 +880,13 @@ impl GameDatabase {
     }
 }
 
+/// Per-topic-folder aggregation used by `collect_incidental_edit_paths` to
+/// decide whether a topic's generated index file can be cleaned up.
 #[derive(Default)]
 struct TopicFolderIncidentalState {
+    /// At least one dialogue file in the folder declares `Source: master`.
     has_master_source_dialogue: bool,
+    /// At least one dialogue file in the folder carries real (user) edits.
     has_non_incidental_dialogue: bool,
 }
 
@@ -935,6 +1023,12 @@ fn is_parsed_info_matching(parsed: &crate::parse::ParsedInfo, db: &DialogueInfo)
     true
 }
 
+/// Rewrites Obsidian wiki-links (`[[target]]`, `[[target|display]]`,
+/// `[[target#heading]]`) into the plain text the game engine would see.
+///
+/// Topic links are inserted into exported Markdown purely as an authoring aid,
+/// so a body that differs from the database only by wiki-link syntax must
+/// still compare as identical during incidental-edit detection.
 fn normalize_incidental_body_text(text: &str) -> String {
     let chars: Vec<char> = text.chars().collect();
     let mut normalized = String::with_capacity(text.len());
@@ -996,12 +1090,16 @@ fn normalize_incidental_body_text(text: &str) -> String {
     normalized
 }
 
+/// Returns the parent directory portion of a `/`-separated relative path
+/// (empty string for top-level files).
 fn parent_relative_path(path: &str) -> String {
     path.rsplit_once('/')
         .map(|(parent, _)| parent.to_string())
         .unwrap_or_default()
 }
 
+/// Returns `true` if the file's YAML frontmatter declares `Source: master`,
+/// i.e. it was generated by unpacking a master rather than authored by hand.
 fn is_master_source_file(content: &str) -> bool {
     let normalized = content.replace("\r\n", "\n").replace('\r', "\n");
     let mut lines = normalized.lines();
@@ -1029,6 +1127,10 @@ fn is_master_source_file(content: &str) -> bool {
     false
 }
 
+/// Returns `true` if the file looks exactly like a topic index generated by the
+/// plugin's LazyLoader: a single `![[...base.base#<Type> View]]` embed,
+/// optionally preceded by the standard `esp-topic-base-view` cssclasses
+/// frontmatter, with no user-added content.
 fn is_generated_topic_index_file(content: &str) -> bool {
     let normalized = content.replace("\r\n", "\n").replace('\r', "\n");
     let trimmed = normalized.trim();

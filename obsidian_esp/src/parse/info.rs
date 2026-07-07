@@ -1,3 +1,14 @@
+//! Parser for individual dialogue-info Markdown files.
+//!
+//! Each file is YAML frontmatter (speaker conditions, IDs, filters, result
+//! script) followed by the dialogue response text. Filters arrive as paired
+//! `FunctionN`/`VariableN` keys that are collected during the frontmatter scan
+//! and assembled into [`ParsedFilter`]s once both halves of a pair are known.
+//!
+//! Body text is normalized to the CRLF line endings the game engine expects,
+//! and trailing Obsidian block IDs (` ^abc123`, appended by the canvas sync
+//! engine for linking) are stripped so they never leak into compiled plugins.
+
 use super::frontmatter::*;
 use super::{FilterValue, ParsedFilter, ParsedInfoFrontmatter};
 use std::collections::BTreeMap;
@@ -140,6 +151,9 @@ pub fn parse_info_file<'s>(input: &mut &'s str) -> Result<(ParsedInfoFrontmatter
     Ok((info, text))
 }
 
+/// Removes a trailing Obsidian block ID (` ^block-id`) from the last line of
+/// the body text, dropping the whole line if the ID was its only content.
+/// Text without a valid block-ID suffix is returned unchanged.
 fn strip_trailing_obsidian_block_id(text: &str) -> String {
     let Some((prefix, last_line)) = text.rsplit_once("\r\n") else {
         return strip_block_id_suffix(last_line_or_text(text)).to_string();
@@ -157,10 +171,15 @@ fn strip_trailing_obsidian_block_id(text: &str) -> String {
     format!("{prefix}\r\n{stripped_last_line}")
 }
 
+/// Identity helper used by [`strip_trailing_obsidian_block_id`] when the text
+/// has no CRLF break — the whole text *is* the last line.
 fn last_line_or_text(text: &str) -> &str {
     text
 }
 
+/// Strips a ` ^block-id` suffix from a single line. The suffix must be
+/// non-empty and consist only of ASCII alphanumerics, `_`, or `-` to qualify
+/// as an Obsidian block ID; anything else is left intact.
 fn strip_block_id_suffix(line: &str) -> &str {
     let Some(separator_index) = line.rfind(" ^") else {
         return line;

@@ -1,14 +1,26 @@
+/**
+ * @file Options dialog for the "Generate property files" feature.
+ */
 import { App, Modal, Notice } from 'obsidian';
 
+/**
+ * Which record categories to harvest from the masters. Field names use
+ * snake_case because the object is passed straight into the WASM
+ * `extract_property_values` call (serde expects these exact keys — keep in
+ * sync with `PropertyExtractionOptions` in `src/lib.rs`).
+ */
 export interface PropertyExtractionOptions {
 	include_factions: boolean;
 	include_races: boolean;
 	include_classes: boolean;
+	/** NPC and creature record IDs. */
 	include_ids: boolean;
 	include_cells: boolean;
 }
 
+/** What the user confirmed in the dialog. */
 export interface PropertyGenerationSelection {
+	/** Master file names to read values from. */
 	selectedMasters: string[];
 	options: PropertyExtractionOptions;
 }
@@ -21,6 +33,11 @@ const DEFAULT_OPTIONS: PropertyExtractionOptions = {
 	include_cells: true,
 };
 
+/**
+ * Opens the property-generation options dialog. Resolves with the user's
+ * selection, or `null` on cancel/dismissal. All masters and all value
+ * categories start checked.
+ */
 export async function selectPropertyGenerationOptions(
 	app: App,
 	masterNames: string[],
@@ -30,6 +47,11 @@ export async function selectPropertyGenerationOptions(
 	});
 }
 
+/**
+ * Checkbox modal backing {@link selectPropertyGenerationOptions}: one section
+ * for choosing masters (with select-all/clear-all) and one for choosing which
+ * value categories to extract. Requires at least one master to submit.
+ */
 class PropertyGenerationModal extends Modal {
 	private resolved = false;
 	private readonly masterStates = new Map<string, boolean>();

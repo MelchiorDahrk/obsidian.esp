@@ -1,9 +1,23 @@
+/**
+ * @file Master-file discovery and header manipulation.
+ *
+ * Masters (Morrowind.esm, Tribunal.esm, ...) live outside the vault, so this
+ * module bridges to the filesystem: it finds the user's `openmw.cfg`, reads
+ * the configured data directories, and loads master binaries from them
+ * (case-insensitively — Linux installs often have mixed-case filenames).
+ * It also owns the helpers for reading and editing the `Masters:` list in a
+ * project's `header.md`.
+ *
+ * Uses Node `fs/promises` directly, which is available because Obsidian
+ * runs on Electron; this code path cannot work on Obsidian Mobile.
+ */
 import { readFile, readdir } from 'fs/promises';
 import { homedir } from 'os';
 import { join } from 'path';
 import { parseYaml, App, TFile, TFolder, normalizePath } from 'obsidian';
 import { splitFrontmatter } from '../utils/obsidian-utils';
 
+/** A master file as `[fileName, rawBytes]`, ready to hand to the WASM layer. */
 export type MasterFile = [string, Uint8Array];
 
 const nodeGlobals = globalThis as typeof globalThis & {
@@ -12,6 +26,11 @@ const nodeGlobals = globalThis as typeof globalThis & {
 	};
 };
 
+/**
+ * Reads the `Masters:` list from `header.md` content. Falls back to
+ * `['Morrowind.esm']` when the frontmatter is missing or unparseable, so
+ * compilation always has at least the base game to validate against.
+ */
 export function extractMasterNamesFromHeaderContent(
 	headerContent: string,
 ): string[] {
@@ -38,6 +57,7 @@ export function extractMasterNamesFromHeaderContent(
 	return ['Morrowind.esm'];
 }
 
+/** Returns the `header.md` file directly inside `folder`, if it exists. */
 export async function readHeaderFile(
 	app: App,
 	folder: TFolder,
@@ -47,6 +67,10 @@ export async function readHeaderFile(
 	return headerFile instanceof TFile ? headerFile : null;
 }
 
+/**
+ * Reads the master names from a project folder's `header.md`, or `null`
+ * when the folder has no header file.
+ */
 export async function readHeaderMasterNames(
 	app: App,
 	folder: TFolder,
@@ -60,10 +84,12 @@ export async function readHeaderMasterNames(
 	return extractMasterNamesFromHeaderContent(headerContent);
 }
 
+/** Removes surrounding double quotes from an openmw.cfg path value. */
 function stripQuotes(value: string): string {
 	return value.replace(/^"(.*)"$/, '$1').trim();
 }
 
+/** Whether a file exists and is readable (probed by attempting a read). */
 async function pathExists(path: string): Promise<boolean> {
 	try {
 		await readFile(path);
@@ -221,6 +247,16 @@ export async function loadValidationMasters(
 	return { masters, messages };
 }
 
+/**
+ * Returns header content with `masterName` appended to the `Masters:` list
+ * (no-op if already present, compared case-insensitively).
+ *
+ * Handles every header shape the exporter or a user can produce: an existing
+ * block list (appends at the end, before trailing blank lines), an inline
+ * `Masters: value` (converted to a block list), or no `Masters:` section at
+ * all (inserted before the closing `---`). Used when unpacking a database so
+ * the unpacked project lists its source plugin as a master.
+ */
 export function addMasterToHeaderContent(
 	headerContent: string,
 	masterName: string,

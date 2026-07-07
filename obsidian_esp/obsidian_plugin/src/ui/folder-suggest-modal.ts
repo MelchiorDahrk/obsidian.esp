@@ -1,11 +1,23 @@
+/**
+ * @file Vault folder picker modal.
+ */
 import { App, Modal, TFolder } from 'obsidian';
 
+/**
+ * Opens a searchable folder-picker modal and resolves with the chosen
+ * folder, or `null` if the user dismisses the modal without picking.
+ */
 export async function selectVaultFolder(app: App): Promise<TFolder | null> {
 	return await new Promise((resolve) => {
 		new FolderSelectionModal(app, resolve).open();
 	});
 }
 
+/**
+ * Modal listing every folder in the vault with a text filter. Enter selects
+ * the first match; results are capped at 200 rows to keep rendering fast in
+ * large vaults.
+ */
 class FolderSelectionModal extends Modal {
 	private resolved = false;
 	private readonly folders: TFolder[];

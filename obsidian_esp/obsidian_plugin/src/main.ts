@@ -1,3 +1,11 @@
+/**
+ * @file Plugin entry point. Wires together every feature of Obsidian.esp:
+ * initializes the WASM compiler module, owns the {@link DatabaseManager} and
+ * status-bar UI for the loaded game database, registers commands and the
+ * folder context-menu actions (compile, quest canvas generation, property
+ * files, topic links, incidental-edit cleanup), and installs the quest-canvas
+ * sync engine and inspector.
+ */
 import { FileView, Menu, Notice, Plugin, TFolder, normalizePath } from 'obsidian';
 import { initSync } from '../pkg/obsidian_esp.js';
 import {

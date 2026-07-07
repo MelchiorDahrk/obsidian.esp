@@ -1,6 +1,27 @@
+/**
+ * @file Parallel master-file parsing.
+ *
+ * Coordinates a pool of short-lived Web Workers (one per master, see
+ * `worker.ts`'s `parseMaster` role) so that large masters like Morrowind.esm
+ * parse concurrently instead of serially in the merge worker.
+ */
 import { App, normalizePath } from 'obsidian';
 import { MasterFile } from '../features/master-files';
 
+/**
+ * Parses each master file into a TES3 record array using one worker per
+ * master, all running concurrently.
+ *
+ * Each worker gets its own copy of the WASM binary (`wasmBuffer.slice(0)`)
+ * because transferring would detach the buffer needed by the next worker;
+ * the master bytes themselves *are* transferred since each is used once.
+ *
+ * @param wasmPath Vault-relative path to the compiled WASM binary.
+ * @param workerPath Vault-relative path to the bundled worker script.
+ * @param onProgress Reports completed count and which masters are in flight.
+ * @returns Parsed record arrays in the same order as `masters`, ready for
+ *   `GameDatabase.loadWithPreparsedMasters` on the merge worker.
+ */
 export async function parseMastersInParallel(
 	app: App,
 	wasmPath: string,

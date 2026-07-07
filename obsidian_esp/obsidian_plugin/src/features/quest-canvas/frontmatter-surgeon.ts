@@ -1,7 +1,18 @@
+/**
+ * @file Surgical frontmatter edits for dialogue notes.
+ *
+ * When the sync engine and node actions write card edits back to notes, they
+ * must change only the affected keys and leave everything else — key order,
+ * unknown keys, block scalars, the note body — byte-for-byte intact. These
+ * helpers do targeted key/filter-slot/result rewrites on the raw frontmatter
+ * text rather than round-tripping through a YAML serializer, which would
+ * reorder and reformat.
+ */
 import { type GateLine, gateLineToFrontmatter, SPEAKER_FIELDS } from './cards';
 import { type FrontmatterValue, QUEST_NAME_FIELD } from './model';
 import { stripQuotes } from './utils';
 
+/** Frontmatter keys the plugin owns; the sync engine may rewrite these. */
 export const KNOWN_FRONTMATTER_KEYS = new Set([
 	'Source',
 	'Type',
@@ -26,6 +37,12 @@ export const KNOWN_FRONTMATTER_KEYS = new Set([
 	'Result',
 ]);
 
+/**
+ * Parses a frontmatter block into a key->value map, handling inline scalars,
+ * `- item` lists, and indented block scalars. Precision-sensitive keys stay
+ * strings (this never coerces to numbers). Used instead of Obsidian's cache
+ * so discovery sees exact values.
+ */
 export function parseStructuredFrontmatter(frontmatter: string): Record<string, FrontmatterValue> {
 	if (frontmatter.length === 0) {
 		return {};
@@ -154,6 +171,7 @@ export function setFrontmatterKey(content: string, key: string, value: string): 
 	return joinSections(sections);
 }
 
+/** Removes a key (and its continuation lines); no-op if absent. */
 export function removeFrontmatterKey(content: string, key: string): string {
 	const sections = splitSections(content);
 	if (!sections.hadFrontmatter) {
@@ -266,6 +284,7 @@ export function setFilterSlot(
 	return joinSections(sections);
 }
 
+/** Removes both the `Function<slot>` and `Variable<slot>` keys of a filter. */
 export function clearFilterSlot(content: string, slot: number): string {
 	let next = removeFrontmatterKey(content, `Function${slot}`);
 	next = removeFrontmatterKey(next, `Variable${slot}`);

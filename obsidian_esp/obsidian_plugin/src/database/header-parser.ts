@@ -1,8 +1,21 @@
+/**
+ * @file Minimal pure-JS reader for the TES3 header record.
+ *
+ * Used to discover a plugin's master list *before* deciding how to load it,
+ * without paying the cost of copying the whole file into WASM memory. Only
+ * the leading `TES3` record is parsed; the rest of the plugin is untouched.
+ *
+ * TES3 layout refresher: a record is `tag(4) size(u32) unknown(u32) flags(u32)`
+ * followed by `size` bytes of subrecords, each `tag(4) size(u32) data`.
+ * The header's subrecords are one `HEDR` followed by `MAST`/`DATA` pairs,
+ * one pair per master file.
+ */
 const TES3_TAG = 'TES3';
 const HEDR_TAG = 'HEDR';
 const MAST_TAG = 'MAST';
 const DATA_TAG = 'DATA';
 
+/** Reads a 4-character ASCII subrecord/record tag. */
 function readTag(bytes: Uint8Array, offset: number): string {
 	if (offset + 4 > bytes.length) {
 		throw new Error('Unexpected end of plugin header.');
@@ -16,6 +29,7 @@ function readTag(bytes: Uint8Array, offset: number): string {
 	);
 }
 
+/** Reads a little-endian unsigned 32-bit integer. */
 function readU32(bytes: Uint8Array, offset: number): number {
 	if (offset + 4 > bytes.length) {
 		throw new Error('Unexpected end of plugin header.');
@@ -34,6 +48,7 @@ function readU32(bytes: Uint8Array, offset: number): number {
 	) >>> 0;
 }
 
+/** Decodes a NUL-padded byte string (master names are zero-terminated). */
 function decodeString(bytes: Uint8Array): string {
 	let end = bytes.length;
 	while (end > 0 && bytes[end - 1] === 0) {
@@ -43,6 +58,13 @@ function decodeString(bytes: Uint8Array): string {
 	return new TextDecoder().decode(bytes.subarray(0, end));
 }
 
+/**
+ * Extracts the master-file names from a plugin's TES3 header record.
+ *
+ * Throws on any structural inconsistency (truncated record, unexpected
+ * subrecord, missing `DATA` after a `MAST`) — callers treat a throw as
+ * "no masters detectable" and fall back to a standalone load.
+ */
 export function extractMasterNamesFromPluginBytes(bytes: Uint8Array): string[] {
 	if (bytes.length < 16) {
 		throw new Error('Plugin is too small to contain a TES3 header.');

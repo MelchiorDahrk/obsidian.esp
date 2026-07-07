@@ -1,3 +1,18 @@
+//! Export: the reverse of the parse/compile pipeline.
+//!
+//! Renders a [`PluginData`] back into Markdown project files (`header.md` plus
+//! one file per dialogue response, in the `{Type}/{Topic}/{File}.md` layout
+//! described in `src/parse/mod.rs`). Round-tripping is the design goal: a
+//! project exported by this module and re-parsed must compile to the same
+//! records. The `format_*`/`push_*` helpers therefore mirror the accepted
+//! grammar of `src/parse/` exactly — change them in lockstep.
+//!
+//! Three granularities are exposed: the full database
+//! ([`collect_project_files`]), only plugin-modified groups
+//! ([`collect_modified_project_files`]), and a single topic
+//! ([`collect_single_topic_files`], used for lazy loading in the Obsidian
+//! plugin).
+
 use std::fmt::Write as _;
 use std::path::Path;
 use std::collections::HashMap;
@@ -80,6 +95,9 @@ fn push_multiline_field(output: &mut String, key: &str, value: Option<impl AsRef
     }
 }
 
+/// Like [`push_multiline_field`], but always emits the key — with an empty
+/// value if needed. Used for fields that must round-trip even when blank
+/// (e.g. `Result` on voice lines).
 fn push_multiline_field_or_empty(output: &mut String, key: &str, value: &str) {
     if value.is_empty() {
         output.push_str(key);
@@ -89,6 +107,7 @@ fn push_multiline_field_or_empty(output: &mut String, key: &str, value: &str) {
     }
 }
 
+/// Renders the header's `File Type` value (ESP/ESM/ESS).
 fn format_file_type(file_type: FileType) -> &'static str {
     match file_type {
         FileType::Esp => "ESP",
@@ -97,6 +116,8 @@ fn format_file_type(file_type: FileType) -> &'static str {
     }
 }
 
+/// Renders the `Sex` frontmatter value; `Any` is omitted entirely (the
+/// parser's default).
 fn format_sex(sex: Sex) -> Option<&'static str> {
     match sex {
         Sex::Any => None,
@@ -105,6 +126,7 @@ fn format_sex(sex: Sex) -> Option<&'static str> {
     }
 }
 
+/// Renders a filter comparison operator in the syntax the parser accepts.
 fn format_comparison(comparison: FilterComparison) -> &'static str {
     match comparison {
         FilterComparison::Equal => "=",
@@ -116,6 +138,7 @@ fn format_comparison(comparison: FilterComparison) -> &'static str {
     }
 }
 
+/// Renders a filter's numeric right-hand side.
 fn format_filter_value(value: FilterValue) -> String {
     match value {
         FilterValue::Float(value) => value.to_string(),
@@ -123,6 +146,8 @@ fn format_filter_value(value: FilterValue) -> String {
     }
 }
 
+/// Renders a `FunctionN` frontmatter value. Spaced forms (`Not ID`, ...) are
+/// emitted; the parser accepts both spaced and unspaced spellings.
 fn format_filter_type(filter_type: FilterType) -> &'static str {
     match filter_type {
         FilterType::None => "None",
@@ -141,6 +166,7 @@ fn format_filter_type(filter_type: FilterType) -> &'static str {
     }
 }
 
+/// Renders a `VariableN` frontmatter value: `<id-or-function> <op> <value>`.
 fn format_filter_variable(filter: &Filter) -> String {
     let comparison = format_comparison(filter.comparison);
     let value = format_filter_value(filter.value);
@@ -152,6 +178,7 @@ fn format_filter_variable(filter: &Filter) -> String {
     }
 }
 
+/// Renders a rank as `Rank N`; `-1` (no requirement) is omitted.
 fn format_rank(rank: i8) -> Option<String> {
     (rank != -1).then(|| format!("Rank {rank}"))
 }
@@ -339,6 +366,12 @@ fn dialogue_priority(dialogue_type: tes3::esp::DialogueType2) -> u8 {
     }
 }
 
+/// Builds the filename for a single dialogue info.
+///
+/// Journal entries are named by their quest index (`{topic} {index}.md`), with
+/// ` ~N` suffixes disambiguating duplicate indices; all other types use their
+/// position in the response chain (`{topic} ~{position}.md`). The parser's
+/// `default_sort_order` relies on this exact scheme to restore ordering.
 fn info_file_name(
     dialogue_type: tes3::esp::DialogueType2,
     stem: &str,

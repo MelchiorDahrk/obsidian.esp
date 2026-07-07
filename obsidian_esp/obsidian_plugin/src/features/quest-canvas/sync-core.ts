@@ -1,3 +1,8 @@
+/**
+ * @file Pure canvas->note translation for the sync engine (see the section
+ * comment below for invariants). No Obsidian APIs — the async wiring lives in
+ * sync.ts.
+ */
 import { getCardMeta } from './card-meta';
 import {
 	type GateLine,
@@ -42,6 +47,7 @@ export interface CanvasData {
 
 export const CARD_WARNING_PREFIX = '⚠️';
 
+/** Parses canvas JSON, returning `null` for invalid or mid-write content. */
 export function parseCanvasData(content: string): CanvasData | null {
 	try {
 		const parsed: unknown = JSON.parse(content);
@@ -59,6 +65,7 @@ export function parseCanvasData(content: string): CanvasData | null {
 	return null;
 }
 
+/** Stable content hash used to detect whether a canvas file actually changed. */
 export function hashCanvasContent(content: string): string {
 	return stableHash(content);
 }
@@ -453,6 +460,7 @@ export interface EdgeGestureEdit {
 	gesture: EdgeGesture;
 }
 
+/** Human-readable summary of an edge gesture, for notices/logging. */
 export function describeEdgeGesture(edit: EdgeGestureEdit): string {
 	const { gesture } = edit;
 	const verb = edit.kind === 'add' ? 'add' : 'remove';

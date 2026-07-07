@@ -1,5 +1,14 @@
+/**
+ * @file Path conventions for unpacked plugin projects.
+ *
+ * A project lives at `{outputFolder}/{pluginBaseName}/` and contains
+ * `header.md` plus `{Type}/{Topic}/{File}.md` dialogue files. Keeping all
+ * path construction here means the layout is defined in exactly one place
+ * on the TS side (the Rust exporter mirrors it in `src/export.rs`).
+ */
 import { normalizePath, TFile, TFolder } from 'obsidian';
 
+/** Top-level record categories that map to project subfolder names. */
 export enum MorrowindRecordType {
     Header = 'Header',
     Topic = 'Topic',
@@ -8,6 +17,11 @@ export enum MorrowindRecordType {
     Journal = 'Journal',
 }
 
+/**
+ * Builds and inspects project paths. Instance methods resolve paths under
+ * the configured output folder; the static helpers identify project roots
+ * anywhere in the vault by the presence of `header.md`.
+ */
 export class PathManager {
     constructor(private outputFolder: string) {}
 

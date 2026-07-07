@@ -1,3 +1,11 @@
+//! Low-level YAML frontmatter parsing primitives shared by the header and
+//! dialogue-info parsers.
+//!
+//! These are winnow combinators over `&str` input. They deliberately implement
+//! only the small YAML subset the project format uses — inline scalars, quoted
+//! strings, `- item` lists, and indented block scalars (`|`, `|-`, `|+`) — not
+//! general YAML.
+
 use winnow::Result;
 use winnow::ascii::Caseless;
 use winnow::ascii::*;
@@ -15,6 +23,9 @@ pub fn eol_or_eof<'s>(input: &mut &'s str) -> Result<&'s str> {
     alt((line_ending, eof.value(""))).parse_next(input)
 }
 
+/// Decodes an inline YAML scalar: trims whitespace and, when the value is
+/// double-quoted, strips the quotes and resolves `\"`, `\\`, and doubled-quote
+/// (`""`) escapes. Unquoted values are returned trimmed but otherwise verbatim.
 pub(crate) fn decode_inline_yaml_value(raw: &str) -> String {
     let trimmed = raw.trim();
     if !(trimmed.starts_with('"') && trimmed.ends_with('"') && trimmed.len() >= 2) {

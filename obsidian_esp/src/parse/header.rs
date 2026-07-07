@@ -1,3 +1,10 @@
+//! Parser for the project-level `header.md` file.
+//!
+//! The header carries plugin metadata — author, description, file type
+//! (ESP/ESM/ESS), and the list of master files — as YAML frontmatter. Unknown
+//! keys are skipped so users can keep their own notes alongside the required
+//! fields.
+
 use super::ParsedHeader;
 use super::frontmatter::*;
 use winnow::Result;

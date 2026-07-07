@@ -1,3 +1,14 @@
+/**
+ * @file Canvas emission primitives: node/edge construction, dedup, and file
+ * output.
+ *
+ * Layout and transition passes build canvases exclusively through the
+ * helpers here — `addFileNode`/`addTextNode`/`addEdge` guarantee stable IDs
+ * (hashed from semantic seeds), attach espCard provenance, and silently
+ * ignore duplicates, which is what makes the passes idempotent. Also home to
+ * `nodeCanReach` (the reachability check every wiring pass uses) and the
+ * canvas/backlink writers.
+ */
 import { App, TFile, TFolder } from 'obsidian';
 import { splitFrontmatter } from '../../utils/obsidian-utils';
 import { getCardMeta, setCardMeta } from './card-meta';
@@ -19,6 +30,7 @@ import {
 	measureTextHeight,
 } from './utils';
 
+/** Fresh, empty layout state for one canvas build. */
 export function createCanvasLayoutContext(): CanvasLayoutContext {
 	return {
 		nodes: [],
@@ -35,10 +47,16 @@ export function createCanvasLayoutContext(): CanvasLayoutContext {
 	};
 }
 
+/** The journal node ID registered for a phase, if that phase was laid out. */
 export function contextPhaseNodeId(context: CanvasLayoutContext, phaseValue: number): string | undefined {
 	return context.phaseNodeIds.get(phaseValue);
 }
 
+/**
+ * Adds the journal (milestone) file node that anchors a phase column and
+ * registers it as that phase's node. Reuses the node when the same milestone
+ * anchors several phases.
+ */
 export function addPhaseMilestone(
 	context: CanvasLayoutContext,
 	phaseValue: number,
@@ -68,6 +86,7 @@ export function addPhaseMilestone(
 	return nodeId;
 }
 
+/** Vertically centers a phase's journal node on its column's content. */
 export function centerPhaseMilestone(context: CanvasLayoutContext, phaseValue: number, centerY: number): void {
 	const nodeId = context.phaseNodeIds.get(phaseValue);
 	if (!nodeId) {
@@ -82,10 +101,12 @@ export function centerPhaseMilestone(context: CanvasLayoutContext, phaseValue: n
 	node.y = Math.round(centerY - node.height / 2);
 }
 
+/** Looks up a node by ID in the context (linear scan). */
 export function findCanvasNode(context: CanvasLayoutContext, nodeId: string): CanvasNode | undefined {
 	return context.nodes.find((node) => node.id === nodeId);
 }
 
+/** Canvas coordinates of the point where an edge meets the given side. */
 export function edgeEndpoint(
 	node: CanvasNode,
 	side: 'left' | 'right' | 'top' | 'bottom',
@@ -102,22 +123,30 @@ export function edgeEndpoint(
 	}
 }
 
+/** Whether the node is a choice card (by espCard role). */
 export function isChoiceNode(node: CanvasNode): boolean {
 	return getCardMeta(node)?.role === 'choice';
 }
 
+/** Whether the node is a text card other than a choice (gate/result/etc.). */
 export function isGateNode(node: CanvasNode): boolean {
 	return node.type === 'text' && !isChoiceNode(node);
 }
 
+/** Whether the node embeds a dialogue note (any file outside Journal/). */
 export function isDialogueFileNode(node: CanvasNode): boolean {
 	return node.type === 'file' && !node.file?.includes(`/${JOURNAL_FOLDER_NAME}/`);
 }
 
+/** Whether the node is a rendered `AddTopic …` result card. */
 export function isAddTopicResultNode(node: CanvasNode): boolean {
 	return node.type === 'text' && (node.text ?? '').startsWith('AddTopic ');
 }
 
+/**
+ * Serializes nodes/edges to JSON Canvas format and writes the `.canvas`
+ * file, creating parent folders and overwriting any existing canvas.
+ */
 export async function writeCanvasPlan(
 	app: App,
 	outputPath: string,
@@ -169,6 +198,11 @@ export async function writeCanvasBacklinks(
 	}
 }
 
+/**
+ * Returns note content with a `canvas:` frontmatter list containing a link
+ * to the canvas: creates frontmatter/key as needed, appends to an existing
+ * list, and no-ops when the link is already present.
+ */
 export function ensureCanvasFrontmatterLink(content: string, canvasFileName: string): string {
 	const linkText = `[[${canvasFileName}]]`;
 	const quotedListItem = `  - "${linkText}"`;
@@ -213,6 +247,11 @@ export function ensureCanvasFrontmatterLink(content: string, canvasFileName: str
 	return `${updatedLines.join('\n')}\n${body}`;
 }
 
+/**
+ * Adds a file-embed node with provenance metadata; height is measured from
+ * the file's registered body text. No-op (returning the same ID) when a node
+ * with this seed already exists.
+ */
 export function addFileNode(
 	context: CanvasLayoutContext,
 	seed: string,
@@ -244,6 +283,7 @@ export function addFileNode(
 	return nodeId;
 }
 
+/** Height for a file node, from its cached body text (minimum if unknown). */
 export function measureFileNodeHeight(context: CanvasLayoutContext, filePath: string, width: number): number {
 	const bodyText = context.fileBodyTextByPath.get(filePath);
 	if (!bodyText) {
@@ -253,6 +293,7 @@ export function measureFileNodeHeight(context: CanvasLayoutContext, filePath: st
 	return measureCanvasBodyHeight(bodyText, width);
 }
 
+/** Text-card counterpart of {@link addFileNode}; height measured from text. */
 export function addTextNode(
 	context: CanvasLayoutContext,
 	seed: string,
@@ -282,6 +323,11 @@ export function addTextNode(
 	return nodeId;
 }
 
+/**
+ * Adds an edge (skipping duplicates and self-loops). Pass `derived: true`
+ * for placement-heuristic edges the sync engine must ignore — live edges
+ * between espCard nodes are interpreted as game semantics.
+ */
 export function addEdge(
 	context: CanvasLayoutContext,
 	seed: string,
@@ -309,6 +355,12 @@ export function addEdge(
 	context.edgeIds.add(edgeId);
 }
 
+/**
+ * BFS over directed edges: is `toNode` reachable from `fromNode`? Used by
+ * every wiring pass to avoid redundant edges and cycles. Rebuilds the
+ * adjacency map per call — fine at canvas scale, revisit if profiling says
+ * otherwise.
+ */
 export function nodeCanReach(context: CanvasLayoutContext, fromNode: string, toNode: string): boolean {
 	const outgoingEdgesByNode = new Map<string, CanvasEdge[]>();
 	for (const edge of context.edges) {
@@ -339,6 +391,7 @@ export function nodeCanReach(context: CanvasLayoutContext, fromNode: string, toN
 	return false;
 }
 
+/** Creates the folder if missing; rejects when a file occupies the path. */
 export function ensureFolder(app: App, folderPath: string): Promise<void> {
 	const existing = app.vault.getAbstractFileByPath(folderPath);
 	if (existing instanceof TFolder) {

@@ -1,5 +1,13 @@
+/**
+ * @file Confirmation dialog for compiling without a `header.md`.
+ */
 import { App, Modal } from 'obsidian';
 
+/**
+ * Asks the user whether to compile a folder that has no `header.md`, falling
+ * back to default header settings (Morrowind.esm master, ESP file type).
+ * Resolves `true` to continue, `false` on cancel or dismissal.
+ */
 export async function confirmDefaultHeader(
 	app: App,
 	folderName: string,
@@ -9,6 +17,7 @@ export async function confirmDefaultHeader(
 	});
 }
 
+/** Two-button (Continue/Cancel) modal backing {@link confirmDefaultHeader}. */
 class HeaderWarningModal extends Modal {
 	private resolved = false;
 	private readonly folderName: string;

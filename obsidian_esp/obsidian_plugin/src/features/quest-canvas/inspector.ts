@@ -1,3 +1,12 @@
+/**
+ * @file Quest inspector side panel and the UI for generative node actions.
+ *
+ * Registers a workspace view that, for the selected canvas card, shows the
+ * backing note and offers the action planners from actions.ts (add choice
+ * branch, add speaker variant, link journal milestone, renumber choice).
+ * This module is the Obsidian glue — modals, menus, and vault writes — around
+ * those pure planners.
+ */
 import {
 	type App,
 	type EventRef,

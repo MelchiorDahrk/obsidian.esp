@@ -1,3 +1,13 @@
+/**
+ * @file Card text grammar: parsing and rendering of gate/result card content.
+ *
+ * Two layers live here. The *analysis* layer (top half) parses note
+ * frontmatter filters into {@link Condition}s and `Result:` scripts into
+ * {@link ResultAction}s for discovery and family grouping. The *bidirectional
+ * grammar* layer (bottom half, see the section comment) parses and renders
+ * the text shown on gate/result cards so that user edits on the canvas can
+ * be written back into note frontmatter losslessly.
+ */
 import {
 	type Condition,
 	type FrontmatterValue,
@@ -8,6 +18,7 @@ import {
 } from './model';
 import { getStringValue, stripQuotes, stripWikilinkSyntax, toWikilinkTarget } from './utils';
 
+/** Splits a `Label = value` speaker-condition display string, if it is one. */
 export function parseSpeakerConditionDisplayText(displayText: string): { label: string; value: string } | null {
 	const separator = displayText.indexOf(' = ');
 	if (separator === -1) {
@@ -20,6 +31,12 @@ export function parseSpeakerConditionDisplayText(displayText: string): { label: 
 	};
 }
 
+/**
+ * Parses a dialogue note's frontmatter into display-ready {@link Condition}s:
+ * the fixed speaker fields plus each `FunctionN`/`VariableN` filter slot,
+ * classified as journal/choice/item/variable/other. Returned in canonical
+ * display order ({@link orderConditions}).
+ */
 export function parseConditions(frontmatter: Record<string, FrontmatterValue>, questIds: string[]): Condition[] {
 	const conditions: Condition[] = [];
 	const speakerFields: Array<[string, string]> = [
@@ -100,6 +117,11 @@ export function parseConditions(frontmatter: Record<string, FrontmatterValue>, q
 	return orderConditions(conditions);
 }
 
+/**
+ * Recognizes a journal filter slot: either an explicit `Journal` function or
+ * a variable that mentions one of the quest's IDs. Extracts quest ID,
+ * operator, and stage value when the variable is a comparison expression.
+ */
 export function parseJournalCondition(rawFunction: string, rawVariable: string, questIds: string[]): Condition | null {
 	const isJournalFunction = rawFunction.trim() === 'Journal';
 	const matchingQuestId = questIds.find((questId) => rawVariable.includes(questId));
@@ -129,6 +151,7 @@ export function parseJournalCondition(rawFunction: string, rawVariable: string, 
 	};
 }
 
+/** Recognizes a `Function` + `Choice = n` filter slot. */
 export function parseChoiceCondition(rawFunction: string, rawVariable: string): Condition | null {
 	if (rawFunction.trim() !== 'Function' || !/^Choice\s*=\s*-?\d+/i.test(rawVariable)) {
 		return null;
@@ -148,6 +171,7 @@ export function parseChoiceCondition(rawFunction: string, rawVariable: string): 
 	};
 }
 
+/** Parses an `<id> <op> <int>` variable expression into its parts. */
 export function parseNumericVariableCondition(rawVariable: string): { id: string; operator: NumericOperator; value: number } | null {
 	const variableMatch = rawVariable.match(new RegExp(`([^\\s]+)\\s*${NUMERIC_OPERATOR_PATTERN}\\s*(-?\\d+)`));
 	if (!variableMatch) {
@@ -168,6 +192,7 @@ export function parseNumericVariableCondition(rawVariable: string): { id: string
 	};
 }
 
+/** Narrows a matched operator string; anything unrecognized becomes `=`. */
 export function normalizeNumericOperator(operator: string | undefined): NumericOperator {
 	if (operator === '<=' || operator === '>=' || operator === '<' || operator === '>' || operator === '==' || operator === '!=') {
 		return operator;
@@ -175,6 +200,12 @@ export function normalizeNumericOperator(operator: string | undefined): NumericO
 	return '=';
 }
 
+/**
+ * Parses a `Result:` script into {@link ResultAction}s, one per line:
+ * `Journal`, `Choice` (may emit several actions from one line), `AddTopic`,
+ * `Goodbye`, and `ModDisposition` are recognized; every other line is kept
+ * as a generic script action so nothing is lost on display.
+ */
 export function parseResultActions(resultText: string, questIds: string[]): ResultAction[] {
 	if (resultText.trim().length === 0) {
 		return [];
@@ -229,6 +260,7 @@ export function parseResultActions(resultText: string, questIds: string[]): Resu
 	return actions;
 }
 
+/** The topic added by an `AddTopic` line (quotes/wikilinks stripped), if any. */
 export function parseAddTopicTarget(line: string): string | null {
 	const match = line.match(/^AddTopic\s+(.+)$/i);
 	if (!match) {
@@ -239,6 +271,7 @@ export function parseAddTopicTarget(line: string): string | null {
 	return target.length > 0 ? stripWikilinkSyntax(target) : null;
 }
 
+/** Expands one `Choice "a" 1 "b" 2 …` line into one action per option. */
 export function parseChoiceResults(line: string): ResultAction[] {
 	const actions: ResultAction[] = [];
 	const choicePattern = /"([^"]+)"\s+(-?\d+)/g;
@@ -257,10 +290,16 @@ export function parseChoiceResults(line: string): ResultAction[] {
 	return actions;
 }
 
+/** Joins condition display texts into gate-card body text. */
 export function renderConditionBlock(conditions: Condition[]): string {
 	return conditions.map((condition) => condition.displayText).join('\n');
 }
 
+/**
+ * Canonical display order: speaker fields in Construction Set order first,
+ * then everything else alphabetically. Deterministic ordering keeps card
+ * text (and therefore node IDs and sync hashes) stable across runs.
+ */
 export function orderConditions(conditions: Condition[]): Condition[] {
 	const order = [
 		'Disposition',
@@ -287,6 +326,7 @@ export function orderConditions(conditions: Condition[]): Condition[] {
 	});
 }
 
+/** The lowest choice value among the conditions, or `null` if unchoiced. */
 export function firstChoiceValue(conditions: Condition[]): number | null {
 	const choiceValues = conditions
 		.filter((condition) => condition.kind === 'choice' && condition.choiceValue !== undefined)
@@ -297,10 +337,16 @@ export function firstChoiceValue(conditions: Condition[]): number | null {
 	return Math.min(...choiceValues);
 }
 
+/** Whether any rendered result line is a journal wikilink line. */
 export function containsJournalLine(lines: string[]): boolean {
 	return lines.some((line) => line.startsWith('Journal [['));
 }
 
+/**
+ * Renders a result action for a result card. Journal-set actions that
+ * resolve to a known milestone render as a wikilink to the milestone's note
+ * (aliased `Journal [[note|Quest 20]]`); everything else renders verbatim.
+ */
 export function renderResultAction(action: ResultAction, allMilestones: MilestoneLink[]): string {
 	if (action.kind !== 'journal-set' || action.targetJournalIndex === undefined) {
 		return action.displayText;
@@ -332,6 +378,7 @@ export function renderResultAction(action: ResultAction, allMilestones: Mileston
 // wikilink render but always parse back (and write) as raw script lines.
 // ---------------------------------------------------------------------------
 
+/** The speaker-identifying frontmatter keys, in Construction Set order. */
 export const SPEAKER_FIELDS = [
 	'Disposition',
 	'Sex',
@@ -347,6 +394,7 @@ export const SPEAKER_FIELDS = [
 
 export type SpeakerField = (typeof SPEAKER_FIELDS)[number];
 
+/** Valid `FunctionN` frontmatter values (unspaced spellings). */
 export const FILTER_KINDS = [
 	'Function',
 	'Global',
@@ -364,11 +412,13 @@ export const FILTER_KINDS = [
 
 export type FilterKind = (typeof FILTER_KINDS)[number];
 
+/** One parsed line of a gate card, ready to round-trip into frontmatter. */
 export type GateLine =
 	| { kind: 'speaker'; field: SpeakerField; value: string }
 	| { kind: 'choice'; choiceValue: number }
 	| { kind: 'filter'; filterKind: FilterKind; variable: string };
 
+/** All-or-nothing parse of a gate card: any bad line rejects the whole edit. */
 export type GateCardParseResult =
 	| { ok: true; lines: GateLine[] }
 	| { ok: false; error: string };
@@ -381,6 +431,12 @@ const FILTER_LINE_PATTERN = new RegExp(
 	`^(${FILTER_KINDS.filter((kind) => kind !== 'Function').join('|')})\\s+(\\S.*)$`,
 );
 
+/**
+ * Parses one gate-card line per the grammar in the section comment above:
+ * speaker assignment, `Choice = n`, `<FilterKind> <expr>`, or (fallback) a
+ * bare variable expression treated as a Function filter. A bare filter-kind
+ * word with no expression is an error rather than a silent Function filter.
+ */
 export function parseGateLine(line: string): GateLine | { error: string } {
 	const trimmed = line.trim();
 	if (trimmed.length === 0) {
@@ -421,6 +477,7 @@ export function parseGateLine(line: string): GateLine | { error: string } {
 	return { kind: 'filter', filterKind: 'Function', variable: trimmed };
 }
 
+/** Parses a whole gate card body, skipping blank lines; fails on first error. */
 export function parseGateCardText(text: string): GateCardParseResult {
 	const lines: GateLine[] = [];
 	for (const rawLine of text.split('\n')) {
@@ -437,6 +494,7 @@ export function parseGateCardText(text: string): GateCardParseResult {
 	return { ok: true, lines };
 }
 
+/** Inverse of {@link parseGateLine}: canonical display text for a gate line. */
 export function renderGateLine(line: GateLine): string {
 	switch (line.kind) {
 		case 'speaker':
@@ -509,6 +567,7 @@ export function filterSlotToGateLine(functionValue: string, variableValue: strin
 	return { kind: 'filter', filterKind: 'Function', variable: `${trimmedFunction} ${trimmedVariable}`.trim() };
 }
 
+/** One parsed line of a result card, ready to round-trip into `Result:`. */
 export type ResultLine =
 	| { kind: 'journal'; questId: string; index: number }
 	| { kind: 'add-topic'; topic: string }
@@ -563,6 +622,7 @@ export function parseResultCardLine(line: string): ResultLine {
 	return { kind: 'script', text: trimmed };
 }
 
+/** Parses a whole result card body (blank lines skipped; never fails). */
 export function parseResultCardText(text: string): ResultLine[] {
 	return text
 		.split('\n')
@@ -589,6 +649,10 @@ export function renderResultNoteLine(line: ResultLine): string {
 	}
 }
 
+/**
+ * Finds the milestone a journal-set action points at. Without a quest ID on
+ * the action, an index-only match is accepted only when unambiguous.
+ */
 export function resolveJournalResultMilestone<T extends MilestoneLink>(
 	action: ResultAction,
 	allMilestones: T[],

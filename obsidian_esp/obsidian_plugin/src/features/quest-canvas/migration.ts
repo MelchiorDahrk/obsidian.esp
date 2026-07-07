@@ -1,3 +1,7 @@
+/**
+ * @file One-shot cleanup migration for legacy quest canvases. Backs the
+ * "Clean canvas block ID markers" command.
+ */
 import { App, TFile } from 'obsidian';
 import { splitFrontmatter } from '../../utils/obsidian-utils';
 import { CANVAS_BODY_BLOCK_PREFIX } from './model';

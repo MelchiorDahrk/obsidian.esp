@@ -1,3 +1,11 @@
+//! Native scratch binary for exercising the library outside of WASM.
+//!
+//! The real product is the library crate (consumed as WASM by the Obsidian
+//! plugin); this binary exists so developers can quickly test the
+//! parse/compile/resolve/export pipeline against local files. The commented
+//! blocks below are ready-made snippets for the common workflows — uncomment
+//! and adjust paths as needed. Nothing here ships to users.
+
 #![allow(unused)]
 
 use std::path::{Path, PathBuf};

@@ -1,3 +1,13 @@
+/**
+ * @file Session-level owner of the loaded game database.
+ *
+ * `DatabaseManager` is the single access point to the active
+ * {@link GameDatabase} (`plugin.dbManager.database`) and implements the
+ * database-centric user actions: load/unload, unpack to Markdown, topic-link
+ * refresh, and incidental-edit cleanup. It keeps UI concerns out of the main
+ * plugin class — callers get Notices and progress bars, `main.ts` only
+ * re-renders the status bar via the `onUpdate` callback.
+ */
 import { App, Notice, TFile, TFolder } from 'obsidian';
 import { GameDatabase } from '../database/game-database';
 import { DatabaseLoader } from '../database/database-loader';
@@ -31,12 +41,16 @@ export class DatabaseManager {
 		this.vaultWriter = new VaultWriter(app);
 	}
 
+	/** The active database, or `null` until the user loads a file. */
 	get database(): GameDatabase | null {
 		return this.db;
 	}
 
 	/**
 	 * Loads a database file and initializes related services (lazy loader).
+	 * Any previously loaded database is freed first. If the plugin's output
+	 * folder already contains an unpacked project for this file, topic links
+	 * are refreshed against the new database automatically.
 	 */
 	async loadDatabase(file: File): Promise<void> {
 		await this.unloadDatabase();
@@ -74,7 +88,12 @@ export class DatabaseManager {
 	}
 
 	/**
-	 * Unpacks the current database into the vault.
+	 * Unpacks the current database into the vault as Markdown project files.
+	 *
+	 * Merged databases only export plugin-owned (modified) dialogue; a
+	 * standalone database exports everything. The unpacked plugin itself is
+	 * appended to the exported header's master list so the project can be
+	 * recompiled against it, and topic links are generated afterwards.
 	 */
 	async unpackDatabase(): Promise<void> {
 		if (!this.db) {
@@ -123,7 +142,13 @@ export class DatabaseManager {
 	}
 
 	/**
-	 * Updates topic links in a given folder.
+	 * Rewrites `[[wiki-links]]` over topic-name mentions in a folder's
+	 * dialogue files (see {@link TopicLinker}). Topic names come from the
+	 * loaded database when available; otherwise the linker falls back to the
+	 * topics present in the folder itself.
+	 *
+	 * @param silent Suppress the completion Notice (used during auto-refresh).
+	 * @param reporter Optional progress sink when running inside a larger job.
 	 */
 	async updateTopicLinks(folder: TFolder, silent = false, reporter?: ProgressReporter): Promise<void> {
 		const allTopicNames = this.db ? await this.db.getAllTopicNames() : undefined;
@@ -144,11 +169,14 @@ export class DatabaseManager {
 	/**
 	 * Cleans incidental dialogue edits from a folder based on current database.
 	 * 
-	 * "Incidental" edits are vault files that are functionally identical to the 
-	 * master database. This includes records that were only "modified" because 
-	 * their link pointers (prev/next) were updated during a merge to accommodate 
-	 * new neighboring records. Since the engine/merger derives these links 
+	 * "Incidental" edits are vault files that are functionally identical to the
+	 * master database. This includes records that were only "modified" because
+	 * their link pointers (prev/next) were updated during a merge to accommodate
+	 * new neighboring records. Since the engine/merger derives these links
 	 * automatically at runtime, unedited master records are redundant.
+	 *
+	 * Identified files are moved to the system trash (recoverable), and any
+	 * topic folders left empty are trashed too — except the project root.
 	 */
 	async cleanIncidentalEdits(folder: TFolder): Promise<void> {
 		if (!this.db) {

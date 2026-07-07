@@ -1,3 +1,11 @@
+/**
+ * @file The "Compile dialogue folder" feature: Markdown project -> `.esp`.
+ *
+ * Collects a project folder's `header.md` and dialogue files, strips
+ * Obsidian-specific wiki-link syntax, loads the referenced master files for
+ * validation, invokes the WASM compiler, and writes the resulting plugin
+ * binary plus a compile log next to the project.
+ */
 import { App, Notice, TAbstractFile, TFile, TFolder, normalizePath } from 'obsidian';
 import * as obsidianEsp from '../../pkg/obsidian_esp.js';
 import {
@@ -7,8 +15,10 @@ import {
 import { confirmDefaultHeader } from '../ui/header-warning-modal';
 import { selectVaultFolder } from '../ui/folder-suggest-modal';
 
+/** Project subfolders that may contain compilable dialogue files. */
 const DIALOGUE_FOLDERS = ['Greeting', 'Journal', 'Persuasion', 'Topic', 'Voice'];
 
+/** `[projectRelativePath, content]` pair fed to the WASM compiler. */
 type ProjectFile = [string, string];
 
 interface CompileProjectWithLogResult {
@@ -251,6 +261,10 @@ export async function compileFolderSelection(
 	}
 }
 
+/**
+ * Command entry point: prompts for a vault folder, then compiles it via
+ * {@link compileFolderSelection}. No-op if the user cancels the picker.
+ */
 export async function compileVaultFolder(app: App): Promise<void> {
 	const folder = await selectVaultFolder(app);
 	if (!folder) {

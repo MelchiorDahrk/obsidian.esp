@@ -1,3 +1,25 @@
+//! Markdown project parsing: turns a directory of Markdown files into a
+//! [`ParsedPlugin`].
+//!
+//! A project follows a fixed layout:
+//!
+//! ```text
+//! project/
+//! ├── header.md                  # plugin metadata (author, masters, ...)
+//! └── {Type}/{Topic}/{File}.md   # one dialogue response per file
+//! ```
+//!
+//! where `{Type}` is one of `Topic`, `Journal`, `Voice`, `Greeting`, or
+//! `Persuasion`. Each dialogue file consists of YAML frontmatter (speaker
+//! conditions, filters, IDs) followed by the response text. The submodules
+//! divide the work:
+//!
+//! - [`frontmatter`] — shared low-level YAML value/key parsers (winnow based).
+//! - [`header`] — the `header.md` frontmatter parser.
+//! - [`info`] — the per-dialogue-file parser (frontmatter + body).
+//!
+//! The full grammar is documented in `md_dialogue_spec.md` at the repo root.
+
 use anyhow::{Context, Result};
 use std::path::Path;
 use tes3::esp::{DialogueType2, FilterComparison, FilterType};
@@ -54,16 +76,27 @@ pub struct ParsedInfoFrontmatter {
     pub filters: Vec<ParsedFilter>,
 }
 
+/// A dialogue condition parsed from paired `FunctionN`/`VariableN` frontmatter
+/// keys (mirrors the Construction Set's six filter slots).
 #[derive(Debug)]
 pub struct ParsedFilter {
+    /// Filter slot number (the `N` in `FunctionN`/`VariableN`).
     pub index: u8,
+    /// Condition category (Function, Global, Local, Journal, Item, ...).
     pub filter_type: FilterType,
+    /// Engine function name for `Function`-type filters; also carries the
+    /// implied function for typed filters (e.g. `JournalType` for Journal).
     pub function_name: Option<String>,
+    /// Comparison operator (`=`, `!=`, `<`, `>=`, ...).
     pub comparison: FilterComparison,
+    /// The variable/record ID being tested (empty for pure function filters).
     pub id: String,
+    /// The right-hand side of the comparison.
     pub value: FilterValue,
 }
 
+/// A filter comparison value, preserving whether the author wrote a float or
+/// an integer (the engine stores them differently).
 #[derive(Debug)]
 pub enum FilterValue {
     Float(f32),
@@ -99,6 +132,8 @@ fn default_sort_order(dialogue_type: DialogueType2, topic_name: &str, file_name:
     }
 }
 
+/// Maps a top-level project directory name (`Topic`, `Journal`, ...) to its
+/// dialogue type, case-insensitively. Returns `None` for unrecognized names.
 fn parse_type_directory_name(name: &str) -> Option<DialogueType2> {
     if name.eq_ignore_ascii_case("Topic") {
         Some(DialogueType2::Topic)
@@ -115,6 +150,8 @@ fn parse_type_directory_name(name: &str) -> Option<DialogueType2> {
     }
 }
 
+/// Sort priority for dialogue types; lower comes first. The Morrowind engine
+/// requires journal entries to be defined before other dialogue types.
 fn dialogue_type_priority(dialogue_type: DialogueType2) -> u8 {
     match dialogue_type {
         DialogueType2::Journal => 0,
@@ -125,6 +162,7 @@ fn dialogue_type_priority(dialogue_type: DialogueType2) -> u8 {
     }
 }
 
+/// Parses `header.md` content, adapting the winnow error into `anyhow`.
 fn parse_header_content(content: &str) -> Result<ParsedHeader> {
     let mut input = content;
     header::parse_header(&mut input)

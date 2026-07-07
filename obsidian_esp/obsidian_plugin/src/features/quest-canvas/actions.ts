@@ -1,3 +1,13 @@
+/**
+ * @file Generative canvas actions (canvas_editing_internals.md, "Inspector
+ * and node actions").
+ *
+ * Each planner is pure: it maps current note/canvas state to the note writes,
+ * note creations, and canvas insertions the action performs. The Obsidian
+ * wiring (inspector.ts) applies plans through the vault. Node IDs reuse the
+ * generator's seeds so a later regeneration matches the inserted nodes by
+ * provenance instead of duplicating them.
+ */
 import { getCardMeta, setCardMeta } from './card-meta';
 import {
 	type GateLine,

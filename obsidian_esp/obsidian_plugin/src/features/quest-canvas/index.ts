@@ -1,6 +1,11 @@
-// Public API of the quest canvas package. The headless harness
-// (scripts/canvas-harness) bundles discoverQuestScope/buildQuestCanvas from
-// here, so keep their signatures stable.
+/**
+ * @file Public API barrel for the quest-canvas package.
+ *
+ * Re-exports the entry points the rest of the plugin (and the headless
+ * harness in scripts/canvas-harness) depends on. Keep the signatures of
+ * `discoverQuestScope` and `buildQuestCanvas` stable — the harness bundles
+ * them directly.
+ */
 export {
 	buildQuestCanvas,
 	canGenerateAllQuestCanvasesFromFolder,
