@@ -256,3 +256,17 @@ body.esp-hide-canvas-properties .canvas-node .markdown-source-view .metadata-con
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);
 }
+
+.esp-position-index {
+	color: var(--text-accent);
+	font-variant-numeric: tabular-nums;
+	font-weight: var(--font-semibold);
+	margin-right: var(--size-2-1);
+}
+
+/* Keep long entry lists reachable: bound the height and scroll internally so
+ * the number input above stays pinned and every row stays clickable. */
+.esp-position-list {
+	max-height: 40vh;
+	overflow-y: auto;
+}

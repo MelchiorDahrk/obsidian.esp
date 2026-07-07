@@ -16,6 +16,7 @@ import {
 	addNewDialogue,
 	createSiblingEntry,
 	dialogueNoteType,
+	moveDialogueNote,
 	typeFolderKind,
 } from './features/dialogue-creation';
 import {
@@ -158,6 +159,19 @@ export default class ObsidianEsp extends Plugin {
 									void createSiblingEntry(this.app, file, noteType, 'duplicate');
 								});
 						});
+
+						// Journals order by their Index field, not `~n`, so they
+						// are excluded from position-based moves.
+						if (noteType !== 'Journal') {
+							submenu.addItem((subItem) => {
+								subItem
+									.setTitle('Move to…')
+									.setIcon('move-vertical')
+									.onClick(() => {
+										void moveDialogueNote(this.app, file, noteType);
+									});
+							});
+						}
 					});
 					return;
 				}

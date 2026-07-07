@@ -24,7 +24,14 @@
 import { App, Notice, TFile, TFolder, normalizePath } from 'obsidian';
 import { PathManager } from './path-manager';
 import { BASE_FILE_NAME, ensureBaseFileInFolder } from './topic-base';
-import { promptForText, promptFromList, type ListChoice } from '../ui/input-modals';
+import {
+	promptForMarking,
+	promptForText,
+	promptFromList,
+	type ListChoice,
+	type MarkingRow,
+} from '../ui/input-modals';
+import { splitFrontmatter } from '../utils/obsidian-utils';
 
 /** Dialogue types that count as an authorable "dialogue note". */
 const DIALOGUE_NOTE_TYPES = ['Topic', 'Greeting', 'Journal', 'Voice', 'Persuasion'] as const;
@@ -452,6 +459,157 @@ function stripIdentity(content: string): string {
 function getTopic(app: App, file: TFile, fallback: string): string {
 	const topic = readStringFrontmatter(app, file, 'Topic');
 	return topic && topic.length > 0 ? topic : fallback;
+}
+
+// ---------------------------------------------------------------------------
+// Note-level action: Move to… (reorder within the topic folder).
+// ---------------------------------------------------------------------------
+
+/**
+ * Reorders a non-journal dialogue note within its topic folder. Prompts for a
+ * target `~n` marking, then renames the note to that marking (shifting only the
+ * occupant's contiguous run when the marking is taken) and repairs the
+ * prev/next chain. Journals order by their `Index` field and are excluded.
+ */
+export async function moveDialogueNote(app: App, source: TFile, type: string): Promise<void> {
+	if (type === 'Journal') {
+		return;
+	}
+
+	const folder = source.parent;
+	if (!folder) {
+		return;
+	}
+
+	try {
+		const stem = folder.name;
+		const entries = collectSpeakerEntries(folder, stem);
+		const sourceIdx = entries.findIndex((entry) => entry.file.path === source.path);
+		if (sourceIdx === -1) {
+			new Notice('Could not locate the note among its siblings.');
+			return;
+		}
+		if (entries.length < 2) {
+			new Notice('Nothing to reorder — this topic has only one entry.');
+			return;
+		}
+
+		const currentMarking = entries[sourceIdx]!.order;
+		const rows = await buildMarkingRows(app, entries, sourceIdx);
+		const target = await promptForMarking(app, {
+			title: 'Move to position',
+			description: 'Enter or pick the ~n marking to move this note to. '
+				+ 'If it is taken, the entries there shift down to make room.',
+			rows,
+			initialValue: currentMarking,
+		});
+		if (target === null || target === currentMarking) {
+			return;
+		}
+
+		await placeSpeakerAtMarking(app, entries, entries[sourceIdx]!, target, stem);
+		await openNote(app, source.path);
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		new Notice(`Failed to move note: ${message}`);
+	}
+}
+
+/** Builds picker rows (marking + short body preview) for each sibling entry. */
+async function buildMarkingRows(
+	app: App,
+	entries: SpeakerEntry[],
+	sourceIdx: number,
+): Promise<MarkingRow[]> {
+	return await Promise.all(
+		entries.map(async (entry, index) => ({
+			marking: entry.order,
+			label: await previewLine(app, entry.file),
+			current: index === sourceIdx,
+		})),
+	);
+}
+
+/** First non-empty body line of a note, truncated — used to label picker rows. */
+async function previewLine(app: App, file: TFile): Promise<string> {
+	const content = await app.vault.read(file);
+	const { body } = splitFrontmatter(content);
+	const line = body
+		.split('\n')
+		.map((text) => text.trim())
+		.find((text) => text.length > 0 && !text.startsWith('!['));
+	const stripped = (line ?? '').replace(/\[\[(?:[^|\]]*\|)?([^|\]]*)\]\]/g, '$1');
+	if (stripped.length === 0) {
+		return '(empty)';
+	}
+	return stripped.length > 60 ? `${stripped.slice(0, 60)}…` : stripped;
+}
+
+/**
+ * Renames `source` to the `~target` marking, preserving every other entry's
+ * marking. When `target` is already taken, the occupant and its contiguous run
+ * shift up by one to open the slot (so a note can be pushed into an occupied
+ * position). Renames go through a temporary name first to avoid collisions, and
+ * every entry whose predecessor changed has its `PrevID` cleared so the
+ * compiler rebuilds the chain from the new file order.
+ */
+async function placeSpeakerAtMarking(
+	app: App,
+	entries: SpeakerEntry[],
+	source: SpeakerEntry,
+	target: number,
+	stem: string,
+): Promise<void> {
+	const folderPath = source.file.parent!.path;
+	const remaining = entries.filter((entry) => entry.file !== source.file);
+
+	// If `target` is occupied, shift its contiguous run (target, target+1, …) up
+	// by one to free the slot; a numeric gap needs no shifting.
+	const occupantIdx = remaining.findIndex((entry) => entry.order === target);
+	const toShift: SpeakerEntry[] = [];
+	if (occupantIdx !== -1) {
+		let expected = target;
+		for (let i = occupantIdx; i < remaining.length && remaining[i]!.order === expected; i += 1) {
+			toShift.push(remaining[i]!);
+			expected += 1;
+		}
+	}
+
+	// New markings: source -> target, each shifted entry -> its marking + 1.
+	const newMarking = new Map<TFile, number>();
+	newMarking.set(source.file, target);
+	for (const entry of toShift) {
+		newMarking.set(entry.file, entry.order + 1);
+	}
+
+	// Two-pass rename (via temp names) for every file whose marking changes.
+	const renamed = [source, ...toShift];
+	const stamp = Date.now();
+	for (let i = 0; i < renamed.length; i += 1) {
+		const tempPath = normalizePath(`${folderPath}/${stem} ~tmp-${stamp}-${i}.md`);
+		await app.fileManager.renameFile(renamed[i]!.file, tempPath);
+	}
+	for (const entry of renamed) {
+		const finalPath = normalizePath(`${folderPath}/${stem} ~${newMarking.get(entry.file)!}.md`);
+		await app.fileManager.renameFile(entry.file, finalPath);
+	}
+
+	// Clear PrevID on any entry whose predecessor changed, so its link re-derives.
+	// Keyed on the stable TFile reference, since paths mutate during renaming.
+	const markingOf = (entry: SpeakerEntry) => newMarking.get(entry.file) ?? entry.order;
+	const newOrder = [...entries].sort((left, right) => markingOf(left) - markingOf(right));
+
+	const oldPredecessor = new Map<TFile, TFile | null>();
+	entries.forEach((entry, index) => {
+		oldPredecessor.set(entry.file, index > 0 ? entries[index - 1]!.file : null);
+	});
+	for (let index = 0; index < newOrder.length; index += 1) {
+		const entry = newOrder[index]!;
+		const newPred = index > 0 ? newOrder[index - 1]!.file : null;
+		if (oldPredecessor.get(entry.file) !== newPred) {
+			await clearPrevId(app, entry.file);
+		}
+	}
 }
 
 // ---------------------------------------------------------------------------
