@@ -6,12 +6,18 @@
  * files, topic links, incidental-edit cleanup), and installs the quest-canvas
  * sync engine and inspector.
  */
-import { FileView, Menu, Notice, Plugin, TFolder, normalizePath } from 'obsidian';
+import { FileView, Menu, Notice, Plugin, TFile, TFolder, normalizePath } from 'obsidian';
 import { initSync } from '../pkg/obsidian_esp.js';
 import {
 	compileFolderSelection,
 	compileVaultFolder,
 } from './features/compile-folder';
+import {
+	addNewDialogue,
+	createSiblingEntry,
+	dialogueNoteType,
+	typeFolderKind,
+} from './features/dialogue-creation';
 import {
 	canGenerateAllQuestCanvasesFromFolder,
 	canGenerateQuestCanvasFromFolder,
@@ -117,6 +123,45 @@ export default class ObsidianEsp extends Plugin {
 		// Vault Context Menu Integration
 		this.registerEvent(
 			this.app.workspace.on('file-menu', (menu, file) => {
+				// Dialogue notes get create-sibling actions.
+				if (file instanceof TFile) {
+					const noteType = dialogueNoteType(this.app, file);
+					if (!noteType) {
+						return;
+					}
+
+					menu.addItem((item) => {
+						item.setTitle('Obsidian.esp Commands').setIcon('folder');
+						const submenu = item.setSubmenu();
+
+						submenu.addItem((subItem) => {
+							subItem
+								.setTitle('Insert above')
+								.setIcon('arrow-up')
+								.onClick(() => {
+									void createSiblingEntry(this.app, file, noteType, 'above');
+								});
+						});
+						submenu.addItem((subItem) => {
+							subItem
+								.setTitle('Insert below')
+								.setIcon('arrow-down')
+								.onClick(() => {
+									void createSiblingEntry(this.app, file, noteType, 'below');
+								});
+						});
+						submenu.addItem((subItem) => {
+							subItem
+								.setTitle('Duplicate')
+								.setIcon('copy')
+								.onClick(() => {
+									void createSiblingEntry(this.app, file, noteType, 'duplicate');
+								});
+						});
+					});
+					return;
+				}
+
 				if (!(file instanceof TFolder)) {
 					return;
 				}
@@ -124,6 +169,20 @@ export default class ObsidianEsp extends Plugin {
 				menu.addItem((item) => {
 					item.setTitle('Obsidian.esp Commands').setIcon('folder');
 					const submenu = item.setSubmenu();
+
+					// Type folders (Topic/Journal/Greeting/Voice) get an "Add new" action.
+					const folderKind = typeFolderKind(file);
+					if (folderKind) {
+						submenu.addItem((subItem) => {
+							subItem
+								.setTitle(`Add new ${folderKind.toLowerCase()}`)
+								.setIcon('file-plus')
+								.onClick(() => {
+									void addNewDialogue(this.app, file, folderKind);
+								});
+						});
+						submenu.addSeparator();
+					}
 
 					submenu.addItem((subItem) => {
 						subItem

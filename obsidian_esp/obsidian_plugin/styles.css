@@ -247,3 +247,12 @@ body.esp-hide-canvas-properties .canvas-node .markdown-source-view .metadata-con
 	font-family: var(--font-monospace);
 	font-size: var(--font-ui-small);
 }
+
+/* -------------------------------------------------------------------------
+ * Dialogue-creation list picker
+ * ----------------------------------------------------------------------- */
+
+.esp-list-choice-hint {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
