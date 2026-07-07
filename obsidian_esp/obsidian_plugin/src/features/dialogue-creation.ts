@@ -238,11 +238,24 @@ function collectJournalEntries(folder: TFolder, stem: string): JournalEntry[] {
 // Shared helpers.
 // ---------------------------------------------------------------------------
 
-/** Reveals a freshly created note in a new tab. */
+/** Opens a freshly created note and selects it in the File Explorer. */
 async function openNote(app: App, path: string): Promise<void> {
 	const file = app.vault.getAbstractFileByPath(path);
 	if (file instanceof TFile) {
 		await app.workspace.getLeaf(false).openFile(file);
+		selectInFileExplorer(app, file);
+	}
+}
+
+/**
+ * Highlights and scrolls to a file in the File Explorer sidebar. `revealInFolder`
+ * is provided by Obsidian's built-in explorer view but is absent from the public
+ * typings, so it is narrowed to an optional method here.
+ */
+function selectInFileExplorer(app: App, file: TFile): void {
+	for (const leaf of app.workspace.getLeavesOfType('file-explorer')) {
+		const view = leaf.view as unknown as { revealInFolder?: (target: TFile) => void };
+		view.revealInFolder?.(file);
 	}
 }
 
