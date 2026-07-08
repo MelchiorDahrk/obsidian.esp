@@ -26,6 +26,9 @@
     -   BECOMES
     -   ; StartScript to Wait-One-Day which will give Journal ABcm_HH_MineReport 20\r
     -   And doesn't handle the journal 55 properly
+    -   When this works OK:
+    -   ; Check strength, reputation, or any dead family members (SUCCESS)
+    -   Journal "ABcm_HH_Mine" 20
 
 
 ## 2. Quest System
@@ -44,6 +47,15 @@
     -   Remaining incoming connections become Jump Nodes
 -   Reference:
     -   `The Eerie Lantern - modified`
+-   `Goodbye` handling. A goodbye dialogue closure should reset to the beginning of the dialogue chain with that speaker (rather than being a dead end, it should be a jump node)
+
+### Implicit linking
+
+-   Need a way to allow implicit linking
+    -   When a journal entry naturally follows a dialogue but isn't a result of the dialogue itself
+    -   E.g. when dialogue starts combat with an actor, the actor gets killed, and a journal entry is given from that.
+    -   These won't be able to be procedurally linked. But there needs to be a system to show what journal entry follows.
+    -   The original Caldera Mine outline used "Event" cards which would have a journal entry as a result. Maybe there could be an "Event" handler in the code.
 
 ## 3. Quest Canvas Improvements
 
