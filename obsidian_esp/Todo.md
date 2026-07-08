@@ -2,11 +2,31 @@
 
 ## 1. High Priority
 
+### Frontmatter
+
+-   Properties is missing all of the function variables
+-   Should pull in all item and creature records from the masters as well (just need IDs)
+-   Allow copy/pasting filters between notes
+
 ### Quest Canvas Core
 
 -   Link up to the next quest (when applicable)
 -   List prerequisites (link to previous quests)
 -   Show speaker more visibly
+-   Add speaker variant issues
+    -   Change to "Add variant" and make it a duplicate (author will change what's needed)
+    -   Should insert right below the file clicked on (rather than putting it at the bottom of the topics)
+    -   Doesn't copy results box or entire filter gate (refreshing fixes this, but maybe the quest should automatically refresh when making changes?)
+-   Regenerate full quest layout should NEVER make changes to notes. It can bring up errors and suggest changes, but no changes without the author's consent
+-   The canvas is incorrectly not linking choices due to disposition mismatch (parent is 0, child is 90, they can still be linked)
+-   Not correctly linking sub-quests `ABcm_HH_Mine` and `ABcm_HH_MineReport` which share the same name
+-   Not handling new lines in results properly.
+    -   ; StartScript to Wait-One-Day which will give Journal ABcm_HH_MineReport 20
+    -   Journal ABcm_HH_Mine 55
+    -   BECOMES
+    -   ; StartScript to Wait-One-Day which will give Journal ABcm_HH_MineReport 20\r
+    -   And doesn't handle the journal 55 properly
+
 
 ## 2. Quest System
 
@@ -61,11 +81,20 @@
 
 ## 5. Workflow Improvements
 
+### Data Refreshing
+
+-   Make an easier workflow for updating the loaded ESM (including property file(s))
+    -   Need a way to not destroy edited notes (maybe an option to override or not)
+
 ### Dialogue Compilation
 
 -   Option to open containing folder after compiling dialogue
 
-## 6. Maintenance
+## 6. Note Handling
+
+-   Note options to insert above/below, etc should not work in the canvas or note view, just in the files view.
+
+## 7. Maintenance
 
 ### Linting
 
