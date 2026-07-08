@@ -85,6 +85,7 @@
 
 -   Make an easier workflow for updating the loaded ESM (including property file(s))
     -   Need a way to not destroy edited notes (maybe an option to override or not)
+-   Create folder notes automatically for new topics/greetings/etc
 
 ### Dialogue Compilation
 
