@@ -35,6 +35,7 @@ export const KNOWN_FRONTMATTER_KEYS = new Set([
 	'PC Faction',
 	'PC Rank',
 	'Result',
+	'Results',
 ]);
 
 /**
@@ -49,9 +50,9 @@ export function parseStructuredFrontmatter(frontmatter: string): Record<string, 
 	}
 
 	const rawLines = frontmatter
-		.replace(/^---\n/, '')
-		.replace(/\n---\n?$/, '')
-		.split('\n');
+		.replace(/^---\r?\n/, '')
+		.replace(/\r?\n---(?:\r?\n)?$/, '')
+		.split(/\r?\n/);
 	const parsed: Record<string, FrontmatterValue> = {};
 
 	for (let index = 0; index < rawLines.length; index += 1) {
@@ -111,25 +112,30 @@ interface FrontmatterSections {
 	/** Everything after the closing `---`, verbatim (including its newline). */
 	body: string;
 	hadFrontmatter: boolean;
+	newline: string;
 }
 
-const FRONTMATTER_PATTERN = /^---\n([\s\S]*?)\n---(?=\n|$)/;
+const FRONTMATTER_PATTERN = /^---(\r?\n)([\s\S]*?)\r?\n---(?=\r?\n|$)/;
 
 function splitSections(content: string): FrontmatterSections {
 	const match = content.match(FRONTMATTER_PATTERN);
 	if (!match) {
-		return { lines: [], body: content, hadFrontmatter: false };
+		return { lines: [], body: content, hadFrontmatter: false, newline: '\n' };
 	}
 
+	const newline = match[1] ?? '\n';
+	const frontmatterBody = match[2] ?? '';
 	return {
-		lines: (match[1] ?? '').split('\n'),
+		lines: frontmatterBody.length > 0 ? frontmatterBody.split(/\r?\n/) : [],
 		body: content.slice(match[0].length),
 		hadFrontmatter: true,
+		newline,
 	};
 }
 
 function joinSections(sections: FrontmatterSections): string {
-	return `---\n${sections.lines.join('\n')}\n---${sections.body}`;
+	const newline = sections.newline;
+	return `---${newline}${sections.lines.join(newline)}${newline}---${sections.body}`;
 }
 
 function escapeRegExp(text: string): string {
@@ -139,6 +145,11 @@ function escapeRegExp(text: string): string {
 function keyLineIndex(lines: string[], key: string): number {
 	const pattern = new RegExp(`^${escapeRegExp(key)}:`);
 	return lines.findIndex((line) => pattern.test(line));
+}
+
+function resultLineIndex(lines: string[]): number {
+	const resultIndex = keyLineIndex(lines, 'Result');
+	return resultIndex === -1 ? keyLineIndex(lines, 'Results') : resultIndex;
 }
 
 /** Index just past a key line's continuation lines (block scalar / list items). */
@@ -198,10 +209,10 @@ export function setResultLines(content: string, resultLines: string[]): string {
 		return setFrontmatterKey(content, 'Result', resultLines.join('\n'));
 	}
 
-	const index = keyLineIndex(sections.lines, 'Result');
+	const index = resultLineIndex(sections.lines);
 	const end = index === -1 ? -1 : continuationEnd(sections.lines, index);
 	const existingKeyLine = index === -1 ? '' : sections.lines[index] ?? '';
-	const wasBlock = /^Result:\s*\|/.test(existingKeyLine);
+	const wasBlock = /^Results?:\s*\|/.test(existingKeyLine);
 	const existingIndent = index !== -1 && end > index + 1
 		? (sections.lines[index + 1] ?? '').match(/^\s*/)?.[0] ?? '  '
 		: '  ';
@@ -277,7 +288,7 @@ export function setFilterSlot(
 		}
 	}
 	if (insertAt === -1) {
-		const resultIndex = keyLineIndex(sections.lines, 'Result');
+		const resultIndex = resultLineIndex(sections.lines);
 		insertAt = resultIndex === -1 ? sections.lines.length : continuationEnd(sections.lines, resultIndex);
 	}
 	sections.lines.splice(insertAt, 0, functionLine, variableLine);

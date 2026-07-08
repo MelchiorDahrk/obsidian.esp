@@ -173,6 +173,31 @@ export function getStringValue(frontmatter: Record<string, FrontmatterValue>, ke
 	return undefined;
 }
 
+/** Result script frontmatter, accepting the compiler's legacy `Results` alias. */
+export function getResultValue(frontmatter: Record<string, FrontmatterValue>): string | undefined {
+	return getStringValue(frontmatter, 'Result') ?? getStringValue(frontmatter, 'Results');
+}
+
+/** Normalizes result-script line endings, including inline escaped newlines. */
+export function normalizeResultText(text: string): string {
+	return text
+		.replace(/\\r\\n/g, '\n')
+		.replace(/\\n/g, '\n')
+		.replace(/\\r/g, '\n')
+		.replace(/\\"/g, '"')
+		.replace(/""/g, '"')
+		.replace(/\r\n/g, '\n')
+		.replace(/\r/g, '\n');
+}
+
+/** Non-empty, trimmed result-script lines after newline normalization. */
+export function resultTextLines(text: string): string[] {
+	return normalizeResultText(text)
+		.split('\n')
+		.map((line) => line.trim())
+		.filter((line) => line.length > 0);
+}
+
 /** Frontmatter value interpreted as a boolean (`"true"`, case-insensitive). */
 export function getBooleanValue(frontmatter: Record<string, FrontmatterValue>, key: string): boolean {
 	return getStringValue(frontmatter, key)?.toLowerCase() === 'true';

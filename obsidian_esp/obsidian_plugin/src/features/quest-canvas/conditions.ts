@@ -10,8 +10,9 @@
 /**
  * Whether a speaker condition value on a candidate record is compatible with
  * the same-labelled value on a source record. Values match by
- * case-insensitive equality, except `Disposition` which is a threshold: a
- * source meeting a higher disposition also meets any lower requirement.
+ * case-insensitive equality, except `Disposition` which is a minimum
+ * threshold: two numeric disposition requirements can both be satisfied by
+ * the same speaker even when their thresholds differ.
  */
 export function speakerConditionValuesAreCompatible(
 	label: string,
@@ -22,7 +23,7 @@ export function speakerConditionValuesAreCompatible(
 		const sourceDisposition = parseIntegerValue(sourceValue);
 		const candidateDisposition = parseIntegerValue(candidateValue);
 		if (sourceDisposition !== null && candidateDisposition !== null) {
-			return sourceDisposition >= candidateDisposition;
+			return true;
 		}
 	}
 

@@ -6,7 +6,7 @@ import { dirname, resolve } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const jiti = createJiti(import.meta.url);
-const { selectFirstQuestTreeAddTopicTargets } = jiti(resolve(here, '../src/features/quest-canvas-add-topic.ts'));
+const { selectFirstQuestTreeAddTopicTargets } = jiti(resolve(here, '../src/features/quest-canvas/add-topic.ts'));
 
 test('AddTopic target selection prefers the leftmost compatible quest-tree usage', () => {
 	const targets = selectFirstQuestTreeAddTopicTargets([

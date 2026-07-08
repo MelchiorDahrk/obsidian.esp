@@ -38,6 +38,7 @@ import {
 	firstNonEmptyLine,
 	firstSentence,
 	getBooleanValue,
+	getResultValue,
 	getStringValue,
 	isDialogueType,
 	normalizeQuestNameKey,
@@ -287,7 +288,7 @@ export function toDialogueRecord(
 	}
 
 	const conditionEntries = parseConditions(document.frontmatter, questIds);
-	const resultActions = parseResultActions(getStringValue(document.frontmatter, 'Result') ?? '', questIds);
+	const resultActions = parseResultActions(getResultValue(document.frontmatter) ?? '', questIds);
 	const bodyText = document.body.trim();
 	const conditionQuestReferences = uniqueValues(
 		conditionEntries

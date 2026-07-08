@@ -23,7 +23,7 @@ import {
 	type EspCardMeta,
 	type MilestoneLink,
 } from './model';
-import { getStringValue, measureTextHeight, stableHash } from './utils';
+import { getResultValue, getStringValue, measureTextHeight, resultTextLines, stableHash } from './utils';
 
 // ---------------------------------------------------------------------------
 // Sync core — pure canvas→note translation.
@@ -336,7 +336,7 @@ export function renderCardFromNote(
 		case 'gate':
 			return renderConditionBlock(parseConditions(frontmatter, context.questIds));
 		case 'result': {
-			const actions = parseResultActions(getStringValue(frontmatter, 'Result') ?? '', context.questIds);
+			const actions = parseResultActions(getResultValue(frontmatter) ?? '', context.questIds);
 			return actions
 				.filter((action) => action.kind !== 'choice-set')
 				.map((action) => renderResultAction(action, context.milestones))
@@ -346,7 +346,7 @@ export function renderCardFromNote(
 			if (meta.choiceValue === undefined) {
 				return null;
 			}
-			const actions = parseResultActions(getStringValue(frontmatter, 'Result') ?? '', context.questIds);
+			const actions = parseResultActions(getResultValue(frontmatter) ?? '', context.questIds);
 			const action = actions.find(
 				(candidate) => candidate.kind === 'choice-set' && candidate.choiceValue === meta.choiceValue,
 			);
@@ -366,10 +366,7 @@ export function renderCardFromNote(
  */
 export function applyResultCardLines(content: string, cardLines: ResultLine[]): string {
 	const frontmatter = parseStructuredFrontmatter(frontmatterSection(content));
-	const originalLines = (getStringValue(frontmatter, 'Result') ?? '')
-		.split('\n')
-		.map((line) => line.trim())
-		.filter((line) => line.length > 0);
+	const originalLines = resultTextLines(getResultValue(frontmatter) ?? '');
 
 	const renderedCardLines = cardLines.map((line) => renderResultNoteLine(line));
 	const cardHasChoiceLines = cardLines.some((line) => line.kind === 'choice');
@@ -407,15 +404,12 @@ export function applyResultCardLines(content: string, cardLines: ResultLine[]): 
  */
 export function renameChoiceInResult(content: string, choiceValue: number, prompt: string): string | null {
 	const frontmatter = parseStructuredFrontmatter(frontmatterSection(content));
-	const resultText = getStringValue(frontmatter, 'Result') ?? '';
+	const resultText = getResultValue(frontmatter) ?? '';
 	if (resultText.trim().length === 0) {
 		return null;
 	}
 
-	const lines = resultText
-		.split('\n')
-		.map((line) => line.trim())
-		.filter((line) => line.length > 0);
+	const lines = resultTextLines(resultText);
 	let found = false;
 	const nextLines = lines.map((line) => {
 		if (!/^Choice\s/i.test(line)) {
@@ -437,7 +431,7 @@ export function renameChoiceInResult(content: string, choiceValue: number, promp
 }
 
 function frontmatterSection(content: string): string {
-	return content.match(/^---\n[\s\S]*?\n---(?:\n|$)/)?.[0] ?? '';
+	return content.match(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/)?.[0] ?? '';
 }
 
 // ---------------------------------------------------------------------------
@@ -629,10 +623,7 @@ function removeChoiceResultPair(content: string, choiceValue: number): string {
 
 function resultLinesOfContent(content: string): string[] {
 	const frontmatter = parseStructuredFrontmatter(frontmatterSection(content));
-	return (getStringValue(frontmatter, 'Result') ?? '')
-		.split('\n')
-		.map((line) => line.trim())
-		.filter((line) => line.length > 0);
+	return resultTextLines(getResultValue(frontmatter) ?? '');
 }
 
 function journalLinePattern(questId: string): RegExp {

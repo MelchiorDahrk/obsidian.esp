@@ -16,7 +16,7 @@ import {
 	type NumericOperator,
 	type ResultAction,
 } from './model';
-import { getStringValue, stripQuotes, stripWikilinkSyntax, toWikilinkTarget } from './utils';
+import { getStringValue, resultTextLines, stripQuotes, stripWikilinkSyntax, toWikilinkTarget } from './utils';
 
 /** Splits a `Label = value` speaker-condition display string, if it is one. */
 export function parseSpeakerConditionDisplayText(displayText: string): { label: string; value: string } | null {
@@ -212,7 +212,7 @@ export function parseResultActions(resultText: string, questIds: string[]): Resu
 	}
 
 	const actions: ResultAction[] = [];
-	const lines = resultText.split('\n').map((line) => line.trim()).filter((line) => line.length > 0);
+	const lines = resultTextLines(resultText);
 	for (const line of lines) {
 		const journalMatch = line.match(/^Journal\s+"?([^"\s]+)"?\s+(-?\d+)/i);
 		if (journalMatch) {
@@ -624,11 +624,7 @@ export function parseResultCardLine(line: string): ResultLine {
 
 /** Parses a whole result card body (blank lines skipped; never fails). */
 export function parseResultCardText(text: string): ResultLine[] {
-	return text
-		.split('\n')
-		.map((line) => line.trim())
-		.filter((line) => line.length > 0)
-		.map((line) => parseResultCardLine(line));
+	return resultTextLines(text).map((line) => parseResultCardLine(line));
 }
 
 /**

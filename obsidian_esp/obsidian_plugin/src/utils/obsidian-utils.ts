@@ -25,9 +25,9 @@ function extractRawFrontmatterValue(
 	keyToFind: string,
 ): string | undefined {
 	const lines = frontmatter
-		.replace(/^---\n/, '')
-		.replace(/\n---\n$/, '')
-		.split('\n');
+		.replace(/^---\r?\n/, '')
+		.replace(/\r?\n---\r?\n?$/, '')
+		.split(/\r?\n/);
 
 	for (const line of lines) {
 		const colonIndex = line.indexOf(':');
@@ -109,7 +109,7 @@ export async function getFrontmatter(app: App, file: TFile): Promise<Record<stri
  */
 export function parseBasicFrontmatter(fmText: string): Record<string, any> {
 	const result: Record<string, any> = {};
-	const lines = fmText.replace(/^---\n/, '').replace(/\n---\n$/, '').split('\n');
+	const lines = fmText.replace(/^---\r?\n/, '').replace(/\r?\n---\r?\n?$/, '').split(/\r?\n/);
 	for (const line of lines) {
 		const colonIndex = line.indexOf(':');
 		if (colonIndex !== -1) {
@@ -128,7 +128,7 @@ export function splitFrontmatter(content: string): {
 	frontmatter: string;
 	body: string;
 } {
-	const match = content.match(/^---\n([\s\S]*?)\n---\n/);
+	const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
 	if (match) {
 		return {
 			frontmatter: match[0],

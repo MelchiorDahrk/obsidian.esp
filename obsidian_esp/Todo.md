@@ -6,7 +6,6 @@
 
 -   Properties is missing all of the function variables
 -   Should pull in all item and creature records from the masters as well (just need IDs)
--   Allow copy/pasting filters between notes
 
 ### Quest Canvas Core
 
@@ -18,9 +17,10 @@
     -   Should insert right below the file clicked on (rather than putting it at the bottom of the topics)
     -   Doesn't copy results box or entire filter gate (refreshing fixes this, but maybe the quest should automatically refresh when making changes?)
 -   Regenerate full quest layout should NEVER make changes to notes. It can bring up errors and suggest changes, but no changes without the author's consent
+    -   For example, it often changes `Journal` to `Journal - Journal` in the Function field
 -   The canvas is incorrectly not linking choices due to disposition mismatch (parent is 0, child is 90, they can still be linked)
 -   Not correctly linking sub-quests `ABcm_HH_Mine` and `ABcm_HH_MineReport` which share the same name
--   Not handling new lines in results properly.
+-   Journal text string being included in a line (e.g. "; StartScript to Wait-One-Day which will give Journal ABcm_HH_MineReport 20") seems like it throws off the journal linking
     -   ; StartScript to Wait-One-Day which will give Journal ABcm_HH_MineReport 20
     -   Journal ABcm_HH_Mine 55
     -   BECOMES
@@ -94,6 +94,7 @@
 ## 6. Note Handling
 
 -   Note options to insert above/below, etc should not work in the canvas or note view, just in the files view.
+-   Allow copy/pasting filters between notes
 
 ## 7. Maintenance
 

@@ -28,7 +28,7 @@ import {
 	GATE_WIDTH,
 } from './model';
 import { type CanvasData, type QuestSyncContext, renderCardFromNote } from './sync-core';
-import { createEdgeId, createNodeId, getStringValue, measureTextHeight } from './utils';
+import { createEdgeId, createNodeId, getResultValue, getStringValue, measureTextHeight, resultTextLines } from './utils';
 
 // ---------------------------------------------------------------------------
 // Generative canvas actions (canvas_editing_internals.md, "Inspector and
@@ -70,14 +70,11 @@ function emptyPlan(): ActionPlan {
 }
 
 function frontmatterOf(content: string): Record<string, string | string[]> {
-	return parseStructuredFrontmatter(content.match(/^---\n[\s\S]*?\n---(?:\n|$)/)?.[0] ?? '');
+	return parseStructuredFrontmatter(content.match(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/)?.[0] ?? '');
 }
 
 function resultLinesOf(content: string): string[] {
-	return (getStringValue(frontmatterOf(content), 'Result') ?? '')
-		.split('\n')
-		.map((line) => line.trim())
-		.filter((line) => line.length > 0);
+	return resultTextLines(getResultValue(frontmatterOf(content)) ?? '');
 }
 
 /** Smallest free `<topic> ~<n>.md` path in the given folder. */
@@ -157,7 +154,7 @@ export function planAddChoiceBranch(args: {
 	}
 
 	// Next free choice value across the parent's existing Choice results.
-	const parentActions = parseResultActions(getStringValue(frontmatter, 'Result') ?? '', args.context.questIds);
+	const parentActions = parseResultActions(getResultValue(frontmatter) ?? '', args.context.questIds);
 	const usedValues = parentActions
 		.filter((action) => action.kind === 'choice-set' && action.choiceValue !== undefined)
 		.map((action) => action.choiceValue as number);
@@ -429,7 +426,7 @@ export function planRenumberChoice(args: {
 	}
 
 	const parentFrontmatter = frontmatterOf(args.parentContent);
-	const parentActions = parseResultActions(getStringValue(parentFrontmatter, 'Result') ?? '', args.context.questIds);
+	const parentActions = parseResultActions(getResultValue(parentFrontmatter) ?? '', args.context.questIds);
 	const usedValues = parentActions
 		.filter((action) => action.kind === 'choice-set' && action.choiceValue !== undefined)
 		.map((action) => action.choiceValue as number);
