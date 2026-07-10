@@ -45,7 +45,7 @@ test('quest canvas parses multi-line Result blocks from CRLF notes', () => {
 		'; StartScript to Wait-One-Day which will give Journal ABcm_HH_MineReport 20\nJournal ABcm_HH_Mine 55',
 	);
 	assert.equal(actions.length, 2);
-	assert.equal(actions[0].kind, 'script');
+	assert.equal(actions[0].kind, 'comment');
 	assert.equal(actions[1].kind, 'journal-set');
 	assert.equal(actions[1].targetQuestId, 'ABcm_HH_Mine');
 	assert.equal(actions[1].targetJournalIndex, 55);
@@ -94,8 +94,19 @@ test('quest canvas treats bare carriage returns as result line breaks', () => {
 	);
 
 	assert.equal(actions.length, 2);
-	assert.equal(actions[0].kind, 'script');
+	assert.equal(actions[0].kind, 'comment');
 	assert.equal(actions[1].kind, 'journal-set');
 	assert.equal(actions[1].targetQuestId, 'ABcm_HH_Mine');
 	assert.equal(actions[1].targetJournalIndex, 55);
+});
+
+test('quest canvas never compiles Journal text inside a semicolon comment', () => {
+	const actions = parseResultActions(
+		'Journal ABcm_HH_Mine 50\n; StartScript to Wait-One-Day which will give Journal ABcm_HH_MineReport 20',
+		['ABcm_HH_Mine', 'ABcm_HH_MineReport'],
+	);
+
+	assert.deepEqual(actions.map((action) => action.kind), ['journal-set', 'comment']);
+	assert.equal(actions[0].targetQuestId, 'ABcm_HH_Mine');
+	assert.equal(actions[0].targetJournalIndex, 50);
 });

@@ -361,4 +361,30 @@ mod tests {
 
         assert_eq!(text, "Value ^ not a block id");
     }
+
+    #[test]
+    fn parse_info_file_accepts_multiline_quoted_result_with_comment() {
+        let mut input = concat!(
+            "---\n",
+            "Type: Topic\n",
+            "Topic: Caldera mining contracts\n",
+            "Result: \"Journal ABcm_HH_Mine 50\\r\n",
+            "\n",
+            "  ; StartScript to Wait-One-Day which will give Journal ABcm_HH_MineReport 20\"\n",
+            "Function0: Journal\n",
+            "Variable0: ABcm_HH_Mine = 40\n",
+            "---\n",
+            "Dialogue body.\n",
+        );
+
+        let (frontmatter, _) = parse_info_file(&mut input).expect("parser should succeed");
+
+        assert_eq!(
+            frontmatter.script_text.as_deref(),
+            Some(
+                "Journal ABcm_HH_Mine 50\r\n; StartScript to Wait-One-Day which will give Journal ABcm_HH_MineReport 20"
+            )
+        );
+        assert_eq!(frontmatter.filters.len(), 1);
+    }
 }

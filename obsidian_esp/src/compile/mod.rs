@@ -76,18 +76,30 @@ fn generate_info_id(existing_ids: &HashSet<String>) -> String {
     }
 }
 
-/// Generates `parse_filter_function_name`, a case-insensitive string ->
-/// [`FilterFunction`] lookup covering every variant listed in the invocation
-/// below. Keeping the list in a macro avoids hand-writing ~80 match arms.
+/// Generates `parse_filter_function_name`, a separator- and case-insensitive
+/// string -> [`FilterFunction`] lookup covering every variant listed in the
+/// invocation below. Keeping the list in a macro avoids hand-writing ~80 match
+/// arms and gives the tests a single authoritative list to exercise.
 macro_rules! parse_filter_functions {
     ($($name:ident),+ $(,)?) => {
+        const FILTER_FUNCTIONS: &[(&str, FilterFunction)] = &[
+            $((stringify!($name), FilterFunction::$name),)+
+        ];
+
         fn parse_filter_function_name(name: &str) -> Option<FilterFunction> {
-            $(
-                if name.eq_ignore_ascii_case(stringify!($name)) {
-                    return Some(FilterFunction::$name);
-                }
-            )+
-            None
+            let normalized_name: String = name
+                .chars()
+                .filter(|character| character.is_ascii_alphanumeric())
+                .map(|character| character.to_ascii_lowercase())
+                .collect();
+
+            FILTER_FUNCTIONS
+                .iter()
+                .find_map(|(function_name, function)| {
+                    function_name
+                        .eq_ignore_ascii_case(&normalized_name)
+                        .then_some(*function)
+                })
         }
     };
 }
@@ -191,9 +203,15 @@ fn filter_function_from_parts(
     function_name: Option<&str>,
 ) -> Result<FilterFunction> {
     let function = match filter_type {
-        FilterType::Function => function_name
-            .and_then(parse_filter_function_name)
-            .unwrap_or_default(),
+        FilterType::Function => {
+            let function = function_name.and_then(parse_filter_function_name);
+            ensure!(
+                function_name.is_none() || function.is_some(),
+                "Unknown filter function: {}",
+                function_name.unwrap()
+            );
+            function.unwrap_or_default()
+        }
         FilterType::Global | FilterType::Local | FilterType::NotLocal => function_name
             .and_then(parse_filter_function_name)
             .unwrap_or(FilterFunction::VariableCompare),
@@ -208,16 +226,85 @@ fn filter_function_from_parts(
         FilterType::None => FilterFunction::default(),
     };
 
-    if matches!(filter_type, FilterType::Function) && function_name.is_some() {
-        ensure!(
-            function != FilterFunction::default()
-                || function_name.is_some_and(|name| name.eq_ignore_ascii_case("ReactionLow")),
-            "Unknown filter function: {}",
-            function_name.unwrap()
+    Ok(function)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        FILTER_FUNCTIONS, compile, filter_function_from_parts, parse_filter_function_name,
+    };
+    use crate::parse::info::parse_info_file;
+    use crate::parse::{ParsedHeader, ParsedInfo, ParsedPlugin};
+    use tes3::esp::{FilterFunction, FilterType};
+
+    fn spaced_function_name(name: &str) -> String {
+        let mut spaced = String::with_capacity(name.len() * 2);
+
+        for (index, character) in name.chars().enumerate() {
+            if index > 0 && character.is_ascii_uppercase() {
+                spaced.push(' ');
+            }
+            spaced.push(character);
+        }
+
+        spaced
+    }
+
+    #[test]
+    fn parses_every_filter_function_with_compact_and_spaced_names() {
+        for &(name, function) in FILTER_FUNCTIONS {
+            assert_eq!(parse_filter_function_name(name), Some(function), "{name}");
+
+            let spaced_name = spaced_function_name(name);
+            assert_eq!(
+                parse_filter_function_name(&spaced_name),
+                Some(function),
+                "{spaced_name}"
+            );
+        }
+    }
+
+    #[test]
+    fn dialogue_compiler_accepts_pc_strength_with_human_readable_spelling() {
+        let mut input = "---\nType: Topic\nFunction0: Function\nVariable0: PC Strength >= 75\n---\nStrong response.\n";
+        let (frontmatter, text) = parse_info_file(&mut input).unwrap();
+        let parsed = ParsedPlugin {
+            header: ParsedHeader {
+                author: String::new(),
+                description: String::new(),
+                file_type: "esp".to_string(),
+                masters: Vec::new(),
+            },
+            infos: vec![ParsedInfo {
+                source_path: "Topic/test/test ~0.md".to_string(),
+                topic: "test".to_string(),
+                frontmatter,
+                text,
+            }],
+        };
+
+        let compiled = compile(parsed).unwrap();
+        let filter = &compiled.dialogues["test"].infos[0].filters[0];
+
+        assert_eq!(filter.function, FilterFunction::PcStrength);
+    }
+
+    #[test]
+    fn compiles_spaced_reaction_low_without_confusing_it_with_unknown() {
+        assert_eq!(
+            filter_function_from_parts(FilterType::Function, Some("Reaction Low")).unwrap(),
+            FilterFunction::ReactionLow
         );
     }
 
-    Ok(function)
+    #[test]
+    fn rejects_unknown_filter_functions() {
+        let error =
+            filter_function_from_parts(FilterType::Function, Some("Not A Function")).unwrap_err();
+
+        assert_eq!(error.to_string(), "Unknown filter function: Not A Function");
+    }
 }
 
 /// Repairs the `next_id` links in a `DialogueGroup` based on the current order of `infos`.

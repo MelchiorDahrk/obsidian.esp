@@ -202,9 +202,10 @@ export function normalizeNumericOperator(operator: string | undefined): NumericO
 
 /**
  * Parses a `Result:` script into {@link ResultAction}s, one per line:
- * `Journal`, `Choice` (may emit several actions from one line), `AddTopic`,
- * `Goodbye`, and `ModDisposition` are recognized; every other line is kept
- * as a generic script action so nothing is lost on display.
+ * Semicolon-prefixed lines are comments. `Journal`, `Choice` (may emit
+ * several actions from one line), `AddTopic`, `Goodbye`, and
+ * `ModDisposition` are recognized; every other line is kept as a generic
+ * script action so nothing is lost on display.
  */
 export function parseResultActions(resultText: string, questIds: string[]): ResultAction[] {
 	if (resultText.trim().length === 0) {
@@ -214,6 +215,11 @@ export function parseResultActions(resultText: string, questIds: string[]): Resu
 	const actions: ResultAction[] = [];
 	const lines = resultTextLines(resultText);
 	for (const line of lines) {
+		if (line.startsWith(';')) {
+			actions.push({ kind: 'comment', displayText: line });
+			continue;
+		}
+
 		const journalMatch = line.match(/^Journal\s+"?([^"\s]+)"?\s+(-?\d+)/i);
 		if (journalMatch) {
 			const journalQuestId = journalMatch[1] ?? '';
@@ -572,6 +578,7 @@ export type ResultLine =
 	| { kind: 'journal'; questId: string; index: number }
 	| { kind: 'add-topic'; topic: string }
 	| { kind: 'choice'; text: string; choiceValue: number }
+	| { kind: 'comment'; text: string }
 	| { kind: 'script'; text: string };
 
 const JOURNAL_WIKILINK_LINE_PATTERN = /^Journal\s+\[\[(?:[^\]|]*\|)?([^\]|]+?)\s+(-?\d+)\]\]$/i;
@@ -586,6 +593,9 @@ const CHOICE_RESULT_LINE_PATTERN = /^Choice\s+"([^"]+)"\s+(-?\d+)$/i;
  */
 export function parseResultCardLine(line: string): ResultLine {
 	const trimmed = line.trim();
+	if (trimmed.startsWith(';')) {
+		return { kind: 'comment', text: trimmed };
+	}
 
 	const wikilinkMatch = trimmed.match(JOURNAL_WIKILINK_LINE_PATTERN);
 	if (wikilinkMatch) {
@@ -640,6 +650,8 @@ export function renderResultNoteLine(line: ResultLine): string {
 			return `AddTopic "${line.topic}"`;
 		case 'choice':
 			return `Choice "${line.text}" ${line.choiceValue}`;
+		case 'comment':
+			return line.text;
 		case 'script':
 			return line.text;
 	}

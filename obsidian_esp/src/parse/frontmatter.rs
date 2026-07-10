@@ -23,9 +23,59 @@ pub fn eol_or_eof<'s>(input: &mut &'s str) -> Result<&'s str> {
     alt((line_ending, eof.value(""))).parse_next(input)
 }
 
-/// Decodes an inline YAML scalar: trims whitespace and, when the value is
-/// double-quoted, strips the quotes and resolves `\"`, `\\`, and doubled-quote
-/// (`""`) escapes. Unquoted values are returned trimmed but otherwise verbatim.
+/// Returns the byte length of a complete double-quoted scalar, including its
+/// closing quote. The closing quote must be followed only by horizontal space
+/// before the physical line ends, which keeps escaped or embedded quotes from
+/// ending the scalar early.
+fn double_quoted_scalar_len(input: &str) -> Option<usize> {
+    if !input.starts_with('"') {
+        return None;
+    }
+
+    let mut characters = input.char_indices().peekable();
+    let _ = characters.next();
+
+    while let Some((index, character)) = characters.next() {
+        if character == '\\' {
+            let _ = characters.next();
+            continue;
+        }
+
+        if character != '"' {
+            continue;
+        }
+
+        if characters.peek().is_some_and(|(_, next)| *next == '"') {
+            let _ = characters.next();
+            continue;
+        }
+
+        let remaining_line = input[index + character.len_utf8()..]
+            .split(['\r', '\n'])
+            .next()
+            .unwrap_or_default();
+        if remaining_line.trim().is_empty() {
+            return Some(index + character.len_utf8());
+        }
+    }
+
+    None
+}
+
+/// Parses a double-quoted scalar that may continue across physical lines.
+fn parse_double_quoted_yaml_value(input: &mut &str) -> Result<String> {
+    let Some(length) = double_quoted_scalar_len(input) else {
+        return fail.parse_next(input);
+    };
+    let character_count = input[..length].chars().count();
+    let raw = take(character_count).parse_next(input)?;
+    Ok(decode_inline_yaml_value(raw))
+}
+
+/// Decodes a YAML scalar: trims whitespace and, when the value is
+/// double-quoted, strips the quotes, resolves common escapes, and folds
+/// physical continuation lines according to YAML's quoted-scalar rules.
+/// Unquoted values are returned trimmed but otherwise verbatim.
 pub(crate) fn decode_inline_yaml_value(raw: &str) -> String {
     let trimmed = raw.trim();
     if !(trimmed.starts_with('"') && trimmed.ends_with('"') && trimmed.len() >= 2) {
@@ -43,6 +93,9 @@ pub(crate) fn decode_inline_yaml_value(raw: &str) -> String {
                     match next {
                         '"' => decoded.push('"'),
                         '\\' => decoded.push('\\'),
+                        'n' => decoded.push('\n'),
+                        'r' => decoded.push('\r'),
+                        't' => decoded.push('\t'),
                         _ => {
                             decoded.push('\\');
                             decoded.push(next);
@@ -55,6 +108,39 @@ pub(crate) fn decode_inline_yaml_value(raw: &str) -> String {
             '"' if chars.peek() == Some(&'"') => {
                 let _ = chars.next();
                 decoded.push('"');
+            }
+            '\r' | '\n' => {
+                if ch == '\r' && chars.peek() == Some(&'\n') {
+                    let _ = chars.next();
+                }
+
+                let mut line_breaks = 1;
+                loop {
+                    while chars.peek().is_some_and(|next| matches!(next, ' ' | '\t')) {
+                        let _ = chars.next();
+                    }
+
+                    match chars.peek().copied() {
+                        Some('\r') => {
+                            let _ = chars.next();
+                            if chars.peek() == Some(&'\n') {
+                                let _ = chars.next();
+                            }
+                            line_breaks += 1;
+                        }
+                        Some('\n') => {
+                            let _ = chars.next();
+                            line_breaks += 1;
+                        }
+                        _ => break,
+                    }
+                }
+
+                if line_breaks == 1 {
+                    decoded.push(' ');
+                } else {
+                    decoded.extend(std::iter::repeat_n('\n', line_breaks - 1));
+                }
             }
             _ => decoded.push(ch),
         }
@@ -108,6 +194,16 @@ pub fn parse_yaml_value_or_list<'s>(input: &mut &'s str) -> Result<Option<String
     } else {
         false
     };
+
+    // A quoted YAML scalar may span physical lines. Parse through its closing
+    // quote before looking for the line ending so continuation lines are not
+    // mistaken for new frontmatter keys.
+    if !is_block && (*input).starts_with('"') {
+        let value = parse_double_quoted_yaml_value.parse_next(input)?;
+        let _ = space_or_tab.parse_next(input)?;
+        let _ = eol_or_eof.parse_next(input)?;
+        return Ok(Some(value));
+    }
 
     if let Ok(_) = eol_or_eof.parse_next(input) {
         // Case 1a: List item with -

@@ -181,6 +181,7 @@ export interface ResultAction {
 		| 'choice-set'
 		| 'add-topic'
 		| 'goodbye'
+		| 'comment'
 		| 'script'
 		| 'disposition';
 	displayText: string;
